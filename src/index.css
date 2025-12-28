@@ -1,0 +1,90 @@
+/* Import Google Fonts - MUST BE FIRST */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
+
+/* Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles from AgriLink HTML */
+@layer base {
+  body {
+    @apply text-gray-800 leading-relaxed bg-gray-50;
+    font-family: "Montserrat", sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Playfair Display", serif;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .btn-primary {
+    @apply inline-block px-6 py-3 bg-secondary-green text-white rounded transition-all duration-300 font-semibold text-sm uppercase tracking-wider shadow-md hover:bg-accent-gold hover:text-dark-green hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply inline-block px-6 py-3 bg-transparent border-2 border-secondary-green text-secondary-green rounded transition-all duration-300 font-semibold text-sm uppercase tracking-wider hover:border-accent-gold hover:text-dark-green hover:bg-accent-gold hover:bg-opacity-10;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-2;
+  }
+
+  .section-title {
+    @apply text-center mb-10;
+  }
+
+  .section-title h2 {
+    @apply text-primary-green text-3xl font-bold inline-block relative pb-4;
+  }
+
+  .section-title h2::after {
+    content: "";
+    @apply absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-accent-gold;
+  }
+}
+
+/* Custom animations */
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 1s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+
+  @keyframes bounce {
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-10px);
+    }
+    60% {
+      transform: translateY(-5px);
+    }
+  }
+}
