@@ -1,0 +1,1 @@
+module.exports = $$require_external('node:_tls_wrap');
