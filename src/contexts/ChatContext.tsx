@@ -1,16 +1,3 @@
-import React, { createContext, useState, useContext } from "react";
-
-const ChatContext = createContext();
-
-export const ChatProvider = ({ children }) => {
-  const [conversations, setConversations] = useState([]);
-  return (
-    <ChatContext.Provider value={{ conversations, setConversations }}>
-      {children}
-    </ChatContext.Provider>
-  );
-};
-
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
 type ChatContextType = {
