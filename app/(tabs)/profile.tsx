@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,9 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/contexts/AuthContext';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../src/contexts/AuthContext";
 import {
   User,
   Settings,
@@ -20,7 +20,11 @@ import {
   ChevronRight,
   Edit,
   Award,
-} from 'lucide-react-native';
+} from "lucide-react-native";
+import AnimatedCard from "../../src/components/AnimatedCard";
+import GlassCard from "../../src/components/GlassCard";
+import AnimatedButton from "../../src/components/AnimatedButton";
+import { theme } from "../../src/theme/tokens";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -28,59 +32,86 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     logout();
-    router.replace('/');
+    router.replace("/");
   };
 
   const menuSections = [
     {
-      title: 'Account',
+      title: "Account",
       items: [
-        { label: 'Edit Profile', icon: Edit, color: '#2E7D32' },
-        { label: 'Account Settings', icon: Settings, color: '#1976D2' },
-        { label: 'Verification Badge', icon: Award, color: '#F57C00' },
+        { label: "Edit Profile", icon: Edit, color: theme.colors.success },
+        { label: "Account Settings", icon: Settings, color: theme.colors.info },
+        {
+          label: "Verification Badge",
+          icon: Award,
+          color: theme.colors.warning,
+        },
       ],
     },
     {
-      title: 'Preferences',
+      title: "Preferences",
       items: [
-        { label: 'Payment Methods', icon: CreditCard, color: '#7B1FA2' },
-        { label: 'Notifications', icon: Bell, color: '#D32F2F' },
-        { label: 'Privacy & Security', icon: Shield, color: '#00796B' },
+        {
+          label: "Payment Methods",
+          icon: CreditCard,
+          color: theme.colors.secondary[600],
+        },
+        { label: "Notifications", icon: Bell, color: theme.colors.error },
+        {
+          label: "Privacy & Security",
+          icon: Shield,
+          color: theme.colors.primary[700],
+        },
       ],
     },
     {
-      title: 'Support',
+      title: "Support",
       items: [
-        { label: 'Help Center', icon: HelpCircle, color: '#1976D2' },
+        { label: "Help Center", icon: HelpCircle, color: theme.colors.info },
       ],
     },
   ];
 
   const stats = [
-    { label: 'Orders', value: '156' },
-    { label: 'Rating', value: '4.8' },
-    { label: 'Products', value: '24' },
+    { label: "Orders", value: "156" },
+    { label: "Rating", value: "4.8" },
+    { label: "Products", value: "24" },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Profile</Text>
         </View>
 
-        <View style={styles.profileCard}>
+        <GlassCard style={styles.profileCard}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <User size={40} color="#2E7D32" strokeWidth={2} />
+              <User
+                size={40}
+                color={theme.colors.primary[600]}
+                strokeWidth={2}
+              />
             </View>
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <Edit size={16} color="#FFFFFF" />
-            </TouchableOpacity>
+            <AnimatedButton
+              title="Edit"
+              variant="primary"
+              size="sm"
+              style={styles.editAvatarButton}
+              onPress={() => console.log("Edit avatar pressed")}
+            >
+              <Edit size={16} color={theme.colors.text.inverse} />
+            </AnimatedButton>
           </View>
 
-          <Text style={styles.userName}>{user?.name || 'Demo User'}</Text>
-          <Text style={styles.userEmail}>{user?.email || 'demo@agrivus.com'}</Text>
+          <Text style={styles.userName}>{user?.name || "Demo User"}</Text>
+          <Text style={styles.userEmail}>
+            {user?.email || "demo@agrivus.com"}
+          </Text>
 
           <View style={styles.statsContainer}>
             {stats.map((stat, index) => (
@@ -90,34 +121,42 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
-        </View>
+        </GlassCard>
 
         {menuSections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.menuSection}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.items.map((item, itemIndex) => (
-              <TouchableOpacity key={itemIndex} style={styles.menuItem}>
+              <AnimatedCard
+                key={itemIndex}
+                style={styles.menuItem}
+                delay={(sectionIndex * 3 + itemIndex) * 50}
+                onPress={() => console.log(`${item.label} pressed`)}
+              >
                 <View
                   style={[
                     styles.menuIconContainer,
-                    { backgroundColor: `${item.color}15` },
+                    { backgroundColor: `${item.color}20` },
                   ]}
                 >
                   <item.icon size={20} color={item.color} strokeWidth={2} />
                 </View>
                 <Text style={styles.menuLabel}>{item.label}</Text>
-                <ChevronRight size={20} color="#999" />
-              </TouchableOpacity>
+                <ChevronRight size={20} color={theme.colors.text.tertiary} />
+              </AnimatedCard>
             ))}
           </View>
         ))}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <View style={styles.logoutIconContainer}>
-            <LogOut size={20} color="#D32F2F" strokeWidth={2} />
-          </View>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <AnimatedButton
+          title="Logout"
+          variant="danger"
+          size="lg"
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <LogOut size={20} color={theme.colors.error} strokeWidth={2} />
+        </AnimatedButton>
 
         <Text style={styles.version}>Version 1.0.0</Text>
         <View style={styles.bottomPadding} />
@@ -129,167 +168,126 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: theme.colors.background.secondary,
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize["4xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.5,
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 24,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+    alignItems: "center",
   },
   avatarContainer: {
-    position: 'relative',
-    marginBottom: 16,
+    position: "relative",
+    marginBottom: theme.spacing.lg,
   },
   avatar: {
     width: 96,
     height: 96,
-    borderRadius: 48,
-    backgroundColor: '#E8F5E9',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary[50],
+    justifyContent: "center",
+    alignItems: "center",
   },
   editAvatarButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: '#2E7D32',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: theme.borderRadius.full,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: theme.colors.background.primary,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSize["2xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
     letterSpacing: -0.3,
   },
   userEmail: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.xl,
   },
   statsContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-around',
-    paddingTop: 24,
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-around",
+    paddingTop: theme.spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: theme.colors.border.light,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#2E7D32',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSize["2xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary[600],
+    marginBottom: theme.spacing.xs,
     letterSpacing: -0.3,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   menuSection: {
-    marginBottom: 24,
-    paddingHorizontal: 24,
+    marginBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.xl,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#999',
-    textTransform: 'uppercase',
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.tertiary,
+    textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: 12,
+    marginBottom: theme.spacing.md,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.sm,
   },
   menuIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
+    borderRadius: theme.borderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: theme.spacing.md,
   },
   menuLabel: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 24,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FFE0E0',
-  },
-  logoutIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFEBEE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  logoutText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#D32F2F',
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   version: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 16,
+    textAlign: "center",
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+    marginBottom: theme.spacing.lg,
   },
   bottomPadding: {
-    height: 16,
+    height: theme.spacing.xl,
   },
 });

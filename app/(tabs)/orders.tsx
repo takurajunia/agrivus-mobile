@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-} from 'react-native';
+} from "react-native";
 import {
   Package,
   Clock,
@@ -14,190 +14,207 @@ import {
   XCircle,
   ChevronRight,
   Filter,
-} from 'lucide-react-native';
+} from "lucide-react-native";
+import AnimatedCard from "../../src/components/AnimatedCard";
+import AnimatedButton from "../../src/components/AnimatedButton";
+import { theme } from "../../src/theme/tokens";
 
 export default function OrdersScreen() {
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState("all");
 
   const orders = [
     {
-      id: 'ORD-1001',
-      customer: 'John Farms Co.',
-      product: 'Organic Tomatoes',
-      quantity: '500 kg',
-      amount: '$1,250',
-      status: 'delivered',
-      date: '2 days ago',
+      id: "ORD-1001",
+      customer: "John Farms Co.",
+      product: "Organic Tomatoes",
+      quantity: "500 kg",
+      amount: "$1,250",
+      status: "delivered",
+      date: "2 days ago",
     },
     {
-      id: 'ORD-1002',
-      customer: 'Green Valley Market',
-      product: 'Fresh Carrots',
-      quantity: '300 kg',
-      amount: '$780',
-      status: 'processing',
-      date: '5 hours ago',
+      id: "ORD-1002",
+      customer: "Green Valley Market",
+      product: "Fresh Carrots",
+      quantity: "300 kg",
+      amount: "$780",
+      status: "processing",
+      date: "5 hours ago",
     },
     {
-      id: 'ORD-1003',
-      customer: 'Urban Grocery',
-      product: 'Potatoes',
-      quantity: '1000 kg',
-      amount: '$2,100',
-      status: 'pending',
-      date: '1 day ago',
+      id: "ORD-1003",
+      customer: "Urban Grocery",
+      product: "Potatoes",
+      quantity: "1000 kg",
+      amount: "$2,100",
+      status: "pending",
+      date: "1 day ago",
     },
     {
-      id: 'ORD-1004',
-      customer: 'Fresh Foods Inc.',
-      product: 'Bell Peppers',
-      quantity: '200 kg',
-      amount: '$950',
-      status: 'cancelled',
-      date: '3 days ago',
+      id: "ORD-1004",
+      customer: "Fresh Foods Inc.",
+      product: "Bell Peppers",
+      quantity: "200 kg",
+      amount: "$950",
+      status: "cancelled",
+      date: "3 days ago",
     },
     {
-      id: 'ORD-1005',
-      customer: 'Local Market',
-      product: 'Organic Lettuce',
-      quantity: '150 kg',
-      amount: '$420',
-      status: 'delivered',
-      date: '1 week ago',
+      id: "ORD-1005",
+      customer: "Local Market",
+      product: "Organic Lettuce",
+      quantity: "150 kg",
+      amount: "$420",
+      status: "delivered",
+      date: "1 week ago",
     },
   ];
 
   const tabs = [
-    { key: 'all', label: 'All', count: orders.length },
-    { key: 'pending', label: 'Pending', count: 1 },
-    { key: 'processing', label: 'Processing', count: 1 },
-    { key: 'delivered', label: 'Delivered', count: 2 },
+    { key: "all", label: "All", count: orders.length },
+    { key: "pending", label: "Pending", count: 1 },
+    { key: "processing", label: "Processing", count: 1 },
+    { key: "delivered", label: "Delivered", count: 2 },
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered':
-        return '#2E7D32';
-      case 'processing':
-        return '#1976D2';
-      case 'pending':
-        return '#F57C00';
-      case 'cancelled':
-        return '#D32F2F';
+      case "delivered":
+        return theme.colors.success;
+      case "processing":
+        return theme.colors.info;
+      case "pending":
+        return theme.colors.secondary[500];
+      case "cancelled":
+        return theme.colors.error;
       default:
-        return '#999';
+        return theme.colors.text.tertiary;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case "delivered":
         return CheckCircle;
-      case 'processing':
+      case "processing":
         return Clock;
-      case 'pending':
+      case "pending":
         return Clock;
-      case 'cancelled':
+      case "cancelled":
         return XCircle;
       default:
         return Package;
     }
   };
 
-  const filteredOrders = activeTab === 'all'
-    ? orders
-    : orders.filter(order => order.status === activeTab);
+  const filteredOrders =
+    activeTab === "all"
+      ? orders
+      : orders.filter((order) => order.status === activeTab);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Orders</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Filter size={20} color="#2E7D32" />
-        </TouchableOpacity>
+        <AnimatedButton
+          title="Filter"
+          variant="outline"
+          size="sm"
+          onPress={() => console.log("Filter pressed")}
+        >
+          <Filter size={16} color={theme.colors.primary[600]} />
+        </AnimatedButton>
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.tabsContainer}
-        contentContainerStyle={styles.tabsContent}
       >
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.activeTab]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
-              {tab.label}
-            </Text>
-            <View
-              style={[
-                styles.badge,
-                activeTab === tab.key && styles.activeBadge,
-              ]}
+        <View style={styles.tabs}>
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.activeTab]}
+              onPress={() => setActiveTab(tab.key)}
             >
               <Text
                 style={[
-                  styles.badgeText,
-                  activeTab === tab.key && styles.activeBadgeText,
+                  styles.tabText,
+                  activeTab === tab.key && styles.activeTabText,
                 ]}
               >
-                {tab.count}
+                {tab.label} ({tab.count})
               </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
 
-      <ScrollView style={styles.ordersList} showsVerticalScrollIndicator={false}>
-        {filteredOrders.map((order) => {
-          const StatusIcon = getStatusIcon(order.status);
-          const statusColor = getStatusColor(order.status);
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.ordersContainer}>
+          {filteredOrders.map((order, index) => {
+            const StatusIcon = getStatusIcon(order.status);
+            return (
+              <AnimatedCard
+                key={order.id}
+                style={styles.orderCard}
+                delay={index * 100}
+                onPress={() => console.log(`Order ${order.id} pressed`)}
+              >
+                <View style={styles.orderHeader}>
+                  <View style={styles.orderInfo}>
+                    <Text style={styles.orderId}>{order.id}</Text>
+                    <Text style={styles.customerName}>{order.customer}</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: `${getStatusColor(order.status)}20` },
+                    ]}
+                  >
+                    <StatusIcon
+                      size={14}
+                      color={getStatusColor(order.status)}
+                    />
+                    <Text
+                      style={[
+                        styles.statusText,
+                        { color: getStatusColor(order.status) },
+                      ]}
+                    >
+                      {order.status.charAt(0).toUpperCase() +
+                        order.status.slice(1)}
+                    </Text>
+                  </View>
+                </View>
 
-          return (
-            <TouchableOpacity key={order.id} style={styles.orderCard}>
-              <View style={styles.orderHeader}>
-                <View style={styles.orderIdContainer}>
-                  <Package size={16} color="#666" />
-                  <Text style={styles.orderId}>{order.id}</Text>
+                <View style={styles.orderDetails}>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Product:</Text>
+                    <Text style={styles.detailValue}>{order.product}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Quantity:</Text>
+                    <Text style={styles.detailValue}>{order.quantity}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Amount:</Text>
+                    <Text style={styles.detailValue}>{order.amount}</Text>
+                  </View>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: `${statusColor}15` }]}>
-                  <StatusIcon size={14} color={statusColor} strokeWidth={2.5} />
-                  <Text style={[styles.statusText, { color: statusColor }]}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </Text>
-                </View>
-              </View>
 
-              <Text style={styles.customerName}>{order.customer}</Text>
-
-              <View style={styles.orderDetails}>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Product:</Text>
-                  <Text style={styles.detailValue}>{order.product}</Text>
+                <View style={styles.orderFooter}>
+                  <Text style={styles.orderDate}>{order.date}</Text>
+                  <ChevronRight size={16} color={theme.colors.text.tertiary} />
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Quantity:</Text>
-                  <Text style={styles.detailValue}>{order.quantity}</Text>
-                </View>
-              </View>
-
-              <View style={styles.orderFooter}>
-                <View>
-                  <Text style={styles.amountLabel}>Total Amount</Text>
-                  <Text style={styles.amount}>{order.amount}</Text>
-                </View>
-                <View style={styles.timeContainer}>
-                  <Clock size={14} color="#999" />
-                  <Text style={styles.time}>{order.date}</Text>
-                </View>
-                <ChevronRight size={20} color="#999" />
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+              </AnimatedCard>
+            );
+          })}
+        </View>
         <View style={styles.bottomPadding} />
       </ScrollView>
     </SafeAreaView>
@@ -207,181 +224,120 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: theme.colors.background.secondary,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize["4xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.5,
-  },
-  filterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E8F5E9',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   tabsContainer: {
     maxHeight: 56,
-    marginBottom: 16,
+    marginBottom: theme.spacing.lg,
   },
-  tabsContent: {
-    paddingHorizontal: 24,
-    gap: 8,
+  tabs: {
+    paddingHorizontal: theme.spacing.xl,
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
   tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    marginRight: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.colors.background.primary,
+    ...theme.shadows.sm,
   },
   activeTab: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: theme.colors.primary[600],
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginRight: 6,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.secondary,
   },
   activeTabText: {
-    color: '#FFFFFF',
+    color: theme.colors.text.inverse,
   },
-  badge: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  activeBadge: {
-    backgroundColor: '#1B5E20',
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#666',
-  },
-  activeBadgeText: {
-    color: '#FFFFFF',
-  },
-  ordersList: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: 24,
+  },
+  ordersContainer: {
+    paddingHorizontal: theme.spacing.xl,
   },
   orderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: theme.spacing.md,
   },
   orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: theme.spacing.md,
   },
-  orderIdContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  orderInfo: {
+    flex: 1,
   },
   orderId: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginLeft: 6,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.xs,
   },
   customerName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: 12,
-    letterSpacing: -0.3,
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.lg,
+    gap: theme.spacing.xs,
+  },
+  statusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   orderDetails: {
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    marginBottom: theme.spacing.md,
   },
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.xs,
   },
   detailLabel: {
-    fontSize: 14,
-    color: '#999',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   detailValue: {
-    fontSize: 14,
-    color: '#1A1A1A',
-    fontWeight: '600',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.primary,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   orderFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  amountLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
-  },
-  amount: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2E7D32',
-    letterSpacing: -0.3,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginRight: 8,
-  },
-  time: {
-    fontSize: 13,
-    color: '#999',
-    marginLeft: 4,
+  orderDate: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
   },
   bottomPadding: {
-    height: 16,
+    height: theme.spacing.xl,
   },
 });

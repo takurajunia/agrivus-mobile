@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,8 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-} from 'react-native';
-import { useAuth } from '../../src/contexts/AuthContext';
+} from "react-native";
+import { useAuth } from "../../src/contexts/AuthContext";
 import {
   TrendingUp,
   Package,
@@ -17,77 +17,129 @@ import {
   BarChart3,
   AlertCircle,
   Leaf,
-} from 'lucide-react-native';
+} from "lucide-react-native";
+import AnimatedCard from "../../src/components/AnimatedCard";
+import GlassCard from "../../src/components/GlassCard";
+import { theme } from "../../src/theme/tokens";
 
 export default function HomeScreen() {
   const { user } = useAuth();
 
   const stats = [
-    { label: 'Active Orders', value: '12', icon: ShoppingCart, color: '#2E7D32' },
-    { label: 'Revenue', value: '$8,450', icon: DollarSign, color: '#1976D2' },
-    { label: 'Live Auctions', value: '5', icon: Gavel, color: '#F57C00' },
-    { label: 'Products', value: '24', icon: Package, color: '#7B1FA2' },
+    {
+      label: "Active Orders",
+      value: "12",
+      icon: ShoppingCart,
+      color: theme.colors.primary[600],
+    },
+    {
+      label: "Revenue",
+      value: "$8,450",
+      icon: DollarSign,
+      color: theme.colors.secondary[600],
+    },
+    {
+      label: "Live Auctions",
+      value: "5",
+      icon: Gavel,
+      color: theme.colors.secondary[500],
+    },
+    {
+      label: "Products",
+      value: "24",
+      icon: Package,
+      color: theme.colors.primary[700],
+    },
   ];
 
   const quickActions = [
-    { label: 'New Listing', icon: Package, color: '#2E7D32' },
-    { label: 'Analytics', icon: BarChart3, color: '#1976D2' },
-    { label: 'Marketplace', icon: ShoppingCart, color: '#F57C00' },
-    { label: 'Auctions', icon: Gavel, color: '#7B1FA2' },
+    { label: "New Listing", icon: Package, color: theme.colors.primary[600] },
+    { label: "Analytics", icon: BarChart3, color: theme.colors.secondary[600] },
+    {
+      label: "Marketplace",
+      icon: ShoppingCart,
+      color: theme.colors.secondary[500],
+    },
+    { label: "Auctions", icon: Gavel, color: theme.colors.primary[700] },
   ];
 
   const recentActivity = [
-    { title: 'New order received', time: '5 min ago', type: 'order' },
-    { title: 'Auction bid placed', time: '1 hour ago', type: 'auction' },
-    { title: 'Payment received', time: '2 hours ago', type: 'payment' },
-    { title: 'Product listed', time: '1 day ago', type: 'listing' },
+    { title: "New order received", time: "5 min ago", type: "order" },
+    { title: "Auction bid placed", time: "1 hour ago", type: "auction" },
+    { title: "Payment received", time: "2 hours ago", type: "payment" },
+    { title: "Product listed", time: "1 day ago", type: "listing" },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.userName}>{user?.name || 'Farmer'}</Text>
+            <Text style={styles.userName}>{user?.name || "Farmer"}</Text>
           </View>
           <View style={styles.logoContainer}>
-            <Leaf size={32} color="#2E7D32" strokeWidth={2.5} />
+            <Leaf
+              size={32}
+              color={theme.colors.primary[600]}
+              strokeWidth={2.5}
+            />
           </View>
         </View>
 
-        <View style={styles.alertBanner}>
-          <AlertCircle size={20} color="#F57C00" />
-          <Text style={styles.alertText}>
-            3 products need restocking
-          </Text>
-        </View>
+        <GlassCard style={styles.alertBanner} intensity="light">
+          <AlertCircle size={20} color={theme.colors.secondary[600]} />
+          <Text style={styles.alertText}>3 products need restocking</Text>
+        </GlassCard>
 
         <View style={styles.statsContainer}>
           {stats.map((stat, index) => (
-            <TouchableOpacity key={index} style={styles.statCard}>
-              <View style={[styles.statIconContainer, { backgroundColor: `${stat.color}15` }]}>
+            <AnimatedCard
+              key={index}
+              style={styles.statCard}
+              delay={index * 100}
+              onPress={() => console.log(`Pressed ${stat.label}`)}
+            >
+              <View
+                style={[
+                  styles.statIconContainer,
+                  { backgroundColor: `${stat.color}15` },
+                ]}
+              >
                 <stat.icon size={24} color={stat.color} strokeWidth={2} />
               </View>
               <Text style={styles.statValue}>{stat.value}</Text>
               <Text style={styles.statLabel}>{stat.label}</Text>
-            </TouchableOpacity>
+            </AnimatedCard>
           ))}
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <TrendingUp size={20} color="#2E7D32" />
+            <TrendingUp size={20} color={theme.colors.primary[600]} />
           </View>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
-              <TouchableOpacity key={index} style={styles.actionCard}>
-                <View style={[styles.actionIcon, { backgroundColor: `${action.color}15` }]}>
+              <AnimatedCard
+                key={index}
+                style={styles.actionCard}
+                delay={400 + index * 100}
+                onPress={() => console.log(`Pressed ${action.label}`)}
+              >
+                <View
+                  style={[
+                    styles.actionIcon,
+                    { backgroundColor: `${action.color}15` },
+                  ]}
+                >
                   <action.icon size={28} color={action.color} strokeWidth={2} />
                 </View>
                 <Text style={styles.actionLabel}>{action.label}</Text>
-              </TouchableOpacity>
+              </AnimatedCard>
             ))}
           </View>
         </View>
@@ -100,13 +152,18 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           {recentActivity.map((activity, index) => (
-            <TouchableOpacity key={index} style={styles.activityItem}>
+            <AnimatedCard
+              key={index}
+              style={styles.activityItem}
+              delay={800 + index * 100}
+              variant="bordered"
+            >
               <View style={styles.activityDot} />
               <View style={styles.activityContent}>
                 <Text style={styles.activityTitle}>{activity.title}</Text>
                 <Text style={styles.activityTime}>{activity.time}</Text>
               </View>
-            </TouchableOpacity>
+            </AnimatedCard>
           ))}
         </View>
 
@@ -119,180 +176,147 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: theme.colors.background.secondary,
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    paddingTop: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
   },
   greeting: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '400',
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.normal,
   },
   userName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginTop: 4,
+    fontSize: theme.typography.fontSize["3xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginTop: theme.spacing.xs,
     letterSpacing: -0.5,
   },
   logoContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#E8F5E9',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: theme.colors.primary[50],
+    justifyContent: "center",
+    alignItems: "center",
   },
   alertBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    marginHorizontal: 24,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
   },
   alertText: {
-    marginLeft: 12,
-    color: '#E65100',
-    fontSize: 14,
-    fontWeight: '600',
+    marginLeft: theme.spacing.md,
+    color: theme.colors.secondary[700],
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
     flex: 1,
   },
   statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    marginBottom: 24,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
   },
   statCard: {
-    width: '47%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    margin: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    width: "47%",
+    margin: theme.spacing.xs,
   },
   statIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
   },
   statValue: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSize["2xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
     letterSpacing: -0.5,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   section: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
+    paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing["2xl"],
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.lg,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.3,
   },
   seeAll: {
-    fontSize: 14,
-    color: '#2E7D32',
-    fontWeight: '600',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary[600],
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -8,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -theme.spacing.xs,
   },
   actionCard: {
-    width: '47%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    margin: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    width: "47%",
+    margin: theme.spacing.xs,
   },
   actionIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
   },
   actionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    textAlign: 'center',
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    textAlign: "center",
   },
   activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
+    marginBottom: theme.spacing.sm,
   },
   activityDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#2E7D32',
-    marginRight: 16,
+    backgroundColor: theme.colors.primary[600],
+    marginRight: theme.spacing.lg,
   },
   activityContent: {
     flex: 1,
   },
   activityTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
   },
   activityTime: {
-    fontSize: 13,
-    color: '#999',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
   },
   bottomPadding: {
-    height: 24,
+    height: theme.spacing.xl,
   },
 });

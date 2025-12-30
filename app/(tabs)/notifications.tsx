@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-} from 'react-native';
+} from "react-native";
 import {
   Bell,
   Package,
@@ -15,83 +15,86 @@ import {
   ShoppingCart,
   TrendingUp,
   AlertCircle,
-} from 'lucide-react-native';
+} from "lucide-react-native";
+import AnimatedCard from "../../src/components/AnimatedCard";
+import AnimatedButton from "../../src/components/AnimatedButton";
+import { theme } from "../../src/theme/tokens";
 
 export default function NotificationsScreen() {
   const notifications = [
     {
       id: 1,
-      type: 'order',
-      title: 'New Order Received',
-      message: 'John Farms Co. placed an order for 500kg Organic Tomatoes',
-      time: '5 minutes ago',
+      type: "order",
+      title: "New Order Received",
+      message: "John Farms Co. placed an order for 500kg Organic Tomatoes",
+      time: "5 minutes ago",
       unread: true,
       icon: ShoppingCart,
-      color: '#2E7D32',
+      color: theme.colors.success,
     },
     {
       id: 2,
-      type: 'bid',
-      title: 'Auction Bid Placed',
-      message: 'Someone bid $850 on your Fresh Carrots auction',
-      time: '1 hour ago',
+      type: "bid",
+      title: "Auction Bid Placed",
+      message: "Someone bid $850 on your Fresh Carrots auction",
+      time: "1 hour ago",
       unread: true,
       icon: Gavel,
-      color: '#F57C00',
+      color: theme.colors.warning,
     },
     {
       id: 3,
-      type: 'payment',
-      title: 'Payment Received',
-      message: 'Payment of $1,250 has been credited to your account',
-      time: '2 hours ago',
+      type: "payment",
+      title: "Payment Received",
+      message: "Payment of $1,250 has been credited to your account",
+      time: "2 hours ago",
       unread: true,
       icon: DollarSign,
-      color: '#1976D2',
+      color: theme.colors.info,
     },
     {
       id: 4,
-      type: 'stock',
-      title: 'Low Stock Alert',
-      message: '3 products are running low on stock. Restock soon!',
-      time: '3 hours ago',
+      type: "stock",
+      title: "Low Stock Alert",
+      message: "3 products are running low on stock. Restock soon!",
+      time: "3 hours ago",
       unread: false,
       icon: AlertCircle,
-      color: '#D32F2F',
+      color: theme.colors.error,
     },
     {
       id: 5,
-      type: 'listing',
-      title: 'Product Listed Successfully',
-      message: 'Your Bell Peppers listing is now live on marketplace',
-      time: '1 day ago',
+      type: "listing",
+      title: "Product Listed Successfully",
+      message: "Your Bell Peppers listing is now live on marketplace",
+      time: "1 day ago",
       unread: false,
       icon: Package,
-      color: '#7B1FA2',
+      color: theme.colors.secondary[600],
     },
     {
       id: 6,
-      type: 'trend',
-      title: 'Price Trend Alert',
-      message: 'Tomato prices increased by 15% in your region',
-      time: '1 day ago',
+      type: "trend",
+      title: "Price Trend Alert",
+      message: "Tomato prices increased by 15% in your region",
+      time: "1 day ago",
       unread: false,
       icon: TrendingUp,
-      color: '#2E7D32',
+      color: theme.colors.success,
     },
     {
       id: 7,
-      type: 'order',
-      title: 'Order Delivered',
-      message: 'Order #ORD-1001 has been successfully delivered',
-      time: '2 days ago',
+      type: "order",
+      title: "Order Delivered",
+      message: "Order #ORD-1001 has been successfully delivered",
+      time: "2 days ago",
       unread: false,
       icon: Package,
-      color: '#2E7D32',
+      color: theme.colors.success,
     },
   ];
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,24 +105,34 @@ export default function NotificationsScreen() {
             <Text style={styles.subtitle}>{unreadCount} unread</Text>
           )}
         </View>
-        <TouchableOpacity style={styles.markAllButton}>
-          <Text style={styles.markAllText}>Mark all read</Text>
-        </TouchableOpacity>
+        <AnimatedButton
+          title="Mark all read"
+          variant="outline"
+          size="sm"
+          onPress={() => console.log("Mark all read pressed")}
+        />
       </View>
 
-      <ScrollView style={styles.notificationsList} showsVerticalScrollIndicator={false}>
-        {notifications.map((notification) => (
-          <TouchableOpacity
+      <ScrollView
+        style={styles.notificationsList}
+        showsVerticalScrollIndicator={false}
+      >
+        {notifications.map((notification, index) => (
+          <AnimatedCard
             key={notification.id}
             style={[
               styles.notificationCard,
               notification.unread && styles.unreadCard,
             ]}
+            delay={index * 50}
+            onPress={() =>
+              console.log(`Notification ${notification.id} pressed`)
+            }
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: `${notification.color}15` },
+                { backgroundColor: `${notification.color}20` },
               ]}
             >
               <notification.icon
@@ -131,13 +144,17 @@ export default function NotificationsScreen() {
 
             <View style={styles.notificationContent}>
               <View style={styles.notificationHeader}>
-                <Text style={styles.notificationTitle}>{notification.title}</Text>
+                <Text style={styles.notificationTitle}>
+                  {notification.title}
+                </Text>
                 {notification.unread && <View style={styles.unreadDot} />}
               </View>
-              <Text style={styles.notificationMessage}>{notification.message}</Text>
+              <Text style={styles.notificationMessage}>
+                {notification.message}
+              </Text>
               <Text style={styles.notificationTime}>{notification.time}</Text>
             </View>
-          </TouchableOpacity>
+          </AnimatedCard>
         ))}
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -148,101 +165,82 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: theme.colors.background.secondary,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize["4xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#2E7D32',
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  markAllButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#E8F5E9',
-  },
-  markAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2E7D32',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.success,
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginTop: theme.spacing.xs,
   },
   notificationsList: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: theme.spacing.xl,
   },
   notificationCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    flexDirection: "row",
+    marginBottom: theme.spacing.md,
   },
   unreadCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#2E7D32',
+    borderLeftColor: theme.colors.success,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
+    borderRadius: theme.borderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: theme.spacing.md,
   },
   notificationContent: {
     flex: 1,
   },
   notificationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
   },
   notificationTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.2,
     flex: 1,
   },
   unreadDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2E7D32',
-    marginLeft: 8,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.success,
+    marginLeft: theme.spacing.sm,
   },
   notificationMessage: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 8,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    lineHeight: theme.typography.lineHeight.normal,
+    marginBottom: theme.spacing.sm,
   },
   notificationTime: {
-    fontSize: 13,
-    color: '#999',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   bottomPadding: {
-    height: 16,
+    height: theme.spacing.xl,
   },
 });

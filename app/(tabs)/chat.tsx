@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,76 +6,79 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  TextInput,
-} from 'react-native';
+} from "react-native";
 import {
   Search,
   MessageCircle,
   MoreVertical,
   Circle,
-} from 'lucide-react-native';
+} from "lucide-react-native";
+import AnimatedCard from "../../src/components/AnimatedCard";
+import ModernInput from "../../src/components/ModernInput";
+import AnimatedButton from "../../src/components/AnimatedButton";
+import { theme } from "../../src/theme/tokens";
 
 export default function ChatScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const conversations = [
     {
       id: 1,
-      name: 'John Farms Co.',
-      lastMessage: 'Great! When can you deliver?',
-      time: '2m',
+      name: "John Farms Co.",
+      lastMessage: "Great! When can you deliver?",
+      time: "2m",
       unread: 2,
       online: true,
-      avatar: '🌾',
+      avatar: "🌾",
     },
     {
       id: 2,
-      name: 'Green Valley Market',
-      lastMessage: 'Thanks for the quick response',
-      time: '1h',
+      name: "Green Valley Market",
+      lastMessage: "Thanks for the quick response",
+      time: "1h",
       unread: 0,
       online: true,
-      avatar: '🏪',
+      avatar: "🏪",
     },
     {
       id: 3,
-      name: 'Urban Grocery',
-      lastMessage: 'Can you send me the catalog?',
-      time: '3h',
+      name: "Urban Grocery",
+      lastMessage: "Can you send me the catalog?",
+      time: "3h",
       unread: 1,
       online: false,
-      avatar: '🛒',
+      avatar: "🛒",
     },
     {
       id: 4,
-      name: 'Fresh Foods Inc.',
-      lastMessage: 'Payment has been processed',
-      time: '1d',
+      name: "Fresh Foods Inc.",
+      lastMessage: "Payment has been processed",
+      time: "1d",
       unread: 0,
       online: false,
-      avatar: '🥬',
+      avatar: "🥬",
     },
     {
       id: 5,
-      name: 'Local Market',
-      lastMessage: 'Looking forward to our partnership',
-      time: '2d',
+      name: "Local Market",
+      lastMessage: "Looking forward to our partnership",
+      time: "2d",
       unread: 0,
       online: false,
-      avatar: '🏬',
+      avatar: "🏬",
     },
     {
       id: 6,
-      name: 'Organic Store',
-      lastMessage: 'Do you have organic options?',
-      time: '3d',
+      name: "Organic Store",
+      lastMessage: "Do you have organic options?",
+      time: "3d",
       unread: 0,
       online: true,
-      avatar: '🌱',
+      avatar: "🌱",
     },
   ];
 
-  const filteredConversations = conversations.filter(conv =>
+  const filteredConversations = conversations.filter((conv) =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -83,32 +86,47 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Messages</Text>
-        <TouchableOpacity style={styles.moreButton}>
-          <MoreVertical size={20} color="#1A1A1A" />
-        </TouchableOpacity>
+        <AnimatedButton
+          title="More"
+          variant="ghost"
+          size="sm"
+          onPress={() => console.log("More pressed")}
+        >
+          <MoreVertical size={20} color={theme.colors.text.primary} />
+        </AnimatedButton>
       </View>
 
       <View style={styles.searchContainer}>
-        <View style={styles.searchIcon}>
-          <Search size={20} color="#999" />
-        </View>
-        <TextInput
-          style={styles.searchInput}
+        <ModernInput
           placeholder="Search conversations..."
-          placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
+          leftIcon={<Search size={20} color={theme.colors.text.tertiary} />}
         />
       </View>
 
-      <ScrollView style={styles.conversationsList} showsVerticalScrollIndicator={false}>
-        {filteredConversations.map((conversation) => (
-          <TouchableOpacity key={conversation.id} style={styles.conversationCard}>
+      <ScrollView
+        style={styles.conversationsList}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredConversations.map((conversation, index) => (
+          <AnimatedCard
+            key={conversation.id}
+            style={styles.conversationCard}
+            delay={index * 50}
+            onPress={() =>
+              console.log(`Chat with ${conversation.name} pressed`)
+            }
+          >
             <View style={styles.avatarContainer}>
               <Text style={styles.avatar}>{conversation.avatar}</Text>
               {conversation.online && (
                 <View style={styles.onlineDot}>
-                  <Circle size={10} color="#2E7D32" fill="#2E7D32" />
+                  <Circle
+                    size={10}
+                    color={theme.colors.success}
+                    fill={theme.colors.success}
+                  />
                 </View>
               )}
             </View>
@@ -130,29 +148,35 @@ export default function ChatScreen() {
                 </Text>
                 {conversation.unread > 0 && (
                   <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadCount}>{conversation.unread}</Text>
+                    <Text style={styles.unreadCount}>
+                      {conversation.unread}
+                    </Text>
                   </View>
                 )}
               </View>
             </View>
-          </TouchableOpacity>
+          </AnimatedCard>
         ))}
         <View style={styles.bottomPadding} />
       </ScrollView>
 
-      <View style={styles.emptyState}>
-        {filteredConversations.length === 0 && (
+      {filteredConversations.length === 0 && (
+        <View style={styles.emptyState}>
           <View style={styles.emptyContent}>
-            <MessageCircle size={64} color="#E0E0E0" strokeWidth={1.5} />
+            <MessageCircle
+              size={64}
+              color={theme.colors.text.tertiary}
+              strokeWidth={1.5}
+            />
             <Text style={styles.emptyTitle}>No conversations found</Text>
             <Text style={styles.emptyText}>
               {searchQuery
-                ? 'Try adjusting your search'
-                : 'Start a conversation to connect with buyers'}
+                ? "Try adjusting your search"
+                : "Start a conversation to connect with buyers"}
             </Text>
           </View>
-        )}
-      </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -160,176 +184,136 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: theme.colors.background.secondary,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize["4xl"],
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.5,
   },
-  moreButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 24,
-    marginBottom: 16,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#1A1A1A',
+    paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   conversationsList: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: theme.spacing.xl,
   },
   conversationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: theme.spacing.md,
   },
   avatarContainer: {
-    position: 'relative',
-    marginRight: 16,
+    position: "relative",
+    marginRight: theme.spacing.md,
   },
   avatar: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E8F5E9',
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary[50],
     fontSize: 28,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 56,
   },
   onlineDot: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 2,
     right: 2,
     width: 14,
     height: 14,
-    borderRadius: 7,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.background.primary,
+    justifyContent: "center",
+    alignItems: "center",
   },
   conversationContent: {
     flex: 1,
   },
   conversationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
   },
   conversationName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
     letterSpacing: -0.2,
   },
   time: {
-    fontSize: 13,
-    color: '#999',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   messageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   lastMessage: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
     flex: 1,
-    marginRight: 8,
+    marginRight: theme.spacing.sm,
   },
   unreadMessage: {
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
   },
   unreadBadge: {
-    backgroundColor: '#2E7D32',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    backgroundColor: theme.colors.primary[600],
+    borderRadius: theme.borderRadius.full,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
     minWidth: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   unreadCount: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
+    color: theme.colors.text.inverse,
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.bold,
   },
   emptyState: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'none',
+    justifyContent: "center",
+    alignItems: "center",
+    pointerEvents: "none",
   },
   emptyContent: {
-    alignItems: 'center',
-    padding: 32,
+    alignItems: "center",
+    padding: theme.spacing.xl,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
   },
   emptyText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    lineHeight: 20,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    textAlign: "center",
+    lineHeight: theme.typography.lineHeight.normal,
   },
   bottomPadding: {
-    height: 16,
+    height: theme.spacing.xl,
   },
 });
