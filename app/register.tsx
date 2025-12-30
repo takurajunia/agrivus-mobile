@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
-import { User, Lock, Phone, Leaf, ChevronDown } from "lucide-react-native";
+import { User, Lock, Phone, Mail, Leaf, ChevronDown } from "lucide-react-native";
 import LoadingSpinner from "../src/components/LoadingSpinner";
 import type { RegisterData, UserRole } from "../src/types";
 
@@ -84,83 +84,100 @@ export default function RegisterScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <View style={styles.backgroundPattern}>
+        <View style={[styles.leafPattern, styles.leafPattern1]} />
+        <View style={[styles.leafPattern, styles.leafPattern2]} />
+        <View style={[styles.leafPattern, styles.leafPattern3]} />
+        <View style={[styles.leafPattern, styles.leafPattern4]} />
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Leaf size={48} color="#2E7D32" strokeWidth={2.5} />
+          <View style={styles.logoWrapper}>
+            <View style={styles.logoGlow} />
+            <View style={styles.logoContainer}>
+              <Leaf size={40} color="#4CAF50" strokeWidth={2.5} />
+            </View>
           </View>
           <Text style={styles.title}>Join Agrivus</Text>
           <Text style={styles.subtitle}>Create your account</Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <View style={styles.inputIcon}>
-              <User size={20} color="#666" />
+        <View style={styles.formCard}>
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputContainer}>
+              <User size={20} color="#9E9E9E" strokeWidth={2} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#BDBDBD"
+                value={formData.fullName}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, fullName: text }))
+                }
+                autoCapitalize="words"
+              />
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              placeholderTextColor="#999"
-              value={formData.fullName}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, fullName: text }))
-              }
-              autoCapitalize="words"
-            />
           </View>
 
-          <View style={styles.inputContainer}>
-            <View style={styles.inputIcon}>
-              <User size={20} color="#666" />
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputContainer}>
+              <User size={20} color="#9E9E9E" strokeWidth={2} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#BDBDBD"
+                value={formData.email}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, email: text }))
+                }
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+              />
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
-              value={formData.email}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, email: text }))
-              }
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
           </View>
 
-          <View style={styles.inputContainer}>
-            <View style={styles.inputIcon}>
-              <Phone size={20} color="#666" />
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputContainer}>
+              <Phone size={20} color="#9E9E9E" strokeWidth={2} />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                placeholderTextColor="#BDBDBD"
+                value={formData.phone}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, phone: text }))
+                }
+                keyboardType="phone-pad"
+              />
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              placeholderTextColor="#999"
-              value={formData.phone}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, phone: text }))
-              }
-              keyboardType="phone-pad"
-            />
           </View>
 
-          <TouchableOpacity
-            style={styles.roleSelector}
-            onPress={() => setShowRolePicker(!showRolePicker)}
-          >
-            <Text style={styles.roleSelectorText}>{selectedRoleLabel}</Text>
-            <ChevronDown size={20} color="#666" />
-          </TouchableOpacity>
+          <View style={styles.inputWrapper}>
+            <TouchableOpacity
+              style={styles.roleSelector}
+              onPress={() => setShowRolePicker(!showRolePicker)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.roleSelectorText}>{selectedRoleLabel}</Text>
+              <ChevronDown size={20} color="#9E9E9E" strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
 
           {showRolePicker && (
-            <View style={styles.roleOptions}>
-              {userRoles.map((role) => (
+            <View style={styles.roleDropdown}>
+              {userRoles.map((role, index) => (
                 <TouchableOpacity
                   key={role.value}
-                  style={styles.roleOption}
+                  style={[
+                    styles.roleOption,
+                    index === userRoles.length - 1 && styles.roleOptionLast,
+                  ]}
                   onPress={() => {
                     setFormData((prev) => ({ ...prev, role: role.value }));
                     setShowRolePicker(false);
@@ -172,68 +189,66 @@ export default function RegisterScreen() {
             </View>
           )}
 
-          <View style={styles.inputContainer}>
-            <View style={styles.inputIcon}>
-              <Lock size={20} color="#666" />
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#9E9E9E" strokeWidth={2} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#BDBDBD"
+                value={formData.password}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, password: text }))
+                }
+                secureTextEntry
+                autoCapitalize="none"
+              />
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#999"
-              value={formData.password}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, password: text }))
-              }
-              secureTextEntry
-              autoCapitalize="none"
-            />
           </View>
 
-          <View style={styles.inputContainer}>
-            <View style={styles.inputIcon}>
-              <Lock size={20} color="#666" />
+          <View style={styles.inputWrapper}>
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#9E9E9E" strokeWidth={2} />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#BDBDBD"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
             </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#999"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoCapitalize="none"
-            />
           </View>
 
           <TouchableOpacity
             style={[
-              styles.registerButton,
-              isLoading && styles.registerButtonDisabled,
+              styles.createButton,
+              isLoading && styles.createButtonDisabled,
             ]}
             onPress={handleRegister}
             disabled={isLoading}
+            activeOpacity={0.9}
           >
-            <Text style={styles.registerButtonText}>
+            <Text style={styles.createButtonText}>
               {isLoading ? "Creating Account..." : "Create Account"}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
           </View>
 
           <TouchableOpacity
-            style={styles.loginButton}
+            style={styles.signInButton}
             onPress={navigateToLogin}
+            activeOpacity={0.8}
           >
-            <Text style={styles.loginButtonText}>Sign In</Text>
+            <Text style={styles.signInButtonText}>Sign In</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.footer}>
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </Text>
+        <View style={styles.bottomPadding} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -242,174 +257,245 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#E8E8EC",
+  },
+  backgroundPattern: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  leafPattern: {
+    position: "absolute",
+    backgroundColor: "#D8D8DC",
+    opacity: 0.3,
+  },
+  leafPattern1: {
+    top: 60,
+    left: 20,
+    width: 150,
+    height: 200,
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 80,
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 20,
+    transform: [{ rotate: "-15deg" }],
+  },
+  leafPattern2: {
+    top: 80,
+    right: -20,
+    width: 180,
+    height: 220,
+    borderTopLeftRadius: 90,
+    borderTopRightRadius: 100,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 100,
+    transform: [{ rotate: "25deg" }],
+  },
+  leafPattern3: {
+    bottom: 150,
+    left: -30,
+    width: 160,
+    height: 190,
+    borderTopLeftRadius: 80,
+    borderTopRightRadius: 100,
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 25,
+    transform: [{ rotate: "10deg" }],
+  },
+  leafPattern4: {
+    bottom: 100,
+    right: 30,
+    width: 140,
+    height: 180,
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 70,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 100,
+    transform: [{ rotate: "-20deg" }],
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    padding: 24,
+    paddingTop: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 20,
   },
   header: {
     alignItems: "center",
     marginBottom: 32,
+    paddingTop: 20,
+  },
+  logoWrapper: {
+    position: "relative",
+    marginBottom: 20,
+  },
+  logoGlow: {
+    position: "absolute",
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: "#C8E6C9",
+    opacity: 0.6,
+    top: -20,
+    left: -20,
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 8,
   },
   logoContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: "#E8F5E9",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
-    shadowColor: "#2E7D32",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: "#2C2C2C",
     marginBottom: 8,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
-    textAlign: "center",
+    color: "#8E8E93",
+    fontWeight: "400",
   },
-  formContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 24,
+  formCard: {
+    backgroundColor: "#FAFAFA",
+    borderRadius: 32,
+    padding: 28,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
+  },
+  inputWrapper: {
+    marginBottom: 16,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    marginBottom: 16,
-    backgroundColor: "#FAFAFA",
-  },
-  inputIcon: {
-    paddingLeft: 16,
-    paddingRight: 12,
+    backgroundColor: "#E8E8EC",
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: -3, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 1,
   },
   input: {
     flex: 1,
-    paddingVertical: 16,
-    paddingRight: 16,
+    marginLeft: 12,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: "#2C2C2C",
+    fontWeight: "400",
   },
   roleSelector: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: "#E8E8EC",
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: -3, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 1,
   },
   roleSelectorText: {
     fontSize: 16,
-    color: "#1A1A1A",
+    color: "#2C2C2C",
+    fontWeight: "400",
   },
-  roleOptions: {
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 12,
-    marginBottom: 16,
-    backgroundColor: "#FFFFFF",
+  roleDropdown: {
+    backgroundColor: "#FAFAFA",
+    borderRadius: 20,
+    marginTop: 8,
+    marginBottom: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 4,
+    overflow: "hidden",
   },
   roleOption: {
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: "#E8E8EC",
+  },
+  roleOptionLast: {
+    borderBottomWidth: 0,
   },
   roleOptionText: {
     fontSize: 16,
-    color: "#1A1A1A",
+    color: "#2C2C2C",
   },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    color: "#2E7D32",
-    fontSize: 14,
-    fontWeight: "500",
-    marginBottom: 24,
-  },
-  registerButton: {
-    backgroundColor: "#2E7D32",
-    borderRadius: 12,
-    padding: 16,
+  createButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 28,
+    paddingVertical: 18,
     alignItems: "center",
-    marginBottom: 24,
-    shadowColor: "#2E7D32",
-    shadowOffset: { width: 0, height: 4 },
+    marginTop: 8,
+    marginBottom: 20,
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 6,
   },
-  registerButtonDisabled: {
+  createButtonDisabled: {
     opacity: 0.6,
   },
-  registerButtonText: {
+  createButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   divider: {
-    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E0E0E0",
+    marginVertical: 20,
   },
   dividerText: {
-    paddingHorizontal: 16,
-    color: "#666",
+    color: "#BDBDBD",
     fontSize: 14,
+    fontWeight: "500",
   },
-  loginButton: {
-    borderWidth: 1,
-    borderColor: "#2E7D32",
-    borderRadius: 12,
-    padding: 16,
+  signInButton: {
+    backgroundColor: "#E8E8EC",
+    borderRadius: 28,
+    paddingVertical: 18,
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: -3, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  loginButtonText: {
-    color: "#2E7D32",
+  signInButtonText: {
+    color: "#4CAF50",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
-  footer: {
-    textAlign: "center",
-    color: "#666",
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 24,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  bottomPadding: {
+    height: 20,
   },
 });
