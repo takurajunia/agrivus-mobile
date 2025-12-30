@@ -1,20 +1,35 @@
-import axios from "axios";
+import api from "./api";
+import type {
+  LoginCredentials,
+  RegisterData,
+  AuthResponse,
+  User,
+} from "../types";
 
-const API_URL = "https://your-api-url.com/api";
-
-export const login = async (credentials: any) => {
-  const response = await axios.post(`${API_URL}/auth/login`, credentials);
+export const login = async (
+  credentials: LoginCredentials
+): Promise<AuthResponse> => {
+  const response = await api.post<AuthResponse>("/auth/login", credentials);
   return response.data;
 };
 
-export const register = async (data: any) => {
-  const response = await axios.post(`${API_URL}/auth/register`, data);
+export const register = async (data: RegisterData): Promise<AuthResponse> => {
+  const response = await api.post<AuthResponse>("/auth/register", data);
   return response.data;
 };
 
-export const fetchUser = async (token: string) => {
-  const response = await axios.get(`${API_URL}/auth/user`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+export const fetchUser = async (): Promise<User> => {
+  const response = await api.get<{ success: boolean; data: User }>(
+    "/auth/user"
+  );
+  return response.data.data;
+};
+
+export const logout = async (): Promise<void> => {
+  // Call logout endpoint if your backend has one
+  try {
+    await api.post("/auth/logout");
+  } catch (error) {
+    // Ignore logout endpoint errors
+  }
 };

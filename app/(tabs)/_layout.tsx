@@ -1,4 +1,7 @@
 import { Tabs } from "expo-router";
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../src/contexts/AuthContext";
 import {
   Home,
   ShoppingBag,
@@ -7,8 +10,26 @@ import {
   Bell,
 } from "lucide-react-native";
 import { theme } from "../../src/theme/tokens";
+import LoadingSpinner from "../../src/components/LoadingSpinner";
 
 export default function TabLayout() {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, loading, router]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect in useEffect
+  }
+
   return (
     <Tabs
       screenOptions={{
