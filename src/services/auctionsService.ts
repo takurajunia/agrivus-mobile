@@ -1,19 +1,88 @@
-import axios from "axios";
+import api from "./api";
+import type {
+  Auction,
+  Bid,
+  CreateAuctionData,
+  PlaceBidData,
+  ChooseTransportData,
+} from "../types";
 
-const API_URL = "https://your-api-url.com/api";
-
-export const fetchAuctions = async () => {
-  const response = await axios.get(`${API_URL}/auctions`);
+// Get all live auctions
+export const getLiveAuctions = async (page = 1, limit = 20) => {
+  const response = await api.get("/auctions/live", {
+    params: { page, limit },
+  });
   return response.data;
 };
 
-export const placeBid = async (auctionId, bid, token) => {
-  const response = await axios.post(
-    `${API_URL}/auctions/${auctionId}/bid`,
-    bid,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
+// Get auction details
+export const getAuctionDetails = async (auctionId: string) => {
+  const response = await api.get(`/auctions/${auctionId}`);
+  return response.data;
+};
+
+// Create auction (farmer)
+export const createAuction = async (data: CreateAuctionData) => {
+  const response = await api.post("/auctions", data);
+  return response.data;
+};
+
+// Place bid (buyer)
+export const placeBid = async (auctionId: string, data: PlaceBidData) => {
+  const response = await api.post(`/auctions/${auctionId}/bid`, data);
+  return response.data;
+};
+
+// Get my bids
+export const getMyBids = async () => {
+  const response = await api.get("/auctions/my/bids");
+  return response.data;
+};
+
+// Choose transport (winner)
+export const chooseTransport = async (
+  auctionId: string,
+  data: ChooseTransportData
+) => {
+  const response = await api.post(
+    `/auctions/${auctionId}/choose-transport`,
+    data
   );
   return response.data;
 };
+
+// Farmer accepts highest bid (reserve not met)
+export const acceptHighestBid = async (auctionId: string) => {
+  const response = await api.post(`/auctions/${auctionId}/accept-bid`);
+  return response.data;
+};
+
+// Farmer rejects auction
+export const rejectAuction = async (auctionId: string) => {
+  const response = await api.post(`/auctions/${auctionId}/reject`);
+  return response.data;
+};
+
+// Farmer relists auction
+export const relistAuction = async (
+  auctionId: string,
+  data: { startingPrice: number; reservePrice?: number; durationHours?: number }
+) => {
+  const response = await api.post(`/auctions/${auctionId}/relist`, data);
+  return response.data;
+};
+
+// Service object for method-based access
+export const auctionsService = {
+  getLiveAuctions,
+  getAuctionDetails,
+  createAuction,
+  placeBid,
+  getMyBids,
+  chooseTransport,
+  acceptHighestBid,
+  rejectAuction,
+  relistAuction,
+};
+
+export default auctionsService;

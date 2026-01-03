@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import {
   Bell,
@@ -15,86 +18,206 @@ import {
   ShoppingCart,
   TrendingUp,
   AlertCircle,
+  MessageCircle,
+  Truck,
+  CheckCircle,
+  User,
+  Trash2,
 } from "lucide-react-native";
 import AnimatedCard from "../../src/components/AnimatedCard";
 import AnimatedButton from "../../src/components/AnimatedButton";
 import { theme } from "../../src/theme/tokens";
+import notificationsService from "../../src/services/notificationsService";
+import type { Notification } from "../../src/types";
 
 export default function NotificationsScreen() {
-  const notifications = [
-    {
-      id: 1,
-      type: "order",
-      title: "New Order Received",
-      message: "John Farms Co. placed an order for 500kg Organic Tomatoes",
-      time: "5 minutes ago",
-      unread: true,
-      icon: ShoppingCart,
-      color: theme.colors.success,
-    },
-    {
-      id: 2,
-      type: "bid",
-      title: "Auction Bid Placed",
-      message: "Someone bid $850 on your Fresh Carrots auction",
-      time: "1 hour ago",
-      unread: true,
-      icon: Gavel,
-      color: theme.colors.warning,
-    },
-    {
-      id: 3,
-      type: "payment",
-      title: "Payment Received",
-      message: "Payment of $1,250 has been credited to your account",
-      time: "2 hours ago",
-      unread: true,
-      icon: DollarSign,
-      color: theme.colors.info,
-    },
-    {
-      id: 4,
-      type: "stock",
-      title: "Low Stock Alert",
-      message: "3 products are running low on stock. Restock soon!",
-      time: "3 hours ago",
-      unread: false,
-      icon: AlertCircle,
-      color: theme.colors.error,
-    },
-    {
-      id: 5,
-      type: "listing",
-      title: "Product Listed Successfully",
-      message: "Your Bell Peppers listing is now live on marketplace",
-      time: "1 day ago",
-      unread: false,
-      icon: Package,
-      color: theme.colors.secondary[600],
-    },
-    {
-      id: 6,
-      type: "trend",
-      title: "Price Trend Alert",
-      message: "Tomato prices increased by 15% in your region",
-      time: "1 day ago",
-      unread: false,
-      icon: TrendingUp,
-      color: theme.colors.success,
-    },
-    {
-      id: 7,
-      type: "order",
-      title: "Order Delivered",
-      message: "Order #ORD-1001 has been successfully delivered",
-      time: "2 days ago",
-      unread: false,
-      icon: Package,
-      color: theme.colors.success,
-    },
-  ];
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await notificationsService.getNotifications(
+        false,
+        50,
+        0
+      );
+      if (response.success && response.data) {
+        setNotifications(response.data.notifications);
+        setUnreadCount(response.data.unreadCount);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsService.markAllAsRead();
+      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      Alert.alert("Error", "Failed to mark notifications as read");
+    }
+  };
+
+  const handleNotificationPress = async (notification: Notification) => {
+    if (!notification.isRead) {
+      try {
+        await notificationsService.markAsRead(notification.id);
+        setNotifications(
+          notifications.map((n) =>
+            n.id === notification.id ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error("Error marking notification as read:", error);
+      }
+    }
+    // Navigate based on notification type and data
+    // This can be expanded to navigate to relevant screens
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    Alert.alert(
+      "Delete Notification",
+      "Are you sure you want to delete this notification?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await notificationsService.deleteNotification(notificationId);
+              const deleted = notifications.find(
+                (n) => n.id === notificationId
+              );
+              setNotifications(
+                notifications.filter((n) => n.id !== notificationId)
+              );
+              if (deleted && !deleted.isRead) {
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+              }
+            } catch (error) {
+              console.error("Error deleting notification:", error);
+              Alert.alert("Error", "Failed to delete notification");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "order":
+      case "order_placed":
+      case "order_received":
+        return ShoppingCart;
+      case "order_update":
+      case "order_delivered":
+        return Package;
+      case "bid":
+      case "auction":
+      case "auction_won":
+      case "auction_outbid":
+        return Gavel;
+      case "payment":
+      case "payment_received":
+      case "wallet":
+        return DollarSign;
+      case "transport":
+      case "delivery":
+        return Truck;
+      case "message":
+      case "chat":
+        return MessageCircle;
+      case "alert":
+      case "warning":
+        return AlertCircle;
+      case "success":
+        return CheckCircle;
+      case "user":
+      case "profile":
+        return User;
+      case "price_alert":
+      case "market":
+        return TrendingUp;
+      default:
+        return Bell;
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case "order":
+      case "order_placed":
+      case "order_received":
+      case "success":
+      case "order_delivered":
+        return theme.colors.success;
+      case "bid":
+      case "auction":
+      case "auction_won":
+      case "auction_outbid":
+        return theme.colors.warning;
+      case "payment":
+      case "payment_received":
+      case "wallet":
+        return theme.colors.info;
+      case "alert":
+      case "warning":
+        return theme.colors.error;
+      case "message":
+      case "chat":
+        return theme.colors.primary[600];
+      default:
+        return theme.colors.secondary[600];
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading notifications...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,57 +228,84 @@ export default function NotificationsScreen() {
             <Text style={styles.subtitle}>{unreadCount} unread</Text>
           )}
         </View>
-        <AnimatedButton
-          title="Mark all read"
-          variant="outline"
-          size="sm"
-          onPress={() => console.log("Mark all read pressed")}
-        />
+        {unreadCount > 0 && (
+          <AnimatedButton
+            title="Mark all read"
+            variant="outline"
+            size="sm"
+            onPress={handleMarkAllRead}
+          />
+        )}
       </View>
 
       <ScrollView
         style={styles.notificationsList}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary[600]]}
+          />
+        }
       >
-        {notifications.map((notification, index) => (
-          <AnimatedCard
-            key={notification.id}
-            style={[
-              styles.notificationCard,
-              notification.unread && styles.unreadCard,
-            ]}
-            delay={index * 50}
-            onPress={() =>
-              console.log(`Notification ${notification.id} pressed`)
-            }
-          >
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: `${notification.color}20` },
-              ]}
-            >
-              <notification.icon
-                size={24}
-                color={notification.color}
-                strokeWidth={2}
-              />
-            </View>
+        {notifications.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Bell size={64} color={theme.colors.text.tertiary} />
+            <Text style={styles.emptyTitle}>No notifications</Text>
+            <Text style={styles.emptyText}>
+              You're all caught up! New notifications will appear here.
+            </Text>
+          </View>
+        ) : (
+          notifications.map((notification, index) => {
+            const IconComponent = getNotificationIcon(notification.type);
+            const iconColor = getNotificationColor(notification.type);
 
-            <View style={styles.notificationContent}>
-              <View style={styles.notificationHeader}>
-                <Text style={styles.notificationTitle}>
-                  {notification.title}
-                </Text>
-                {notification.unread && <View style={styles.unreadDot} />}
-              </View>
-              <Text style={styles.notificationMessage}>
-                {notification.message}
-              </Text>
-              <Text style={styles.notificationTime}>{notification.time}</Text>
-            </View>
-          </AnimatedCard>
-        ))}
+            return (
+              <AnimatedCard
+                key={notification.id}
+                style={[
+                  styles.notificationCard,
+                  !notification.isRead && styles.unreadCard,
+                ]}
+                delay={index * 50}
+                onPress={() => handleNotificationPress(notification)}
+              >
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: `${iconColor}20` },
+                  ]}
+                >
+                  <IconComponent size={24} color={iconColor} strokeWidth={2} />
+                </View>
+
+                <View style={styles.notificationContent}>
+                  <View style={styles.notificationHeader}>
+                    <Text style={styles.notificationTitle}>
+                      {notification.title}
+                    </Text>
+                    {!notification.isRead && <View style={styles.unreadDot} />}
+                  </View>
+                  <Text style={styles.notificationMessage}>
+                    {notification.message}
+                  </Text>
+                  <Text style={styles.notificationTime}>
+                    {formatTime(notification.createdAt)}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteNotification(notification.id)}
+                >
+                  <Trash2 size={18} color={theme.colors.text.tertiary} />
+                </TouchableOpacity>
+              </AnimatedCard>
+            );
+          })
+        )}
         <View style={styles.bottomPadding} />
       </ScrollView>
     </SafeAreaView>
@@ -166,6 +316,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background.secondary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text.secondary,
   },
   header: {
     flexDirection: "row",
@@ -239,6 +399,29 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  deleteButton: {
+    padding: theme.spacing.sm,
+    marginLeft: theme.spacing.sm,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: theme.spacing["4xl"],
+  },
+  emptyTitle: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginTop: theme.spacing.lg,
+  },
+  emptyText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    textAlign: "center",
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xl,
   },
   bottomPadding: {
     height: theme.spacing.xl,

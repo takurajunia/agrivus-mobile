@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import {
   Search,
@@ -13,74 +16,94 @@ import {
   MoreVertical,
   Circle,
 } from "lucide-react-native";
+import { useRouter } from "expo-router";
 import AnimatedCard from "../../src/components/AnimatedCard";
 import ModernInput from "../../src/components/ModernInput";
 import AnimatedButton from "../../src/components/AnimatedButton";
 import { theme } from "../../src/theme/tokens";
+import chatService, {
+  ConversationWithUser,
+} from "../../src/services/chatService";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 export default function ChatScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [conversations, setConversations] = useState<ConversationWithUser[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const conversations = [
-    {
-      id: 1,
-      name: "John Farms Co.",
-      lastMessage: "Great! When can you deliver?",
-      time: "2m",
-      unread: 2,
-      online: true,
-      avatar: "🌾",
-    },
-    {
-      id: 2,
-      name: "Green Valley Market",
-      lastMessage: "Thanks for the quick response",
-      time: "1h",
-      unread: 0,
-      online: true,
-      avatar: "🏪",
-    },
-    {
-      id: 3,
-      name: "Urban Grocery",
-      lastMessage: "Can you send me the catalog?",
-      time: "3h",
-      unread: 1,
-      online: false,
-      avatar: "🛒",
-    },
-    {
-      id: 4,
-      name: "Fresh Foods Inc.",
-      lastMessage: "Payment has been processed",
-      time: "1d",
-      unread: 0,
-      online: false,
-      avatar: "🥬",
-    },
-    {
-      id: 5,
-      name: "Local Market",
-      lastMessage: "Looking forward to our partnership",
-      time: "2d",
-      unread: 0,
-      online: false,
-      avatar: "🏬",
-    },
-    {
-      id: 6,
-      name: "Organic Store",
-      lastMessage: "Do you have organic options?",
-      time: "3d",
-      unread: 0,
-      online: true,
-      avatar: "🌱",
-    },
-  ];
+  const fetchConversations = useCallback(async () => {
+    try {
+      const response = await chatService.getConversations();
+      if (response.success && response.data) {
+        setConversations(response.data.conversations);
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      // Don't show alert on initial load failure, just show empty state
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchConversations();
+  }, [fetchConversations]);
+
+  const formatTime = (dateString: string | null) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "now";
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return date.toLocaleDateString();
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleConversationPress = (conversation: ConversationWithUser) => {
+    router.push(`/chat/${conversation.conversation.id}`);
+  };
 
   const filteredConversations = conversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
+    conv.otherUser.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading conversations...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -108,60 +131,59 @@ export default function ChatScreen() {
       <ScrollView
         style={styles.conversationsList}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary[600]]}
+          />
+        }
       >
-        {filteredConversations.map((conversation, index) => (
-          <AnimatedCard
-            key={conversation.id}
-            style={styles.conversationCard}
-            delay={index * 50}
-            onPress={() =>
-              console.log(`Chat with ${conversation.name} pressed`)
-            }
-          >
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatar}>{conversation.avatar}</Text>
-              {conversation.online && (
-                <View style={styles.onlineDot}>
-                  <Circle
-                    size={10}
-                    color={theme.colors.success}
-                    fill={theme.colors.success}
-                  />
+        {filteredConversations.length > 0 ? (
+          filteredConversations.map((conv, index) => (
+            <AnimatedCard
+              key={conv.conversation.id}
+              style={styles.conversationCard}
+              delay={index * 50}
+              onPress={() => handleConversationPress(conv)}
+            >
+              <View style={styles.avatarContainer}>
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarText}>
+                    {getInitials(conv.otherUser.fullName)}
+                  </Text>
                 </View>
-              )}
-            </View>
-
-            <View style={styles.conversationContent}>
-              <View style={styles.conversationHeader}>
-                <Text style={styles.conversationName}>{conversation.name}</Text>
-                <Text style={styles.time}>{conversation.time}</Text>
               </View>
-              <View style={styles.messageRow}>
-                <Text
-                  style={[
-                    styles.lastMessage,
-                    conversation.unread > 0 && styles.unreadMessage,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {conversation.lastMessage}
-                </Text>
-                {conversation.unread > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadCount}>
-                      {conversation.unread}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </AnimatedCard>
-        ))}
-        <View style={styles.bottomPadding} />
-      </ScrollView>
 
-      {filteredConversations.length === 0 && (
-        <View style={styles.emptyState}>
+              <View style={styles.conversationContent}>
+                <View style={styles.conversationHeader}>
+                  <Text style={styles.conversationName}>
+                    {conv.otherUser.fullName}
+                  </Text>
+                  <Text style={styles.time}>
+                    {formatTime(conv.conversation.lastMessageAt)}
+                  </Text>
+                </View>
+                <View style={styles.messageRow}>
+                  <Text
+                    style={[
+                      styles.lastMessage,
+                      conv.unreadCount > 0 && styles.unreadMessage,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {conv.conversation.lastMessageText || "No messages yet"}
+                  </Text>
+                  {conv.unreadCount > 0 && (
+                    <View style={styles.unreadBadge}>
+                      <Text style={styles.unreadCount}>{conv.unreadCount}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </AnimatedCard>
+          ))
+        ) : (
           <View style={styles.emptyContent}>
             <MessageCircle
               size={64}
@@ -172,11 +194,12 @@ export default function ChatScreen() {
             <Text style={styles.emptyText}>
               {searchQuery
                 ? "Try adjusting your search"
-                : "Start a conversation to connect with buyers"}
+                : "Start a conversation from a listing or order"}
             </Text>
           </View>
-        </View>
-      )}
+        )}
+        <View style={styles.bottomPadding} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -185,6 +208,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background.secondary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.typography.fontSize.md,
+    color: theme.colors.text.secondary,
   },
   header: {
     flexDirection: "row",
@@ -217,25 +250,18 @@ const styles = StyleSheet.create({
     position: "relative",
     marginRight: theme.spacing.md,
   },
-  avatar: {
+  avatarCircle: {
     width: 56,
     height: 56,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary[50],
-    fontSize: 28,
-    textAlign: "center",
-    lineHeight: 56,
-  },
-  onlineDot: {
-    position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.primary,
+    borderRadius: 28,
+    backgroundColor: theme.colors.primary[100],
     justifyContent: "center",
     alignItems: "center",
+  },
+  avatarText: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.primary[600],
   },
   conversationContent: {
     flex: 1,
@@ -286,19 +312,10 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  emptyState: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    pointerEvents: "none",
-  },
   emptyContent: {
     alignItems: "center",
     padding: theme.spacing.xl,
+    marginTop: theme.spacing["4xl"],
   },
   emptyTitle: {
     fontSize: theme.typography.fontSize.xl,

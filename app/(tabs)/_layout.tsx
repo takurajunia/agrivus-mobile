@@ -8,6 +8,9 @@ import {
   MessageCircle,
   User,
   Bell,
+  Store,
+  Gavel,
+  Wallet,
 } from "lucide-react-native";
 import { theme } from "../../src/theme/tokens";
 import LoadingSpinner from "../../src/components/LoadingSpinner";
@@ -67,6 +70,33 @@ export default function TabLayout() {
           title: "Home",
           tabBarIcon: ({ size, color, focused }) => (
             <Home size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="marketplace"
+        options={{
+          title: "Market",
+          tabBarIcon: ({ size, color, focused }) => (
+            <Store size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="auctions"
+        options={{
+          title: "Auctions",
+          tabBarIcon: ({ size, color, focused }) => (
+            <Gavel size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="wallet"
+        options={{
+          title: "Wallet",
+          tabBarIcon: ({ size, color, focused }) => (
+            <Wallet size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
           ),
         }}
       />

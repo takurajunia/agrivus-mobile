@@ -1,21 +1,54 @@
-import axios from "axios";
+import api from "./api";
+import type { WalletBalance, Transaction, TransactionHistory } from "../types";
 
-const API_URL = "https://your-api-url.com/api";
+export const walletService = {
+  // Get wallet balance
+  async getBalance(): Promise<WalletBalance> {
+    const response = await api.get("/wallet/balance");
+    return response.data.data;
+  },
 
-export const fetchWallet = async (token: string) => {
-  const response = await axios.get(`${API_URL}/wallet`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
+  // Deposit funds
+  async deposit(amount: number, paymentMethod: string) {
+    const response = await api.post("/wallet/deposit", {
+      amount,
+      paymentMethod,
+    });
+    return response.data;
+  },
 
-export const fundWallet = async (amount: number, token: string) => {
-  const response = await axios.post(
-    `${API_URL}/wallet/fund`,
-    { amount },
-    {
-      headers: { Authorization: `Bearer ${token}` },
+  // Withdraw funds
+  async withdraw(
+    amount: number,
+    withdrawalMethod: string,
+    accountDetails: string
+  ) {
+    const response = await api.post("/wallet/withdraw", {
+      amount,
+      withdrawalMethod,
+      accountDetails,
+    });
+    return response.data;
+  },
+
+  // Get transaction history
+  async getTransactions(
+    page = 1,
+    limit = 20,
+    type?: string
+  ): Promise<TransactionHistory> {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      limit: limit.toString(),
+    };
+
+    if (type) {
+      params.type = type;
     }
-  );
-  return response.data;
+
+    const response = await api.get("/wallet/transactions", { params });
+    return response.data.data;
+  },
 };
+
+export default walletService;

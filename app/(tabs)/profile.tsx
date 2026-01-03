@@ -35,16 +35,28 @@ export default function ProfileScreen() {
     router.replace("/");
   };
 
-  const menuSections = [
+  // Build menu sections dynamically based on user role
+  const baseMenuSections = [
     {
       title: "Account",
       items: [
-        { label: "Edit Profile", icon: Edit, color: theme.colors.success },
-        { label: "Account Settings", icon: Settings, color: theme.colors.info },
+        {
+          label: "Edit Profile",
+          icon: Edit,
+          color: theme.colors.success,
+          route: "/edit-profile",
+        },
+        {
+          label: "Account Settings",
+          icon: Settings,
+          color: theme.colors.info,
+          route: "/settings",
+        },
         {
           label: "Verification Badge",
           icon: Award,
           color: theme.colors.warning,
+          route: "/verification",
         },
       ],
     },
@@ -55,22 +67,53 @@ export default function ProfileScreen() {
           label: "Payment Methods",
           icon: CreditCard,
           color: theme.colors.secondary[600],
+          route: "/payment-methods",
         },
-        { label: "Notifications", icon: Bell, color: theme.colors.error },
+        {
+          label: "Notifications",
+          icon: Bell,
+          color: theme.colors.error,
+          route: "/notifications-settings",
+        },
         {
           label: "Privacy & Security",
           icon: Shield,
           color: theme.colors.primary[700],
+          route: "/privacy-security",
         },
       ],
     },
     {
       title: "Support",
       items: [
-        { label: "Help Center", icon: HelpCircle, color: theme.colors.info },
+        {
+          label: "Help Center",
+          icon: HelpCircle,
+          color: theme.colors.info,
+          route: "/help",
+        },
       ],
     },
   ];
+
+  // Add admin section if user is admin
+  const menuSections =
+    user?.role === "admin"
+      ? [
+          {
+            title: "Administration",
+            items: [
+              {
+                label: "Admin Dashboard",
+                icon: Shield,
+                color: theme.colors.error,
+                route: "/admin",
+              },
+            ],
+          },
+          ...baseMenuSections,
+        ]
+      : baseMenuSections;
 
   const stats = [
     { label: "Orders", value: "156" },
@@ -131,7 +174,11 @@ export default function ProfileScreen() {
                 key={itemIndex}
                 style={styles.menuItem}
                 delay={(sectionIndex * 3 + itemIndex) * 50}
-                onPress={() => console.log(`${item.label} pressed`)}
+                onPress={() =>
+                  item.route
+                    ? router.push(item.route as any)
+                    : console.log(`${item.label} pressed`)
+                }
               >
                 <View
                   style={[

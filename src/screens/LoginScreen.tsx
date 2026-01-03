@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
-import { Mail, Lock, Leaf } from "lucide-react-native";
+import { Mail, Lock, Leaf, Eye, EyeOff } from "lucide-react-native";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ModernInput from "../components/ModernInput";
 import AnimatedButton from "../components/AnimatedButton";
@@ -24,6 +24,7 @@ export default function LoginScreen() {
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login, isAuthenticated, loading } = useAuth();
 
@@ -108,9 +109,18 @@ export default function LoginScreen() {
                 password: text,
               }))
             }
-            secureTextEntry
+            secureTextEntry={!showPassword}
             autoCapitalize="none"
             leftIcon={<Lock size={20} color={theme.colors.text.tertiary} />}
+            rightIcon={
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOff size={20} color={theme.colors.text.tertiary} />
+                ) : (
+                  <Eye size={20} color={theme.colors.text.tertiary} />
+                )}
+              </TouchableOpacity>
+            }
             style={styles.inputSpacing}
           />
 

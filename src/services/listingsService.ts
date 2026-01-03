@@ -6,10 +6,7 @@ import type {
   ListingFilters,
 } from "../types";
 
-// Re-export listingsService for backwards compatibility
-export { listingsService } from "./listingsService";
-
-export const marketplaceService = {
+export const listingsService = {
   // Get all listings with filters
   getListings: async (filters?: ListingFilters) => {
     const params: Record<string, string> = {};
@@ -92,4 +89,4 @@ export const marketplaceService = {
   },
 };
 
-export default marketplaceService;
+export default listingsService;

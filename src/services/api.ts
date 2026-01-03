@@ -5,11 +5,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // Run `ipconfig` (Windows) or `ifconfig` (Mac/Linux) to find your IP
 // For production, use your deployed backend URL
 const API_BASE_URL = __DEV__
-  ? "http://192.168.1.100:5000" // Replace with your computer's IP address
+  ? "http://192.168.153.195:5000" // Replace with your computer's IP address
   : "https://your-production-api.com"; // Replace with production URL
 
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
+  timeout: 15000, // 15 second timeout for faster feedback
   headers: {
     "Content-Type": "application/json",
   },
