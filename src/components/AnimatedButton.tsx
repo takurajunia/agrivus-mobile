@@ -7,6 +7,7 @@ import {
   ViewStyle,
   Animated,
   GestureResponderEvent,
+  ActivityIndicator,
 } from "react-native";
 import { theme } from "../theme/tokens";
 
@@ -37,12 +38,12 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   const handlePressIn = () => {
     Animated.parallel([
       Animated.timing(scaleAnim, {
-        toValue: 0.95,
+        toValue: 0.98,
         duration: theme.animation.duration.fast,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
-        toValue: 0.8,
+        toValue: 0.9,
         duration: theme.animation.duration.fast,
         useNativeDriver: true,
       }),
@@ -66,7 +67,7 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
 
   const getButtonStyle = () => {
     const baseStyle: ViewStyle = {
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.pill,
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "row",
@@ -78,24 +79,26 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         return {
           ...baseStyle,
           backgroundColor: disabled
-            ? theme.colors.neutral[400]
+            ? theme.colors.primary[100]
             : theme.colors.primary[600],
+          ...(disabled ? {} : theme.neumorphicShadows.primaryGlow),
         };
       case "secondary":
         return {
           ...baseStyle,
           backgroundColor: disabled
-            ? theme.colors.neutral[400]
+            ? theme.colors.secondary[100]
             : theme.colors.secondary[600],
+          ...(disabled ? {} : theme.neumorphicShadows.level3),
         };
       case "outline":
         return {
           ...baseStyle,
           backgroundColor: "transparent",
-          borderWidth: 1,
+          borderWidth: 2,
           borderColor: disabled
             ? theme.colors.neutral[400]
-            : theme.colors.primary[600],
+            : theme.colors.primary[500],
         };
       case "ghost":
         return {
@@ -108,6 +111,13 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
           backgroundColor: disabled
             ? theme.colors.neutral[400]
             : theme.colors.error,
+          ...(disabled ? {} : {
+            shadowColor: theme.colors.error,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 6,
+          }),
         };
       default:
         return baseStyle;
@@ -120,32 +130,33 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         return {
           paddingHorizontal: theme.spacing.md,
           paddingVertical: theme.spacing.sm,
-          minHeight: 36,
+          minHeight: 40,
         };
       case "lg":
         return {
           paddingHorizontal: theme.spacing.xl,
-          paddingVertical: theme.spacing.md,
-          minHeight: 52,
+          paddingVertical: 18,
+          minHeight: 56,
         };
       default:
         return {
           paddingHorizontal: theme.spacing.lg,
           paddingVertical: theme.spacing.md,
-          minHeight: 44,
+          minHeight: 48,
         };
     }
   };
 
   const getTextStyle = () => {
     const baseTextStyle = {
-      fontWeight: theme.typography.fontWeight.medium,
+      fontWeight: theme.typography.fontWeight.semibold,
       ...getSizeTextStyle(),
     };
 
     switch (variant) {
       case "primary":
       case "secondary":
+      case "danger":
         return {
           ...baseTextStyle,
           color: theme.colors.text.inverse,
@@ -199,7 +210,17 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         activeOpacity={1}
         {...props}
       >
-        <Text style={getTextStyle()}>{loading ? "Loading..." : title}</Text>
+        {loading ? (
+          <ActivityIndicator
+            color={variant === "primary" || variant === "secondary" || variant === "danger"
+              ? theme.colors.text.inverse
+              : theme.colors.primary[600]
+            }
+            size="small"
+          />
+        ) : (
+          <Text style={getTextStyle()}>{title}</Text>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );

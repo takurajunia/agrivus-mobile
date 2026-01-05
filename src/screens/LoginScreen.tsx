@@ -9,12 +9,14 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { Mail, Lock, Leaf, Eye, EyeOff } from "lucide-react-native";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ModernInput from "../components/ModernInput";
 import AnimatedButton from "../components/AnimatedButton";
+import LeafBackground from "../components/LeafBackground";
 import { theme } from "../theme/tokens";
 import type { LoginCredentials } from "../types";
 
@@ -60,105 +62,117 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <LinearGradient
+      colors={[theme.colors.primary[50], theme.colors.neumorphic.background]}
+      locations={[0, 0.3]}
+      style={styles.gradient}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Leaf
-              size={40}
-              color={theme.colors.primary[600]}
-              strokeWidth={2.5}
-            />
-          </View>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue to Agrivus</Text>
-        </View>
+      <LeafBackground pattern="auth">
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <Leaf
+                  size={40}
+                  color={theme.colors.primary[600]}
+                  strokeWidth={2.5}
+                />
+              </View>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sign in to continue to Agrivus</Text>
+            </View>
 
-        <View style={styles.formContainer}>
-          <ModernInput
-            label="Email Address"
-            placeholder="Enter your email"
-            value={credentials.email}
-            onChangeText={(text: string) =>
-              setCredentials((prev: LoginCredentials) => ({
-                ...prev,
-                email: text,
-              }))
-            }
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            leftIcon={<Mail size={20} color={theme.colors.text.tertiary} />}
-            style={styles.inputSpacing}
-          />
+            <View style={styles.formCard}>
+              <ModernInput
+                label="Email Address"
+                placeholder="Enter your email"
+                value={credentials.email}
+                onChangeText={(text: string) =>
+                  setCredentials((prev: LoginCredentials) => ({
+                    ...prev,
+                    email: text,
+                  }))
+                }
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                leftIcon={<Mail size={20} color={theme.colors.text.tertiary} />}
+                variant="filled"
+                style={styles.inputSpacing}
+              />
 
-          <ModernInput
-            label="Password"
-            placeholder="Enter your password"
-            value={credentials.password}
-            onChangeText={(text: string) =>
-              setCredentials((prev: LoginCredentials) => ({
-                ...prev,
-                password: text,
-              }))
-            }
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            leftIcon={<Lock size={20} color={theme.colors.text.tertiary} />}
-            rightIcon={
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                {showPassword ? (
-                  <EyeOff size={20} color={theme.colors.text.tertiary} />
-                ) : (
-                  <Eye size={20} color={theme.colors.text.tertiary} />
-                )}
+              <ModernInput
+                label="Password"
+                placeholder="Enter your password"
+                value={credentials.password}
+                onChangeText={(text: string) =>
+                  setCredentials((prev: LoginCredentials) => ({
+                    ...prev,
+                    password: text,
+                  }))
+                }
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                leftIcon={<Lock size={20} color={theme.colors.text.tertiary} />}
+                rightIcon={
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    {showPassword ? (
+                      <EyeOff size={20} color={theme.colors.text.tertiary} />
+                    ) : (
+                      <Eye size={20} color={theme.colors.text.tertiary} />
+                    )}
+                  </TouchableOpacity>
+                }
+                variant="filled"
+                style={styles.inputSpacing}
+              />
+
+              <TouchableOpacity style={styles.forgotPasswordContainer}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
-            }
-            style={styles.inputSpacing}
-          />
 
-          <TouchableOpacity style={styles.forgotPasswordContainer}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
+              <AnimatedButton
+                title="Sign In"
+                onPress={handleLogin}
+                loading={isLoading}
+                variant="primary"
+                size="lg"
+                style={styles.signInButton}
+              />
 
-          <AnimatedButton
-            title="Sign In"
-            onPress={handleLogin}
-            loading={isLoading}
-            variant="primary"
-            size="lg"
-            style={styles.signInButton}
-          />
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
 
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.footerContainer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={navigateToRegister}>
-              <Text style={styles.signUpText}>Create Account</Text>
-            </TouchableOpacity>
+              <View style={styles.footerContainer}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={navigateToRegister}>
+                  <Text style={styles.signUpText}>Create Account</Text>
+                </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+      </LeafBackground>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
   },
   scrollContent: {
     flexGrow: 1,
@@ -173,11 +187,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary[50],
+    backgroundColor: theme.colors.neumorphic.card,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: theme.spacing.lg,
-    ...theme.shadows.sm,
+    ...theme.neumorphicShadows.level3,
   },
   title: {
     fontSize: theme.typography.fontSize["3xl"],
@@ -191,8 +205,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     textAlign: "center",
   },
-  formContainer: {
-    width: "100%",
+  formCard: {
+    backgroundColor: theme.colors.neumorphic.card,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    ...theme.neumorphicShadows.level3,
   },
   inputSpacing: {
     marginBottom: theme.spacing.md,
@@ -208,7 +225,6 @@ const styles = StyleSheet.create({
   },
   signInButton: {
     marginBottom: theme.spacing.xl,
-    ...theme.shadows.colored,
   },
   dividerContainer: {
     flexDirection: "row",

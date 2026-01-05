@@ -104,15 +104,22 @@ const ModernInput: React.FC<ModernInputProps> = ({
     const baseStyle: ViewStyle = {
       flexDirection: "row",
       alignItems: "center",
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.lg,
       ...getVariantStyle(),
       ...getSizeInputStyle(),
     };
 
     if (error) {
       baseStyle.borderColor = theme.colors.error;
+      baseStyle.borderWidth = 2;
     } else if (isFocused) {
       baseStyle.borderColor = theme.colors.primary[500];
+      baseStyle.borderWidth = 2;
+      // Add focus glow effect
+      baseStyle.shadowColor = theme.colors.primary[500];
+      baseStyle.shadowOffset = { width: 0, height: 0 };
+      baseStyle.shadowOpacity = 0.15;
+      baseStyle.shadowRadius = 8;
     }
 
     return baseStyle;
@@ -122,21 +129,24 @@ const ModernInput: React.FC<ModernInputProps> = ({
     switch (variant) {
       case "filled":
         return {
-          backgroundColor: theme.colors.neutral[100],
-          borderWidth: 0,
+          backgroundColor: theme.colors.neumorphic.input,
+          borderWidth: 1,
+          borderColor: "transparent",
         };
       case "search":
         return {
-          backgroundColor: theme.colors.background.secondary,
+          backgroundColor: theme.colors.neumorphic.card,
           borderWidth: 1,
-          borderColor: theme.colors.border.light,
+          borderColor: "transparent",
+          borderRadius: theme.borderRadius["3xl"],
           paddingHorizontal: theme.spacing.md,
+          ...theme.neumorphicShadows.level1,
         };
       default:
         return {
-          backgroundColor: theme.colors.background.primary,
+          backgroundColor: theme.colors.neumorphic.input,
           borderWidth: 1,
-          borderColor: theme.colors.border.light,
+          borderColor: "transparent",
         };
     }
   };
@@ -144,11 +154,11 @@ const ModernInput: React.FC<ModernInputProps> = ({
   const getSizeStyle = (): ViewStyle => {
     switch (size) {
       case "sm":
-        return { minHeight: 40 };
+        return { minHeight: 44 };
       case "lg":
         return { minHeight: 56 };
       default:
-        return { minHeight: 48 };
+        return { minHeight: 52 };
     }
   };
 
