@@ -2,16 +2,7 @@ import { Tabs } from "expo-router";
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
-import {
-  Home,
-  ShoppingBag,
-  MessageCircle,
-  User,
-  Bell,
-  Store,
-  Gavel,
-  Wallet,
-} from "lucide-react-native";
+import { Home, ShoppingBag, Store, Wallet } from "lucide-react-native";
 import {
   neumorphicColors,
   spacing,
@@ -47,7 +38,7 @@ export default function TabLayout() {
           backgroundColor: neumorphicColors.base.card,
           borderTopWidth: 0,
           paddingTop: spacing.sm,
-          paddingBottom: spacing.sm,
+          paddingBottom: spacing.md,
           height: 70,
           // Neumorphic shadow
           shadowColor: neumorphicColors.base.shadowDark,
@@ -59,9 +50,9 @@ export default function TabLayout() {
           borderTopRightRadius: neumorphicBorderRadius.xl,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: "600",
-          marginTop: 2,
+          marginTop: 4,
         },
         tabBarItemStyle: {
           paddingVertical: spacing.xs,
@@ -91,15 +82,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="auctions"
-        options={{
-          title: "Auctions",
-          tabBarIcon: ({ size, color, focused }) => (
-            <Gavel size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="wallet"
         options={{
           title: "Wallet",
@@ -121,35 +103,30 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Hidden tabs - accessible via TopNavBar */}
+      <Tabs.Screen
+        name="auctions"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
       <Tabs.Screen
         name="chat"
         options={{
-          title: "Chat",
-          tabBarIcon: ({ size, color, focused }) => (
-            <MessageCircle
-              size={size}
-              color={color}
-              strokeWidth={focused ? 2.5 : 2}
-            />
-          ),
+          href: null, // Hide from tab bar
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
-          title: "Alerts",
-          tabBarIcon: ({ size, color, focused }) => (
-            <Bell size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
+          href: null, // Hide from tab bar
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ size, color, focused }) => (
-            <User size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
+          href: null, // Hide from tab bar
         }}
       />
     </Tabs>

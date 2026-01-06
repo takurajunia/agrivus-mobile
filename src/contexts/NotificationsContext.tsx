@@ -1,8 +1,26 @@
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useMemo,
+} from "react";
+
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  type?: string;
+};
 
 type NotificationsContextType = {
-  notifications: any[];
-  setNotifications: React.Dispatch<React.SetStateAction<any[]>>;
+  notifications: Notification[];
+  setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  unreadCount: number;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
 };
 
 const NotificationsContext = createContext<
@@ -16,9 +34,33 @@ type NotificationsProviderProps = {
 export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({
   children,
 }) => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
+
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
   return (
-    <NotificationsContext.Provider value={{ notifications, setNotifications }}>
+    <NotificationsContext.Provider
+      value={{
+        notifications,
+        setNotifications,
+        unreadCount,
+        markAsRead,
+        markAllAsRead,
+      }}
+    >
       {children}
     </NotificationsContext.Provider>
   );

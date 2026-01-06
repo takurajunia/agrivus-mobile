@@ -17,19 +17,19 @@ import {
   ShoppingCart,
   BarChart3,
   AlertCircle,
-  Bell,
   ChevronRight,
   Store,
   Globe,
 } from "lucide-react-native";
+
+// Components
+import TopNavBar from "../../src/components/TopNavBar";
 
 // Neumorphic Components
 import {
   NeumorphicScreen,
   NeumorphicCard,
   NeumorphicStatCard,
-  NeumorphicIconButton,
-  NeumorphicAvatar,
 } from "../../src/components/neumorphic";
 
 import {
@@ -205,6 +205,9 @@ export default function HomeScreen() {
 
   return (
     <NeumorphicScreen variant="dashboard" showLeaves={true}>
+      {/* Top Navigation Bar */}
+      <TopNavBar showGreeting={true} unreadChats={2} />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -218,30 +221,6 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.userName}>{user?.fullName || "Farmer"}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <NeumorphicIconButton
-              icon={<Bell size={22} color={neumorphicColors.text.secondary} />}
-              onPress={() => router.push("/(tabs)/notifications")}
-              size="medium"
-              badge={3}
-            />
-            <View style={styles.avatarContainer}>
-              <NeumorphicAvatar
-                name={user?.fullName}
-                size="medium"
-                status="online"
-                showStatus
-              />
-            </View>
-          </View>
-        </View>
-
         {/* Alert Banner */}
         <NeumorphicCard
           variant="glass"
@@ -345,33 +324,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: spacing.lg,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.lg,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  greeting: {
-    ...typography.body,
-    color: neumorphicColors.text.secondary,
-  },
-  userName: {
-    ...typography.h2,
-    color: neumorphicColors.text.primary,
-    marginTop: spacing.xs,
-  },
-  avatarContainer: {
-    marginLeft: spacing.md,
+    paddingTop: spacing.md,
   },
   alertBanner: {
     marginHorizontal: spacing.xl,
