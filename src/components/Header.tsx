@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react-native";
 import {
   neumorphicColors,
   spacing,
+  typography,
   getNeumorphicShadow,
 } from "../theme/neumorphic";
 
@@ -79,10 +80,8 @@ const styles = StyleSheet.create({
     ...getNeumorphicShadow(1),
   },
   title: {
+    ...typography.h4,
     flex: 1,
-    fontSize: 20,
-    fontWeight: "700",
-    color: neumorphicColors.text.primary,
     textAlign: "center",
   },
   rightContainer: {

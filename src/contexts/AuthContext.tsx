@@ -91,9 +91,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         await AsyncStorage.setItem("token", userToken);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
+      } else {
+        // Handle case where success is false but no exception was thrown
+        throw new Error(response.message || "Registration failed");
       }
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Registration failed");
+      console.log("Registration error details:", error);
+      // Error message is already enhanced by the API interceptor
+      const errorMessage =
+        error.response?.data?.message || error.message || "Registration failed";
+      throw new Error(errorMessage);
     }
   };
 

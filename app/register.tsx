@@ -12,7 +12,14 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
-import { User, Lock, Phone, Mail, Leaf, ChevronDown } from "lucide-react-native";
+import {
+  User,
+  Lock,
+  Phone,
+  Mail,
+  Leaf,
+  ChevronDown,
+} from "lucide-react-native";
 import LoadingSpinner from "../src/components/LoadingSpinner";
 import type { RegisterData, UserRole } from "../src/types";
 
@@ -37,6 +44,44 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
 
+  // Validate password strength to match backend requirements
+  const validatePassword = (
+    password: string
+  ): { valid: boolean; message: string } => {
+    if (password.length < 8) {
+      return {
+        valid: false,
+        message: "Password must be at least 8 characters long",
+      };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one uppercase letter",
+      };
+    }
+    if (!/[a-z]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one lowercase letter",
+      };
+    }
+    if (!/[0-9]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one number",
+      };
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return {
+        valid: false,
+        message:
+          "Password must contain at least one special character (!@#$%^&*)",
+      };
+    }
+    return { valid: true, message: "" };
+  };
+
   const handleRegister = async () => {
     if (
       !formData.email ||
@@ -53,8 +98,9 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.valid) {
+      Alert.alert("Weak Password", passwordValidation.message);
       return;
     }
 
@@ -126,10 +172,10 @@ export default function RegisterScreen() {
 
           <View style={styles.inputWrapper}>
             <View style={styles.inputContainer}>
-              <User size={20} color="#9E9E9E" strokeWidth={2} />
+              <Mail size={20} color="#9E9E9E" strokeWidth={2} />
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder="Email Address"
                 placeholderTextColor="#BDBDBD"
                 value={formData.email}
                 onChangeText={(text) =>
@@ -204,6 +250,9 @@ export default function RegisterScreen() {
                 autoCapitalize="none"
               />
             </View>
+            <Text style={styles.passwordHint}>
+              8+ chars, uppercase, lowercase, number, special char (!@#$%^&*)
+            </Text>
           </View>
 
           <View style={styles.inputWrapper}>
@@ -395,6 +444,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 1,
+  },
+  passwordHint: {
+    fontSize: 11,
+    color: "#8E8E93",
+    marginTop: 6,
+    marginLeft: 20,
   },
   input: {
     flex: 1,

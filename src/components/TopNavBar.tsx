@@ -22,6 +22,7 @@ import {
   neumorphicColors,
   spacing,
   borderRadius,
+  typography,
   getNeumorphicShadow,
 } from "../theme/neumorphic";
 
@@ -213,29 +214,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarInitials: {
+    ...typography.buttonSmall,
     color: neumorphicColors.text.inverse,
-    fontSize: 16,
-    fontWeight: "700",
   },
   titleContainer: {
     flex: 1,
     marginHorizontal: spacing.md,
   },
   greetingText: {
-    fontSize: 13,
+    ...typography.caption,
     color: neumorphicColors.text.secondary,
-    fontWeight: "500",
   },
   userName: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: neumorphicColors.text.primary,
+    ...typography.h3,
     marginTop: 2,
   },
   titleText: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: neumorphicColors.text.primary,
+    ...typography.h2,
   },
   actionsContainer: {
     flexDirection: "row",
@@ -266,9 +261,10 @@ const styles = StyleSheet.create({
     borderColor: neumorphicColors.base.card,
   },
   badgeText: {
+    ...typography.overline,
     color: neumorphicColors.text.inverse,
     fontSize: 10,
-    fontWeight: "700",
+    letterSpacing: 0,
   },
   navPillsContainer: {
     flexDirection: "row",
@@ -284,8 +280,7 @@ const styles = StyleSheet.create({
     ...getNeumorphicShadow(1),
   },
   navPillText: {
-    fontSize: 14,
-    fontWeight: "600",
+    ...typography.buttonSmall,
     color: neumorphicColors.text.primary,
   },
 });

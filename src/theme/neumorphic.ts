@@ -682,87 +682,219 @@ export const leafPatterns: Record<string, LeafConfig> = {
 // TYPOGRAPHY STYLES
 // =============================================================================
 
+/**
+ * Font Family Configuration
+ * Uses system fonts optimized for each platform:
+ * - iOS: SF Pro (system default) with -apple-system fallback
+ * - Android: Roboto (system default)
+ *
+ * For custom fonts like Inter or Poppins, load them via expo-font
+ * and replace the fontFamily values below.
+ */
+export const fontFamilies = {
+  // Primary font for headings and emphasis
+  heading: Platform.select({
+    ios: "System",
+    android: "Roboto",
+    default: "System",
+  }),
+  // Body font for general text
+  body: Platform.select({
+    ios: "System",
+    android: "Roboto",
+    default: "System",
+  }),
+  // Monospace for numbers and code
+  mono: Platform.select({
+    ios: "Menlo",
+    android: "monospace",
+    default: "monospace",
+  }),
+} as const;
+
+/**
+ * Modern Neumorphic Typography System
+ *
+ * Design Principles:
+ * - Clean, geometric typefaces that complement soft shadows
+ * - Generous letter-spacing for readability
+ * - Optimized line heights for comfortable reading
+ * - Subtle weight variations for visual hierarchy
+ */
 export const typography = {
+  // Display - Hero text, large callouts
+  display: {
+    fontSize: 40,
+    fontWeight: "800" as const,
+    lineHeight: 48,
+    letterSpacing: -1,
+    color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
+  } as TextStyle,
+
+  // H1 - Page titles
   h1: {
     fontSize: 32,
-    fontWeight: "700",
-    lineHeight: 38,
+    fontWeight: "700" as const,
+    lineHeight: 40,
     letterSpacing: -0.5,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
   } as TextStyle,
 
+  // H2 - Section headers
   h2: {
-    fontSize: 28,
-    fontWeight: "700",
-    lineHeight: 35,
-    letterSpacing: -0.5,
+    fontSize: 26,
+    fontWeight: "700" as const,
+    lineHeight: 34,
+    letterSpacing: -0.3,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
   } as TextStyle,
 
+  // H3 - Subsection headers
   h3: {
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 31,
-    letterSpacing: -0.25,
+    fontSize: 22,
+    fontWeight: "600" as const,
+    lineHeight: 30,
+    letterSpacing: -0.2,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
   } as TextStyle,
 
+  // H4 - Card titles, list headers
   h4: {
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 27,
-    color: neumorphicColors.text.primary,
-  } as TextStyle,
-
-  h5: {
     fontSize: 18,
-    fontWeight: "500",
-    lineHeight: 25,
+    fontWeight: "600" as const,
+    lineHeight: 26,
+    letterSpacing: 0,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
   } as TextStyle,
 
-  h6: {
+  // H5 - Small headers
+  h5: {
     fontSize: 16,
-    fontWeight: "500",
-    lineHeight: 22,
+    fontWeight: "600" as const,
+    lineHeight: 24,
+    letterSpacing: 0.1,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
   } as TextStyle,
 
+  // H6 - Smallest headers
+  h6: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    lineHeight: 20,
+    letterSpacing: 0.1,
+    color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.heading,
+  } as TextStyle,
+
+  // Body Large - Featured body text
   bodyLarge: {
     fontSize: 18,
-    fontWeight: "400",
-    lineHeight: 29,
+    fontWeight: "400" as const,
+    lineHeight: 28,
+    letterSpacing: 0.2,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.body,
   } as TextStyle,
 
+  // Body - Default body text
   body: {
     fontSize: 16,
-    fontWeight: "400",
+    fontWeight: "400" as const,
     lineHeight: 24,
+    letterSpacing: 0.15,
     color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.body,
   } as TextStyle,
 
+  // Body Small - Secondary body text
   bodySmall: {
     fontSize: 14,
-    fontWeight: "400",
+    fontWeight: "400" as const,
     lineHeight: 21,
+    letterSpacing: 0.1,
     color: neumorphicColors.text.secondary,
+    fontFamily: fontFamilies.body,
   } as TextStyle,
 
+  // Caption - Small labels, timestamps
   caption: {
     fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 17,
+    fontWeight: "500" as const,
+    lineHeight: 18,
+    letterSpacing: 0.2,
     color: neumorphicColors.text.tertiary,
+    fontFamily: fontFamilies.body,
   } as TextStyle,
 
+  // Overline - Small uppercase labels
   overline: {
-    fontSize: 10,
-    fontWeight: "600",
-    lineHeight: 14,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
+    fontSize: 11,
+    fontWeight: "600" as const,
+    lineHeight: 16,
+    letterSpacing: 1,
+    textTransform: "uppercase" as const,
     color: neumorphicColors.text.tertiary,
+    fontFamily: fontFamilies.body,
+  } as TextStyle,
+
+  // Button text styles
+  buttonLarge: {
+    fontSize: 17,
+    fontWeight: "600" as const,
+    lineHeight: 22,
+    letterSpacing: 0.3,
+    fontFamily: fontFamilies.heading,
+  } as TextStyle,
+
+  button: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    lineHeight: 20,
+    letterSpacing: 0.3,
+    fontFamily: fontFamilies.heading,
+  } as TextStyle,
+
+  buttonSmall: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    lineHeight: 18,
+    letterSpacing: 0.3,
+    fontFamily: fontFamilies.heading,
+  } as TextStyle,
+
+  // Label - Form labels, pill text
+  label: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    lineHeight: 20,
+    letterSpacing: 0.1,
+    color: neumorphicColors.text.secondary,
+    fontFamily: fontFamilies.body,
+  } as TextStyle,
+
+  // Number - Numeric values, stats
+  number: {
+    fontSize: 28,
+    fontWeight: "700" as const,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+    color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.mono,
+  } as TextStyle,
+
+  numberSmall: {
+    fontSize: 20,
+    fontWeight: "600" as const,
+    lineHeight: 26,
+    letterSpacing: -0.3,
+    color: neumorphicColors.text.primary,
+    fontFamily: fontFamilies.mono,
   } as TextStyle,
 
   // Size utilities for direct font-size access
@@ -776,15 +908,18 @@ export const typography = {
     "3xl": 24,
     "4xl": 28,
     "5xl": 32,
+    "6xl": 40,
   } as const,
 
   // Weight utilities for direct font-weight access
   weights: {
-    normal: "400" as const,
+    light: "300" as const,
+    regular: "400" as const,
     medium: "500" as const,
     semibold: "600" as const,
     bold: "700" as const,
-  },
+    extrabold: "800" as const,
+  } as const,
 };
 
 // =============================================================================
@@ -836,6 +971,7 @@ export default {
   avatars: avatarStyles,
   leaves: leafPatterns,
   typography,
+  fontFamilies,
   spacing,
   borderRadius,
   // Helper functions
