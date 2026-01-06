@@ -4,27 +4,32 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
-  SafeAreaView,
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
   Package,
   Clock,
-  MapPin,
   ChevronRight,
-  Filter,
   Check,
   Truck,
   XCircle,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../theme/neumorphic";
 import { agrimallService } from "../services/agrimallService";
 import type { AgrimallOrder } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicBadge from "../components/neumorphic/NeumorphicBadge";
 
 export default function AgriMallOrdersScreen() {
   const router = useRouter();
@@ -79,20 +84,39 @@ export default function AgriMallOrdersScreen() {
     }
   };
 
+  const getStatusBadgeVariant = (
+    status: string
+  ): "warning" | "info" | "primary" | "success" | "error" | "neutral" => {
+    switch (status) {
+      case "pending":
+        return "warning";
+      case "processing":
+        return "info";
+      case "shipped":
+        return "primary";
+      case "delivered":
+        return "success";
+      case "cancelled":
+        return "error";
+      default:
+        return "neutral";
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "processing":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "shipped":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "delivered":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "cancelled":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.secondary;
+        return neumorphicColors.text.secondary;
     }
   };
 
@@ -114,16 +138,16 @@ export default function AgriMallOrdersScreen() {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list">
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>AgriMall Orders</Text>
@@ -140,34 +164,29 @@ export default function AgriMallOrdersScreen() {
         contentContainerStyle={styles.filterContainer}
       >
         {filters.map((f) => (
-          <TouchableOpacity
+          <NeumorphicButton
             key={f.value}
-            style={[
-              styles.filterChip,
-              filter === f.value && styles.filterChipActive,
-            ]}
+            title={f.label}
+            variant={filter === f.value ? "primary" : "secondary"}
+            size="small"
             onPress={() => setFilter(f.value)}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                filter === f.value && styles.filterTextActive,
-              ]}
-            >
-              {f.label}
-            </Text>
-          </TouchableOpacity>
+            style={styles.filterChip}
+          />
         ))}
       </ScrollView>
 
       {/* Error */}
       {error ? (
-        <View style={styles.errorContainer}>
+        <NeumorphicCard style={styles.errorContainer} variant="bordered">
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchOrders}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+          <NeumorphicButton
+            title="Retry"
+            variant="danger"
+            size="small"
+            onPress={fetchOrders}
+            style={styles.retryButton}
+          />
+        </NeumorphicCard>
       ) : null}
 
       {/* Orders List */}
@@ -178,25 +197,25 @@ export default function AgriMallOrdersScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         {filteredOrders.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Package size={64} color={theme.colors.text.tertiary} />
+            <Package size={64} color={neumorphicColors.text.tertiary} />
             <Text style={styles.emptyTitle}>No orders found</Text>
             <Text style={styles.emptyText}>
               {filter === "all"
                 ? "Start shopping to see your orders here"
                 : `No ${filter} orders found`}
             </Text>
-            <TouchableOpacity
-              style={styles.shopButton}
+            <NeumorphicButton
+              title="Shop Now"
+              variant="primary"
               onPress={() => router.push("/agrimall")}
-            >
-              <Text style={styles.shopButtonText}>Shop Now</Text>
-            </TouchableOpacity>
+              style={styles.shopButton}
+            />
           </View>
         ) : (
           filteredOrders.map((order) => {
@@ -204,10 +223,11 @@ export default function AgriMallOrdersScreen() {
             const statusColor = getStatusColor(order.status);
 
             return (
-              <AnimatedCard
+              <NeumorphicCard
                 key={order.id}
                 style={styles.orderCard}
                 onPress={() => router.push(`/agrimall-orders/${order.id}`)}
+                variant="elevated"
               >
                 {/* Order Header */}
                 <View style={styles.orderHeader}>
@@ -217,17 +237,15 @@ export default function AgriMallOrdersScreen() {
                       {formatDate(order.createdAt)}
                     </Text>
                   </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: statusColor + "20" },
-                    ]}
-                  >
-                    <StatusIcon size={14} color={statusColor} />
-                    <Text style={[styles.statusText, { color: statusColor }]}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </Text>
-                  </View>
+                  <NeumorphicBadge
+                    label={
+                      order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)
+                    }
+                    variant={getStatusBadgeVariant(order.status)}
+                    size="small"
+                    icon={<StatusIcon size={12} color={statusColor} />}
+                  />
                 </View>
 
                 {/* Order Items Preview */}
@@ -268,183 +286,123 @@ export default function AgriMallOrdersScreen() {
                   </View>
                   <View style={styles.viewDetails}>
                     <Text style={styles.viewDetailsText}>View Details</Text>
-                    <ChevronRight size={16} color={theme.colors.primary[600]} />
+                    <ChevronRight
+                      size={16}
+                      color={neumorphicColors.primary[600]}
+                    />
                   </View>
                 </View>
-              </AnimatedCard>
+              </NeumorphicCard>
             );
           })
         )}
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   header: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: neumorphicColors.base.card,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h3,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
   filterScroll: {
-    backgroundColor: theme.colors.background.primary,
-    paddingBottom: theme.spacing.md,
+    backgroundColor: neumorphicColors.base.card,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.background,
   },
   filterContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   filterChip: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.secondary,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  filterChipActive: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
-  },
-  filterText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-  },
-  filterTextActive: {
-    color: theme.colors.text.inverse,
+    marginRight: spacing.xs,
   },
   errorContainer: {
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.error + "10",
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing.lg,
     alignItems: "center",
   },
   errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.sm,
+    ...typography.bodySmall,
+    color: neumorphicColors.semantic.error,
     textAlign: "center",
   },
   retryButton: {
-    marginTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.error,
-    borderRadius: theme.borderRadius.md,
-  },
-  retryText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    marginTop: spacing.md,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["3xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h4,
+    marginTop: spacing.lg,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
+    ...typography.bodySmall,
+    marginTop: spacing.sm,
     textAlign: "center",
   },
   shopButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.xl,
-  },
-  shopButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontSize: theme.typography.fontSize.md,
+    marginTop: spacing.xl,
   },
   orderCard: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
+    marginBottom: spacing.md,
+    padding: 0,
     overflow: "hidden",
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.sm,
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    padding: theme.spacing.md,
+    padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.background,
   },
   orderIdContainer: {},
   orderId: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
   },
   orderDate: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
     marginTop: 2,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.full,
-    gap: 4,
-  },
-  statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   itemsPreview: {
     flexDirection: "row",
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   itemPreview: {},
   itemImageContainer: {
     width: 50,
     height: 50,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   itemImage: {
     width: "100%",
@@ -455,38 +413,34 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: theme.colors.primary[100],
+    backgroundColor: neumorphicColors.primary[100],
   },
   moreItems: {
     width: 50,
     height: 50,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.background.secondary,
+    borderRadius: borderRadius.md,
+    backgroundColor: neumorphicColors.base.background,
     justifyContent: "center",
     alignItems: "center",
   },
   moreItemsText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    fontWeight: "500",
   },
   orderFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: theme.spacing.md,
+    padding: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    backgroundColor: theme.colors.background.secondary,
+    borderTopColor: neumorphicColors.base.background,
+    backgroundColor: neumorphicColors.base.input,
   },
   totalLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
   },
   totalValue: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
   },
   viewDetails: {
     flexDirection: "row",
@@ -494,11 +448,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   viewDetailsText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.primary[600],
+    ...typography.bodySmall,
+    fontWeight: "500",
+    color: neumorphicColors.primary[600],
   },
   bottomPadding: {
-    height: theme.spacing["3xl"],
+    height: spacing["2xl"],
   },
 });

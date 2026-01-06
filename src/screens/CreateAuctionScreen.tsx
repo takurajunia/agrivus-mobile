@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  SafeAreaView,
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -18,12 +17,21 @@ import {
   TrendingUp,
   Gavel,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { auctionsService } from "../services/auctionsService";
 import { listingsService } from "../services/listingsService";
 import type { Listing } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicIconButton from "../components/neumorphic/NeumorphicIconButton";
+import NeumorphicInput from "../components/neumorphic/NeumorphicInput";
 
 export default function CreateAuctionScreen() {
   const router = useRouter();
@@ -146,15 +154,15 @@ export default function CreateAuctionScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="default">
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+        <NeumorphicIconButton
+          icon={<ChevronLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-        >
-          <ChevronLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="flat"
+          size="md"
+        />
         <Text style={styles.headerTitle}>Create Auction</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -170,7 +178,7 @@ export default function CreateAuctionScreen() {
             <LoadingSpinner />
           </View>
         ) : listing ? (
-          <AnimatedCard style={styles.listingCard}>
+          <NeumorphicCard style={styles.listingCard}>
             <Text style={styles.sectionTitle}>Selected Listing</Text>
             <View style={styles.listingInfo}>
               <Text style={styles.listingCrop}>{listing.cropType}</Text>
@@ -182,108 +190,73 @@ export default function CreateAuctionScreen() {
                 {listing.unit}
               </Text>
             </View>
-          </AnimatedCard>
+          </NeumorphicCard>
         ) : (
-          <AnimatedCard style={styles.selectListingCard}>
-            <Gavel size={40} color={theme.colors.text.tertiary} />
+          <NeumorphicCard style={styles.selectListingCard}>
+            <Gavel size={40} color={neumorphicColors.text.tertiary} />
             <Text style={styles.selectListingTitle}>Select a Listing</Text>
             <Text style={styles.selectListingText}>
               Choose a listing from your inventory to put up for auction
             </Text>
-            <TouchableOpacity
-              style={styles.selectListingButton}
+            <NeumorphicButton
+              title="Browse Listings"
               onPress={() => router.push("/my-listings?select=true")}
-            >
-              <Text style={styles.selectListingButtonText}>
-                Browse Listings
-              </Text>
-            </TouchableOpacity>
-          </AnimatedCard>
+              variant="primary"
+              size="md"
+              style={{ marginTop: spacing.xl }}
+            />
+          </NeumorphicCard>
         )}
 
         {/* Form */}
         <View style={styles.form}>
           {/* Starting Price */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Starting Price *</Text>
-            <View
-              style={[
-                styles.inputWrapper,
-                errors.startingPrice && styles.inputError,
-              ]}
-            >
-              <DollarSign size={20} color={theme.colors.text.secondary} />
-              <TextInput
-                style={styles.input}
-                value={formData.startingPrice}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, startingPrice: text })
-                }
-                placeholder="0.00"
-                placeholderTextColor={theme.colors.text.tertiary}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            {errors.startingPrice && (
-              <Text style={styles.errorText}>{errors.startingPrice}</Text>
-            )}
-            <Text style={styles.helperText}>
-              The minimum amount bidders can start bidding at
-            </Text>
-          </View>
+          <NeumorphicInput
+            label="Starting Price *"
+            value={formData.startingPrice}
+            onChangeText={(text) =>
+              setFormData({ ...formData, startingPrice: text })
+            }
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            error={errors.startingPrice}
+            leftIcon={
+              <DollarSign size={20} color={neumorphicColors.text.secondary} />
+            }
+            helperText="The minimum amount bidders can start bidding at"
+          />
 
           {/* Reserve Price */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Reserve Price (Optional)</Text>
-            <View style={styles.inputWrapper}>
-              <DollarSign size={20} color={theme.colors.text.secondary} />
-              <TextInput
-                style={styles.input}
-                value={formData.reservePrice}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, reservePrice: text })
-                }
-                placeholder="0.00"
-                placeholderTextColor={theme.colors.text.tertiary}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            {errors.reservePrice && (
-              <Text style={styles.errorText}>{errors.reservePrice}</Text>
-            )}
-            <Text style={styles.helperText}>
-              Minimum price you're willing to accept (hidden from bidders)
-            </Text>
-          </View>
+          <NeumorphicInput
+            label="Reserve Price (Optional)"
+            value={formData.reservePrice}
+            onChangeText={(text) =>
+              setFormData({ ...formData, reservePrice: text })
+            }
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            error={errors.reservePrice}
+            leftIcon={
+              <DollarSign size={20} color={neumorphicColors.text.secondary} />
+            }
+            helperText="Minimum price you're willing to accept (hidden from bidders)"
+          />
 
           {/* Min Bid Increment */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Minimum Bid Increment *</Text>
-            <View
-              style={[
-                styles.inputWrapper,
-                errors.minBidIncrement && styles.inputError,
-              ]}
-            >
-              <TrendingUp size={20} color={theme.colors.text.secondary} />
-              <TextInput
-                style={styles.input}
-                value={formData.minBidIncrement}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, minBidIncrement: text })
-                }
-                placeholder="10"
-                placeholderTextColor={theme.colors.text.tertiary}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            {errors.minBidIncrement && (
-              <Text style={styles.errorText}>{errors.minBidIncrement}</Text>
-            )}
-            <Text style={styles.helperText}>
-              Each new bid must be at least this much higher than the previous
-            </Text>
-          </View>
+          <NeumorphicInput
+            label="Minimum Bid Increment *"
+            value={formData.minBidIncrement}
+            onChangeText={(text) =>
+              setFormData({ ...formData, minBidIncrement: text })
+            }
+            placeholder="10"
+            keyboardType="decimal-pad"
+            error={errors.minBidIncrement}
+            leftIcon={
+              <TrendingUp size={20} color={neumorphicColors.text.secondary} />
+            }
+            helperText="Each new bid must be at least this much higher than the previous"
+          />
 
           {/* Duration */}
           <View style={styles.inputGroup}>
@@ -320,7 +293,7 @@ export default function CreateAuctionScreen() {
 
           {/* Summary */}
           {listing && formData.startingPrice && (
-            <AnimatedCard style={styles.summaryCard}>
+            <NeumorphicCard style={styles.summaryCard} variant="elevated">
               <Text style={styles.summaryTitle}>Auction Summary</Text>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Item</Text>
@@ -352,7 +325,7 @@ export default function CreateAuctionScreen() {
                   {durations.find((d) => d.value === formData.duration)?.label}
                 </Text>
               </View>
-            </AnimatedCard>
+            </NeumorphicCard>
           )}
         </View>
 
@@ -360,236 +333,155 @@ export default function CreateAuctionScreen() {
       </ScrollView>
 
       {/* Submit Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            (submitting || !listing) && styles.submitButtonDisabled,
-          ]}
+      <NeumorphicCard style={styles.footer} variant="elevated">
+        <NeumorphicButton
+          title={submitting ? "Creating Auction..." : "Create Auction"}
           onPress={handleSubmit}
+          variant="primary"
+          size="lg"
+          loading={submitting}
           disabled={submitting || !listing}
-        >
-          <Gavel size={20} color={theme.colors.text.inverse} />
-          <Text style={styles.submitButtonText}>
-            {submitting ? "Creating Auction..." : "Create Auction"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          icon={<Gavel size={20} color={neumorphicColors.text.inverse} />}
+        />
+      </NeumorphicCard>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: spacing.lg,
   },
   headerTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   scrollView: {
     flex: 1,
   },
   loadingContainer: {
-    padding: theme.spacing["3xl"],
+    padding: spacing["2xl"],
     justifyContent: "center",
     alignItems: "center",
   },
   listingCard: {
-    backgroundColor: theme.colors.background.primary,
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing.lg,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.md,
+    ...typography.caption,
+    fontWeight: "500",
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.md,
   },
   listingInfo: {},
   listingCrop: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
   },
   listingDetails: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   listingPrice: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary[600],
-    marginTop: theme.spacing.sm,
+    ...typography.h5,
+    color: neumorphicColors.primary.main,
+    marginTop: spacing.sm,
   },
   selectListingCard: {
-    backgroundColor: theme.colors.background.primary,
-    margin: theme.spacing.lg,
-    padding: theme.spacing["3xl"],
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing["2xl"],
     alignItems: "center",
   },
   selectListingTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
   },
   selectListingText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
-    marginTop: theme.spacing.sm,
-  },
-  selectListingButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.xl,
-  },
-  selectListingButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.inverse,
+    marginTop: spacing.sm,
   },
   form: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   inputGroup: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   label: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  inputError: {
-    borderColor: theme.colors.error,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "500",
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.sm,
   },
   errorText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.error,
-    marginTop: theme.spacing.xs,
-  },
-  helperText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.semantic.error,
+    marginTop: spacing.xs,
   },
   durationContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   durationOption: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: neumorphicColors.base.card,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    borderColor: neumorphicColors.base.border,
   },
   durationOptionSelected: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary.main,
+    borderColor: neumorphicColors.primary.main,
   },
   durationText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    fontWeight: "500",
+    color: neumorphicColors.text.secondary,
   },
   durationTextSelected: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
   },
   summaryCard: {
-    backgroundColor: theme.colors.primary[50],
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.md,
+    padding: spacing.lg,
+    marginTop: spacing.md,
+    backgroundColor: neumorphicColors.primary.light,
   },
   summaryTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.md,
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.border,
   },
   summaryLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   summaryValue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "500",
+    color: neumorphicColors.text.primary,
   },
   bottomPadding: {
-    height: theme.spacing["3xl"],
+    height: spacing["2xl"],
   },
   footer: {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-  },
-  submitButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary[600],
-    paddingVertical: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.sm,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
+    margin: spacing.lg,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
   },
 });

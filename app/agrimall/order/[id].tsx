@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -29,10 +27,18 @@ import {
   Calendar,
   Store,
 } from "lucide-react-native";
-import AnimatedCard from "../../../src/components/AnimatedCard";
-import AnimatedButton from "../../../src/components/AnimatedButton";
-import GlassCard from "../../../src/components/GlassCard";
-import { theme } from "../../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+} from "../../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../../src/theme/neumorphic";
 import agrimallService from "../../../src/services/agrimallService";
 import { useAuth } from "../../../src/contexts/AuthContext";
 
@@ -231,23 +237,23 @@ export default function AgriMallOrderDetailScreen() {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "pending":
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
       case "paid":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "processing":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "ready_for_pickup":
-        return theme.colors.secondary[600];
+        return neumorphicColors.secondary[600];
       case "shipped":
       case "in_transit":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "delivered":
       case "confirmed":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "cancelled":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
@@ -287,32 +293,35 @@ export default function AgriMallOrderDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail" showLeaves={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading order...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   if (!order) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail" showLeaves={false}>
         <View style={styles.header}>
-          <TouchableOpacity
+          <NeumorphicIconButton
+            icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
             onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <ArrowLeft size={24} color={theme.colors.text.primary} />
-          </TouchableOpacity>
+            variant="default"
+            size="medium"
+          />
           <Text style={styles.title}>Order Details</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.errorContainer}>
           <Package
             size={64}
-            color={theme.colors.text.tertiary}
+            color={neumorphicColors.text.tertiary}
             strokeWidth={1}
           />
           <Text style={styles.errorTitle}>Order Not Found</Text>
@@ -320,20 +329,20 @@ export default function AgriMallOrderDetailScreen() {
             The order you're looking for doesn't exist.
           </Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="detail" showLeaves={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="default"
+          size="medium"
+        />
         <Text style={styles.title}>Order #{order.orderNumber}</Text>
         <View style={styles.placeholder} />
       </View>
@@ -346,13 +355,13 @@ export default function AgriMallOrderDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary[600]]}
-            tintColor={theme.colors.primary[600]}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
           />
         }
       >
         {/* Status Card */}
-        <GlassCard style={styles.statusCard}>
+        <NeumorphicCard style={styles.statusCard} variant="elevated">
           <View style={styles.statusHeader}>
             {getStatusIcon(order.status)}
             <View style={styles.statusInfo}>
@@ -369,13 +378,13 @@ export default function AgriMallOrderDetailScreen() {
               </Text>
             </View>
           </View>
-        </GlassCard>
+        </NeumorphicCard>
 
         {/* Product Details */}
         <Text style={styles.sectionTitle}>Product</Text>
-        <AnimatedCard style={styles.productCard}>
+        <NeumorphicCard style={styles.productCard}>
           <View style={styles.productInfo}>
-            <Package size={40} color={theme.colors.primary[600]} />
+            <Package size={40} color={neumorphicColors.primary[600]} />
             <View style={styles.productDetails}>
               <Text style={styles.productName}>{order.product?.name}</Text>
               <Text style={styles.productQuantity}>
@@ -384,11 +393,11 @@ export default function AgriMallOrderDetailScreen() {
               </Text>
             </View>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Order Summary */}
         <Text style={styles.sectionTitle}>Order Summary</Text>
-        <AnimatedCard style={styles.summaryCard}>
+        <NeumorphicCard style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
             <Text style={styles.summaryValue}>
@@ -407,14 +416,14 @@ export default function AgriMallOrderDetailScreen() {
               {formatCurrency(order.totalAmount)}
             </Text>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Vendor Info */}
         <Text style={styles.sectionTitle}>Vendor</Text>
-        <AnimatedCard style={styles.partyCard}>
+        <NeumorphicCard style={styles.partyCard}>
           <View style={styles.partyHeader}>
             <View style={styles.partyAvatar}>
-              <Store size={24} color={theme.colors.primary[600]} />
+              <Store size={24} color={neumorphicColors.primary[600]} />
             </View>
             <View style={styles.partyInfo}>
               <Text style={styles.partyName}>{order.vendor?.storeName}</Text>
@@ -423,30 +432,35 @@ export default function AgriMallOrderDetailScreen() {
           </View>
           {isBuyer && (
             <View style={styles.partyActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
+              <NeumorphicIconButton
+                icon={<Phone size={18} color={neumorphicColors.primary[600]} />}
                 onPress={() => handleCall(order.vendor?.phone)}
-              >
-                <Phone size={18} color={theme.colors.primary[600]} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
+                variant="secondary"
+                size="medium"
+              />
+              <NeumorphicIconButton
+                icon={
+                  <MessageSquare
+                    size={18}
+                    color={neumorphicColors.primary[600]}
+                  />
+                }
                 onPress={() => handleChat(order.vendor?.id)}
-              >
-                <MessageSquare size={18} color={theme.colors.primary[600]} />
-              </TouchableOpacity>
+                variant="secondary"
+                size="medium"
+              />
             </View>
           )}
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Buyer Info (for vendors) */}
         {isVendor && (
           <>
             <Text style={styles.sectionTitle}>Buyer</Text>
-            <AnimatedCard style={styles.partyCard}>
+            <NeumorphicCard style={styles.partyCard}>
               <View style={styles.partyHeader}>
                 <View style={styles.partyAvatar}>
-                  <User size={24} color={theme.colors.info} />
+                  <User size={24} color={neumorphicColors.semantic.info} />
                 </View>
                 <View style={styles.partyInfo}>
                   <Text style={styles.partyName}>{order.buyer?.name}</Text>
@@ -454,28 +468,35 @@ export default function AgriMallOrderDetailScreen() {
                 </View>
               </View>
               <View style={styles.partyActions}>
-                <TouchableOpacity
-                  style={styles.actionButton}
+                <NeumorphicIconButton
+                  icon={
+                    <Phone size={18} color={neumorphicColors.primary[600]} />
+                  }
                   onPress={() => handleCall(order.buyer?.phone)}
-                >
-                  <Phone size={18} color={theme.colors.primary[600]} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
+                  variant="secondary"
+                  size="medium"
+                />
+                <NeumorphicIconButton
+                  icon={
+                    <MessageSquare
+                      size={18}
+                      color={neumorphicColors.primary[600]}
+                    />
+                  }
                   onPress={() => handleChat(order.buyer?.id)}
-                >
-                  <MessageSquare size={18} color={theme.colors.primary[600]} />
-                </TouchableOpacity>
+                  variant="secondary"
+                  size="medium"
+                />
               </View>
-            </AnimatedCard>
+            </NeumorphicCard>
           </>
         )}
 
         {/* Delivery Info */}
         <Text style={styles.sectionTitle}>Delivery</Text>
-        <AnimatedCard style={styles.deliveryCard}>
+        <NeumorphicCard style={styles.deliveryCard}>
           <View style={styles.deliveryRow}>
-            <MapPin size={18} color={theme.colors.text.tertiary} />
+            <MapPin size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.deliveryInfo}>
               <Text style={styles.deliveryLabel}>Delivery Address</Text>
               <Text style={styles.deliveryValue}>{order.deliveryAddress}</Text>
@@ -483,7 +504,7 @@ export default function AgriMallOrderDetailScreen() {
           </View>
           {order.pickupLocation && (
             <View style={styles.deliveryRow}>
-              <Store size={18} color={theme.colors.text.tertiary} />
+              <Store size={18} color={neumorphicColors.text.tertiary} />
               <View style={styles.deliveryInfo}>
                 <Text style={styles.deliveryLabel}>Pickup Location</Text>
                 <Text style={styles.deliveryValue}>{order.pickupLocation}</Text>
@@ -491,7 +512,7 @@ export default function AgriMallOrderDetailScreen() {
             </View>
           )}
           <View style={styles.deliveryRow}>
-            <Calendar size={18} color={theme.colors.text.tertiary} />
+            <Calendar size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.deliveryInfo}>
               <Text style={styles.deliveryLabel}>Order Date</Text>
               <Text style={styles.deliveryValue}>
@@ -499,13 +520,13 @@ export default function AgriMallOrderDetailScreen() {
               </Text>
             </View>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Notes */}
         {(order.notes || order.vendorNotes) && (
           <>
             <Text style={styles.sectionTitle}>Notes</Text>
-            <AnimatedCard style={styles.notesCard}>
+            <NeumorphicCard style={styles.notesCard}>
               {order.notes && (
                 <View style={styles.noteItem}>
                   <Text style={styles.noteLabel}>Buyer Notes</Text>
@@ -518,7 +539,7 @@ export default function AgriMallOrderDetailScreen() {
                   <Text style={styles.noteText}>{order.vendorNotes}</Text>
                 </View>
               )}
-            </AnimatedCard>
+            </NeumorphicCard>
           </>
         )}
 
@@ -526,15 +547,17 @@ export default function AgriMallOrderDetailScreen() {
         {order.rating && (
           <>
             <Text style={styles.sectionTitle}>Rating & Review</Text>
-            <AnimatedCard style={styles.ratingCard}>
+            <NeumorphicCard style={styles.ratingCard}>
               <View style={styles.ratingHeader}>
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
                     size={20}
-                    color={theme.colors.warning}
+                    color={neumorphicColors.semantic.warning}
                     fill={
-                      i < order.rating! ? theme.colors.warning : "transparent"
+                      i < order.rating!
+                        ? neumorphicColors.semantic.warning
+                        : "transparent"
                     }
                   />
                 ))}
@@ -543,7 +566,7 @@ export default function AgriMallOrderDetailScreen() {
               {order.review && (
                 <Text style={styles.reviewText}>{order.review}</Text>
               )}
-            </AnimatedCard>
+            </NeumorphicCard>
           </>
         )}
 
@@ -553,11 +576,12 @@ export default function AgriMallOrderDetailScreen() {
           {isVendor &&
             order.status !== "cancelled" &&
             order.status !== "confirmed" && (
-              <AnimatedButton
+              <NeumorphicButton
                 title="Update Status"
                 variant="primary"
-                size="lg"
+                size="large"
                 onPress={() => setShowStatusModal(true)}
+                fullWidth
               />
             )}
 
@@ -568,54 +592,67 @@ export default function AgriMallOrderDetailScreen() {
                 <Text style={styles.confirmLabel}>Rate this order</Text>
                 <View style={styles.ratingSelector}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
+                    <NeumorphicIconButton
                       key={star}
+                      icon={
+                        <Star
+                          size={28}
+                          color={neumorphicColors.semantic.warning}
+                          fill={
+                            star <= rating
+                              ? neumorphicColors.semantic.warning
+                              : "transparent"
+                          }
+                        />
+                      }
                       onPress={() => setRating(star)}
-                    >
-                      <Star
-                        size={32}
-                        color={theme.colors.warning}
-                        fill={
-                          star <= rating ? theme.colors.warning : "transparent"
-                        }
-                      />
-                    </TouchableOpacity>
+                      variant="ghost"
+                      size="medium"
+                    />
                   ))}
                 </View>
                 <TextInput
                   style={styles.reviewInput}
                   placeholder="Write a review (optional)"
+                  placeholderTextColor={neumorphicColors.text.tertiary}
                   value={review}
                   onChangeText={setReview}
                   multiline
                   numberOfLines={3}
                 />
               </View>
-              <AnimatedButton
+              <NeumorphicButton
                 title="Confirm Delivery"
                 variant="primary"
-                size="lg"
+                size="large"
                 loading={processing}
                 onPress={handleConfirmDelivery}
-              >
-                <CheckCircle size={20} color={theme.colors.text.inverse} />
-              </AnimatedButton>
+                icon={
+                  <CheckCircle
+                    size={20}
+                    color={neumorphicColors.text.inverse}
+                  />
+                }
+                fullWidth
+              />
             </>
           )}
 
           {/* Cancel Action */}
           {(isBuyer || isVendor) &&
             ["pending", "paid", "processing"].includes(order.status) && (
-              <AnimatedButton
+              <NeumorphicButton
                 title="Cancel Order"
                 variant="danger"
-                size="lg"
-                style={{ marginTop: theme.spacing.md }}
+                size="large"
+                style={{ marginTop: spacing.md }}
                 loading={processing}
                 onPress={handleCancelOrder}
-              >
-                <XCircle size={20} color={theme.colors.text.inverse} />
-              </AnimatedButton>
+                icon={
+                  <XCircle size={20} color={neumorphicColors.text.inverse} />
+                }
+                fullWidth
+              />
             )}
         </View>
 
@@ -625,36 +662,28 @@ export default function AgriMallOrderDetailScreen() {
       {/* Status Update Modal */}
       {showStatusModal && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <NeumorphicCard style={styles.modalContent} variant="elevated">
             <Text style={styles.modalTitle}>Update Status</Text>
 
             <View style={styles.statusOptions}>
               {STATUS_OPTIONS.map((option) => (
-                <TouchableOpacity
+                <NeumorphicButton
                   key={option.value}
-                  style={[
-                    styles.statusOption,
-                    selectedStatus === option.value &&
-                      styles.statusOptionSelected,
-                  ]}
+                  title={option.label}
+                  variant={
+                    selectedStatus === option.value ? "primary" : "secondary"
+                  }
+                  size="small"
                   onPress={() => setSelectedStatus(option.value)}
-                >
-                  <Text
-                    style={[
-                      styles.statusOptionText,
-                      selectedStatus === option.value &&
-                        styles.statusOptionTextSelected,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
+                  style={styles.statusOptionButton}
+                />
               ))}
             </View>
 
             <TextInput
               style={styles.notesInput}
               placeholder="Add notes (optional)"
+              placeholderTextColor={neumorphicColors.text.tertiary}
               value={vendorNotes}
               onChangeText={setVendorNotes}
               multiline
@@ -662,10 +691,10 @@ export default function AgriMallOrderDetailScreen() {
             />
 
             <View style={styles.modalActions}>
-              <AnimatedButton
+              <NeumorphicButton
                 title="Cancel"
-                variant="outline"
-                size="md"
+                variant="secondary"
+                size="medium"
                 style={{ flex: 1 }}
                 onPress={() => {
                   setShowStatusModal(false);
@@ -673,51 +702,49 @@ export default function AgriMallOrderDetailScreen() {
                   setVendorNotes("");
                 }}
               />
-              <AnimatedButton
+              <NeumorphicButton
                 title="Update"
                 variant="primary"
-                size="md"
-                style={{ flex: 1, marginLeft: theme.spacing.md }}
+                size="medium"
+                style={{ flex: 1, marginLeft: spacing.md }}
                 loading={processing}
                 onPress={handleUpdateStatus}
               />
             </View>
-          </View>
+          </NeumorphicCard>
         </View>
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   backButton: {
-    padding: theme.spacing.xs,
+    padding: spacing.xs,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   loadingContainer: {
     flex: 1,
@@ -725,111 +752,99 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   errorTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   errorSubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   statusCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   statusHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   statusInfo: {
     flex: 1,
   },
   statusText: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.h5,
   },
   statusDate: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
     marginTop: 2,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
+    ...typography.h5,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
   productCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   productInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   productDetails: {
     flex: 1,
   },
   productName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
   },
   productQuantity: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     marginTop: 2,
   },
   summaryCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   summaryLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   summaryValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   totalRow: {
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.shadowDark,
     marginBottom: 0,
   },
   totalLabel: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
   },
   totalValue: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h5,
+    color: neumorphicColors.primary[600],
   },
   partyCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -837,14 +852,14 @@ const styles = StyleSheet.create({
   partyHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
     flex: 1,
   },
   partyAvatar: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.primary[50],
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.primary[50],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -852,170 +867,161 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   partyName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
   },
   partySubtext: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     marginTop: 2,
   },
   partyActions: {
     flexDirection: "row",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.primary[50],
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.primary[50],
     justifyContent: "center",
     alignItems: "center",
   },
   deliveryCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   deliveryRow: {
     flexDirection: "row",
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   deliveryInfo: {
     flex: 1,
   },
   deliveryLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
     marginBottom: 2,
   },
   deliveryValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
   },
   notesCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   noteItem: {
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   noteLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginBottom: theme.spacing.xs,
+    ...typography.caption,
+    marginBottom: spacing.xs,
   },
   noteText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
     lineHeight: 22,
   },
   ratingCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   ratingHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   ratingValue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginLeft: theme.spacing.sm,
+    ...typography.body,
+    fontWeight: "600",
+    marginLeft: spacing.sm,
   },
   reviewText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     fontStyle: "italic",
     lineHeight: 22,
   },
   actions: {
-    marginTop: theme.spacing.xl,
+    marginTop: spacing.xl,
   },
   confirmSection: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   confirmLabel: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    ...typography.body,
+    fontWeight: "600",
+    marginBottom: spacing.md,
   },
   ratingSelector: {
     flexDirection: "row",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   reviewInput: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...typography.body,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    borderColor: "transparent",
     textAlignVertical: "top",
     minHeight: 80,
   },
   bottomPadding: {
-    height: theme.spacing["2xl"],
+    height: spacing["2xl"],
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   modalContent: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
     width: "100%",
     maxWidth: 400,
+    padding: spacing.xl,
   },
   modalTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.lg,
+    ...typography.h4,
+    marginBottom: spacing.lg,
     textAlign: "center",
   },
   statusOptions: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   statusOption: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.base.input,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    borderColor: neumorphicColors.base.shadowDark,
   },
   statusOptionSelected: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[600],
+    borderColor: neumorphicColors.primary[600],
   },
   statusOptionText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
   },
   statusOptionTextSelected: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
+  },
+  statusOptionButton: {
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
   },
   notesInput: {
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
     textAlignVertical: "top",
     minHeight: 80,
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   modalActions: {
     flexDirection: "row",

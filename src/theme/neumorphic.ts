@@ -764,6 +764,27 @@ export const typography = {
     textTransform: "uppercase",
     color: neumorphicColors.text.tertiary,
   } as TextStyle,
+
+  // Size utilities for direct font-size access
+  sizes: {
+    xs: 10,
+    sm: 12,
+    md: 14,
+    lg: 16,
+    xl: 18,
+    "2xl": 20,
+    "3xl": 24,
+    "4xl": 28,
+    "5xl": 32,
+  } as const,
+
+  // Weight utilities for direct font-weight access
+  weights: {
+    normal: "400" as const,
+    medium: "500" as const,
+    semibold: "600" as const,
+    bold: "700" as const,
+  },
 };
 
 // =============================================================================
@@ -777,6 +798,8 @@ export const spacing = {
   lg: 24,
   xl: 32,
   "2xl": 48,
+  "3xl": 64,
+  "4xl": 80,
 } as const;
 
 // =============================================================================

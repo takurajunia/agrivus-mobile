@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
@@ -20,11 +19,27 @@ import {
   ChevronRight,
   Edit,
   Award,
+  Star,
+  Package,
+  ShoppingBag,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import GlassCard from "../../src/components/GlassCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import { theme } from "../../src/theme/tokens";
+
+// Neumorphic Components
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicAvatar,
+  NeumorphicBadge,
+} from "../../src/components/neumorphic";
+
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../../src/theme/neumorphic";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -43,19 +58,19 @@ export default function ProfileScreen() {
         {
           label: "Edit Profile",
           icon: Edit,
-          color: theme.colors.success,
+          color: neumorphicColors.semantic.success,
           route: "/edit-profile",
         },
         {
           label: "Account Settings",
           icon: Settings,
-          color: theme.colors.info,
+          color: neumorphicColors.semantic.info,
           route: "/settings",
         },
         {
           label: "Verification Badge",
           icon: Award,
-          color: theme.colors.warning,
+          color: neumorphicColors.semantic.warning,
           route: "/verification",
         },
       ],
@@ -66,19 +81,19 @@ export default function ProfileScreen() {
         {
           label: "Payment Methods",
           icon: CreditCard,
-          color: theme.colors.secondary[600],
+          color: neumorphicColors.secondary[600],
           route: "/payment-methods",
         },
         {
           label: "Notifications",
           icon: Bell,
-          color: theme.colors.error,
+          color: neumorphicColors.semantic.error,
           route: "/notifications-settings",
         },
         {
           label: "Privacy & Security",
           icon: Shield,
-          color: theme.colors.primary[700],
+          color: neumorphicColors.primary[700],
           route: "/privacy-security",
         },
       ],
@@ -89,7 +104,7 @@ export default function ProfileScreen() {
         {
           label: "Help Center",
           icon: HelpCircle,
-          color: theme.colors.info,
+          color: neumorphicColors.semantic.info,
           route: "/help",
         },
       ],
@@ -106,7 +121,7 @@ export default function ProfileScreen() {
               {
                 label: "Admin Dashboard",
                 icon: Shield,
-                color: theme.colors.error,
+                color: neumorphicColors.semantic.error,
                 route: "/admin",
               },
             ],
@@ -116,137 +131,147 @@ export default function ProfileScreen() {
       : baseMenuSections;
 
   const stats = [
-    { label: "Orders", value: "156" },
-    { label: "Rating", value: "4.8" },
-    { label: "Products", value: "24" },
+    { label: "Orders", value: "156", icon: ShoppingBag },
+    { label: "Rating", value: "4.8", icon: Star },
+    { label: "Products", value: "24", icon: Package },
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="profile" showLeaves={true}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Profile</Text>
+          <TouchableOpacity onPress={() => router.push("/settings" as any)}>
+            <Settings size={24} color={neumorphicColors.text.secondary} />
+          </TouchableOpacity>
         </View>
 
-        <GlassCard style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <User
-                size={40}
-                color={theme.colors.primary[600]}
-                strokeWidth={2}
-              />
-            </View>
-            <AnimatedButton
-              title="Edit"
-              variant="primary"
-              size="sm"
-              style={styles.editAvatarButton}
-              onPress={() => console.log("Edit avatar pressed")}
-            >
-              <Edit size={16} color={theme.colors.text.inverse} />
-            </AnimatedButton>
+        {/* Profile Card */}
+        <NeumorphicCard variant="elevated" style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <NeumorphicAvatar
+              name={user?.fullName}
+              size="xlarge"
+              status="online"
+              showStatus
+            />
+            <TouchableOpacity style={styles.editAvatarButton}>
+              <Edit size={16} color={neumorphicColors.text.inverse} />
+            </TouchableOpacity>
           </View>
 
-          <Text style={styles.userName}>{user?.name || "Demo User"}</Text>
+          <Text style={styles.userName}>{user?.fullName || "Demo User"}</Text>
           <Text style={styles.userEmail}>
             {user?.email || "demo@agrivus.com"}
           </Text>
 
+          <NeumorphicBadge
+            label={user?.role || "Farmer"}
+            variant="primary"
+            size="medium"
+            style={styles.roleBadge}
+          />
+
           <View style={styles.statsContainer}>
             {stats.map((stat, index) => (
               <View key={index} style={styles.statItem}>
+                <View style={styles.statIconContainer}>
+                  <stat.icon size={16} color={neumorphicColors.primary[600]} />
+                </View>
                 <Text style={styles.statValue}>{stat.value}</Text>
                 <Text style={styles.statLabel}>{stat.label}</Text>
               </View>
             ))}
           </View>
-        </GlassCard>
+        </NeumorphicCard>
 
+        {/* Menu Sections */}
         {menuSections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.menuSection}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.items.map((item, itemIndex) => (
-              <AnimatedCard
+              <NeumorphicCard
                 key={itemIndex}
+                variant="standard"
                 style={styles.menuItem}
-                delay={(sectionIndex * 3 + itemIndex) * 50}
                 onPress={() =>
                   item.route
                     ? router.push(item.route as any)
                     : console.log(`${item.label} pressed`)
                 }
+                animationDelay={(sectionIndex * 3 + itemIndex) * 50}
               >
-                <View
-                  style={[
-                    styles.menuIconContainer,
-                    { backgroundColor: `${item.color}20` },
-                  ]}
-                >
-                  <item.icon size={20} color={item.color} strokeWidth={2} />
+                <View style={styles.menuItemContent}>
+                  <View
+                    style={[
+                      styles.menuIconContainer,
+                      { backgroundColor: `${item.color}15` },
+                    ]}
+                  >
+                    <item.icon size={20} color={item.color} strokeWidth={2} />
+                  </View>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <ChevronRight
+                    size={20}
+                    color={neumorphicColors.text.tertiary}
+                  />
                 </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <ChevronRight size={20} color={theme.colors.text.tertiary} />
-              </AnimatedCard>
+              </NeumorphicCard>
             ))}
           </View>
         ))}
 
-        <AnimatedButton
-          title="Logout"
-          variant="danger"
-          size="lg"
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <LogOut size={20} color={theme.colors.error} strokeWidth={2} />
-        </AnimatedButton>
+        {/* Logout Button */}
+        <View style={styles.logoutContainer}>
+          <NeumorphicButton
+            title="Logout"
+            variant="danger"
+            onPress={handleLogout}
+            icon={<LogOut size={20} color={neumorphicColors.text.inverse} />}
+            fullWidth
+          />
+        </View>
 
-        <Text style={styles.version}>Version 1.0.0</Text>
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: spacing.xl,
+  },
   header: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: theme.typography.fontSize["4xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
     letterSpacing: -0.5,
   },
   profileCard: {
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
     alignItems: "center",
+    padding: spacing.xl,
   },
-  avatarContainer: {
+  profileHeader: {
     position: "relative",
-    marginBottom: theme.spacing.lg,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary[50],
-    justifyContent: "center",
-    alignItems: "center",
+    marginBottom: spacing.lg,
   },
   editAvatarButton: {
     position: "absolute",
@@ -254,87 +279,99 @@ const styles = StyleSheet.create({
     right: 0,
     width: 32,
     height: 32,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.primary[600],
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 3,
-    borderColor: theme.colors.background.primary,
+    borderColor: neumorphicColors.base.card,
   },
   userName: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.xs,
     letterSpacing: -0.3,
   },
   userEmail: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xl,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.md,
+  },
+  roleBadge: {
+    marginBottom: spacing.xl,
   },
   statsContainer: {
     flexDirection: "row",
     width: "100%",
     justifyContent: "space-around",
-    paddingTop: theme.spacing.xl,
+    paddingTop: spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.border,
   },
   statItem: {
     alignItems: "center",
   },
+  statIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: `${neumorphicColors.primary[500]}15`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
   statValue: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
-    marginBottom: theme.spacing.xs,
+    ...typography.h4,
+    color: neumorphicColors.primary[600],
+    marginBottom: spacing.xs,
     letterSpacing: -0.3,
   },
   statLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    fontWeight: "500",
   },
   menuSection: {
-    marginBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.xl,
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    fontWeight: "700",
+    color: neumorphicColors.text.tertiary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   menuItem: {
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  menuItemContent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.sm,
   },
   menuIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: theme.spacing.md,
+    marginRight: spacing.md,
   },
   menuLabel: {
     flex: 1,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
   },
-  logoutButton: {
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.lg,
-  },
-  version: {
-    textAlign: "center",
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginBottom: theme.spacing.lg,
+  logoutContainer: {
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
   },
   bottomPadding: {
-    height: theme.spacing.xl,
+    height: spacing.xl,
   },
 });

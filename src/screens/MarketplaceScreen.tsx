@@ -4,28 +4,31 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Image,
   RefreshControl,
-  SafeAreaView,
   FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Search, Filter, MapPin, Star, TrendingUp } from "lucide-react-native";
 import {
-  Search,
-  Filter,
-  MapPin,
-  Star,
-  TrendingUp,
-  ChevronDown,
-} from "lucide-react-native";
-import { theme } from "../theme/tokens";
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { listingsService } from "../services/listingsService";
 import type { ListingWithFarmer, ListingFilters } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
 import BoostBadge from "../components/BoostBadge";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicSearchBar,
+  NeumorphicBadge,
+  NeumorphicIconButton,
+  NeumorphicButton,
+} from "../components/neumorphic";
 
 const CROP_TYPES = [
   "All",
@@ -104,9 +107,10 @@ export default function MarketplaceScreen() {
       : 1;
 
     return (
-      <AnimatedCard
+      <NeumorphicCard
         style={styles.listingCard}
         onPress={() => router.push(`/listing/${listing.id}`)}
+        variant="standard"
       >
         <View style={styles.imageContainer}>
           {listing.images && listing.images.length > 0 ? (
@@ -122,7 +126,11 @@ export default function MarketplaceScreen() {
           )}
           {boostMultiplier > 1 && (
             <View style={styles.boostBadgeContainer}>
-              <BoostBadge label={`${boostMultiplier.toFixed(1)}x`} />
+              <NeumorphicBadge
+                label={`${boostMultiplier.toFixed(1)}x`}
+                variant="success"
+                size="small"
+              />
             </View>
           )}
         </View>
@@ -141,7 +149,7 @@ export default function MarketplaceScreen() {
           </View>
 
           <View style={styles.locationRow}>
-            <MapPin size={14} color={theme.colors.text.secondary} />
+            <MapPin size={14} color={neumorphicColors.text.secondary} />
             <Text style={styles.location}>{listing.location}</Text>
           </View>
 
@@ -149,18 +157,18 @@ export default function MarketplaceScreen() {
             <View style={styles.farmerInfo}>
               <Text style={styles.farmerName}>{farmer.fullName}</Text>
               <View style={styles.scoreContainer}>
-                <Star size={12} color={theme.colors.secondary[500]} />
+                <Star size={12} color={neumorphicColors.secondary[500]} />
                 <Text style={styles.score}>{farmer.platformScore}</Text>
               </View>
             </View>
           </View>
         </View>
-      </AnimatedCard>
+      </NeumorphicCard>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={true}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Marketplace</Text>
@@ -171,22 +179,18 @@ export default function MarketplaceScreen() {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Search size={20} color={theme.colors.text.secondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
-            placeholderTextColor={theme.colors.text.tertiary}
-            value={filters.search || ""}
-            onChangeText={(text) => handleFilterChange("search", text)}
-          />
-        </View>
-        <TouchableOpacity
-          style={styles.filterButton}
+        <NeumorphicSearchBar
+          placeholder="Search products..."
+          value={filters.search || ""}
+          onChangeText={(text) => handleFilterChange("search", text)}
+          style={styles.searchBar}
+        />
+        <NeumorphicIconButton
+          icon={<Filter size={20} color={neumorphicColors.primary[600]} />}
           onPress={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={20} color={theme.colors.primary[600]} />
-        </TouchableOpacity>
+          size="medium"
+          variant={showFilters ? "primary" : "default"}
+        />
       </View>
 
       {/* Filter Tags */}
@@ -196,48 +200,51 @@ export default function MarketplaceScreen() {
         style={styles.filterTags}
         contentContainerStyle={styles.filterTagsContent}
       >
-        {CROP_TYPES.map((crop) => (
-          <TouchableOpacity
-            key={crop}
-            style={[
-              styles.filterTag,
-              (filters.cropType === crop ||
-                (crop === "All" && !filters.cropType)) &&
-                styles.filterTagActive,
-            ]}
-            onPress={() =>
-              handleFilterChange("cropType", crop === "All" ? undefined : crop)
-            }
-          >
-            <Text
-              style={[
-                styles.filterTagText,
-                (filters.cropType === crop ||
-                  (crop === "All" && !filters.cropType)) &&
-                  styles.filterTagTextActive,
-              ]}
+        {CROP_TYPES.map((crop) => {
+          const isActive =
+            filters.cropType === crop || (crop === "All" && !filters.cropType);
+          return (
+            <TouchableOpacity
+              key={crop}
+              style={[styles.filterTag, isActive && styles.filterTagActive]}
+              onPress={() =>
+                handleFilterChange(
+                  "cropType",
+                  crop === "All" ? undefined : crop
+                )
+              }
             >
-              {crop}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.filterTagText,
+                  isActive && styles.filterTagTextActive,
+                ]}
+              >
+                {crop}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       {/* Boost Info Banner */}
-      <View style={styles.boostBanner}>
-        <TrendingUp size={20} color={theme.colors.primary[600]} />
+      <NeumorphicCard variant="glass" style={styles.boostBanner}>
+        <TrendingUp size={20} color={neumorphicColors.primary[600]} />
         <Text style={styles.boostText}>
           Smart Ranking: Top sellers appear first
         </Text>
-      </View>
+      </NeumorphicCard>
 
       {/* Error Message */}
       {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchListings}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+          <NeumorphicButton
+            title="Retry"
+            variant="danger"
+            size="small"
+            onPress={fetchListings}
+          />
         </View>
       ) : null}
 
@@ -258,7 +265,7 @@ export default function MarketplaceScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[theme.colors.primary[600]]}
+              colors={[neumorphicColors.primary[600]]}
             />
           }
           ListEmptyComponent={
@@ -272,112 +279,90 @@ export default function MarketplaceScreen() {
           }
           ListFooterComponent={
             pagination.page < pagination.totalPages ? (
-              <TouchableOpacity
-                style={styles.loadMoreButton}
+              <NeumorphicButton
+                title="Load More"
+                variant="secondary"
                 onPress={() =>
                   handleFilterChange("page", (filters.page || 1) + 1)
                 }
-              >
-                <Text style={styles.loadMoreText}>Load More</Text>
-              </TouchableOpacity>
+              />
             ) : null
           }
         />
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   header: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.sm,
+    padding: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   searchContainer: {
     flexDirection: "row",
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+    alignItems: "center",
   },
   searchBar: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    paddingHorizontal: theme.spacing.md,
-    height: 48,
-    ...theme.shadows.sm,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: theme.spacing.sm,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-  },
-  filterButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadows.sm,
   },
   filterTags: {
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
     maxHeight: 44,
   },
   filterTagsContent: {
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   filterTag: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: neumorphicColors.base.card,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    borderColor: neumorphicColors.base.border,
+    // Neumorphic shadow
+    shadowColor: neumorphicColors.base.shadowDark,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   filterTagActive: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[600],
+    borderColor: neumorphicColors.primary[600],
+    shadowColor: neumorphicColors.primary[500],
   },
   filterTagText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
   },
   filterTagTextActive: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    color: neumorphicColors.text.inverse,
+    fontWeight: "600",
   },
   boostBanner: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.md,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.primary[50],
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   boostText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary[700],
+    ...typography.body,
+    color: neumorphicColors.primary[700],
     flex: 1,
   },
   loadingContainer: {
@@ -386,42 +371,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorContainer: {
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.error + "10",
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing.lg,
+    backgroundColor: `${neumorphicColors.semantic.error}15`,
+    borderRadius: borderRadius.lg,
     alignItems: "center",
   },
   errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.sm,
+    color: neumorphicColors.semantic.error,
+    ...typography.body,
     textAlign: "center",
-  },
-  retryButton: {
-    marginTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.error,
-    borderRadius: theme.borderRadius.md,
-  },
-  retryText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: spacing.md,
   },
   listContent: {
-    padding: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
+    padding: spacing.lg,
+    paddingTop: spacing.md,
   },
   columnWrapper: {
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   listingCard: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
     overflow: "hidden",
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.md,
+    marginBottom: spacing.md,
+    padding: 0,
   },
   imageContainer: {
     position: "relative",
@@ -430,66 +403,68 @@ const styles = StyleSheet.create({
   listingImage: {
     width: "100%",
     height: "100%",
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
   },
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: theme.colors.primary[100],
+    backgroundColor: neumorphicColors.primary[100],
     justifyContent: "center",
     alignItems: "center",
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
   },
   placeholderText: {
     fontSize: 40,
   },
   boostBadgeContainer: {
     position: "absolute",
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
+    top: spacing.sm,
+    right: spacing.sm,
   },
   cardContent: {
-    padding: theme.spacing.md,
+    padding: spacing.md,
   },
   cropType: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   quantity: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   priceRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    marginTop: theme.spacing.sm,
+    marginTop: spacing.sm,
   },
   price: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h4,
+    color: neumorphicColors.primary[600],
   },
   perUnit: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-    marginLeft: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    marginLeft: spacing.xs,
   },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: theme.spacing.sm,
-    gap: theme.spacing.xs,
+    marginTop: spacing.sm,
+    gap: spacing.xs,
   },
   location: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
     flex: 1,
   },
   farmerRow: {
-    marginTop: theme.spacing.sm,
-    paddingTop: theme.spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.border,
   },
   farmerInfo: {
     flexDirection: "row",
@@ -497,8 +472,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   farmerName: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
     flex: 1,
   },
   scoreContainer: {
@@ -507,37 +482,28 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   score: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.secondary[600],
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.caption,
+    color: neumorphicColors.secondary[600],
+    fontWeight: "600",
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["3xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyIcon: {
     fontSize: 64,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.sm,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
-  },
-  loadMoreButton: {
-    paddingVertical: theme.spacing.md,
-    alignItems: "center",
-  },
-  loadMoreText: {
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.medium,
   },
 });

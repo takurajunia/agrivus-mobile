@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -25,10 +24,19 @@ import {
   DollarSign,
   User,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import ModernInput from "../../src/components/ModernInput";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+  NeumorphicSearchBar,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../src/theme/neumorphic";
 import adminService from "../../src/services/adminService";
 
 type AdminOrderStatus =
@@ -134,34 +142,36 @@ export default function AdminOrdersScreen() {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return <Clock size={16} color={theme.colors.warning} />;
+        return <Clock size={16} color={neumorphicColors.semantic.warning} />;
       case "processing":
-        return <Package size={16} color={theme.colors.info} />;
+        return <Package size={16} color={neumorphicColors.semantic.info} />;
       case "shipped":
-        return <Truck size={16} color={theme.colors.primary[600]} />;
+        return <Truck size={16} color={neumorphicColors.primary[600]} />;
       case "delivered":
-        return <CheckCircle size={16} color={theme.colors.success} />;
+        return (
+          <CheckCircle size={16} color={neumorphicColors.semantic.success} />
+        );
       case "cancelled":
-        return <XCircle size={16} color={theme.colors.error} />;
+        return <XCircle size={16} color={neumorphicColors.semantic.error} />;
       default:
-        return <Package size={16} color={theme.colors.text.tertiary} />;
+        return <Package size={16} color={neumorphicColors.text.tertiary} />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "processing":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "shipped":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "delivered":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "cancelled":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
@@ -180,10 +190,10 @@ export default function AdminOrdersScreen() {
   };
 
   const renderOrder = (order: AdminOrder, index: number) => (
-    <AnimatedCard
+    <NeumorphicCard
       key={order.id}
       style={styles.orderCard}
-      delay={index * 50}
+      animationDelay={index * 50}
       onPress={() => router.push(`/order/${order.id}` as any)}
     >
       <View style={styles.orderHeader}>
@@ -208,12 +218,12 @@ export default function AdminOrdersScreen() {
             </Text>
           </View>
         </View>
-        <ChevronRight size={20} color={theme.colors.text.tertiary} />
+        <ChevronRight size={20} color={neumorphicColors.text.tertiary} />
       </View>
 
       <View style={styles.orderDetails}>
         <View style={styles.detailRow}>
-          <Package size={14} color={theme.colors.text.tertiary} />
+          <Package size={14} color={neumorphicColors.text.tertiary} />
           <Text style={styles.detailText} numberOfLines={1}>
             {order.productName || "Product"} ({order.quantity}{" "}
             {order.unit || "units"})
@@ -221,7 +231,7 @@ export default function AdminOrdersScreen() {
         </View>
 
         <View style={styles.detailRow}>
-          <User size={14} color={theme.colors.text.tertiary} />
+          <User size={14} color={neumorphicColors.text.tertiary} />
           <Text style={styles.detailText}>
             {order.buyerName || "Buyer"} → {order.sellerName || "Seller"}
           </Text>
@@ -229,41 +239,40 @@ export default function AdminOrdersScreen() {
 
         <View style={styles.orderFooter}>
           <View style={styles.detailRow}>
-            <Calendar size={14} color={theme.colors.text.tertiary} />
+            <Calendar size={14} color={neumorphicColors.text.tertiary} />
             <Text style={styles.detailText}>{formatDate(order.createdAt)}</Text>
           </View>
           <View style={styles.amountContainer}>
-            <DollarSign size={14} color={theme.colors.success} />
+            <DollarSign size={14} color={neumorphicColors.semantic.success} />
             <Text style={styles.amountText}>
               {formatCurrency(order.totalAmount)}
             </Text>
           </View>
         </View>
       </View>
-    </AnimatedCard>
+    </NeumorphicCard>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+          size="medium"
+        />
         <Text style={styles.title}>All Orders</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <ModernInput
+        <NeumorphicSearchBar
           placeholder="Search orders..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          leftIcon={<Search size={20} color={theme.colors.text.tertiary} />}
         />
       </View>
 
@@ -295,7 +304,10 @@ export default function AdminOrdersScreen() {
       {/* Orders List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading orders...</Text>
         </View>
       ) : (
@@ -307,8 +319,8 @@ export default function AdminOrdersScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={[theme.colors.primary[600]]}
-              tintColor={theme.colors.primary[600]}
+              colors={[neumorphicColors.primary[600]]}
+              tintColor={neumorphicColors.primary[600]}
             />
           }
         >
@@ -316,7 +328,7 @@ export default function AdminOrdersScreen() {
             <View style={styles.emptyState}>
               <Package
                 size={64}
-                color={theme.colors.text.tertiary}
+                color={neumorphicColors.text.tertiary}
                 strokeWidth={1}
               />
               <Text style={styles.emptyTitle}>No Orders Found</Text>
@@ -331,10 +343,10 @@ export default function AdminOrdersScreen() {
               {orders.map((order, index) => renderOrder(order, index))}
 
               {hasMore && (
-                <AnimatedButton
+                <NeumorphicButton
                   title="Load More"
-                  variant="outline"
-                  size="md"
+                  variant="secondary"
+                  size="medium"
                   style={styles.loadMoreButton}
                   onPress={() => {
                     setPage((prev) => prev + 1);
@@ -346,72 +358,71 @@ export default function AdminOrdersScreen() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   backButton: {
-    padding: theme.spacing.xs,
+    padding: spacing.xs,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   searchContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   tabsContainer: {
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: neumorphicColors.base.background,
     maxHeight: 50,
   },
   tabsContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
   tab: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    marginRight: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.base.input,
+    marginRight: spacing.sm,
   },
   activeTab: {
-    backgroundColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[600],
   },
   tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    fontWeight: "500",
+    color: neumorphicColors.text.secondary,
   },
   activeTabText: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing["2xl"],
+    padding: spacing.lg,
+    paddingBottom: spacing["2xl"],
   },
   loadingContainer: {
     flex: 1,
@@ -419,94 +430,93 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   orderCard: {
-    marginBottom: theme.spacing.md,
-    padding: theme.spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.lg,
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   orderNumber: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   orderNumberText: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    gap: theme.spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
   },
   statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.caption,
+    fontWeight: "600",
     textTransform: "capitalize",
   },
   orderDetails: {
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   detailText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
     flex: 1,
   },
   orderFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: theme.spacing.sm,
-    paddingTop: theme.spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.pressed,
   },
   amountContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   amountText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.success,
+    ...typography.body,
+    fontWeight: "700",
+    color: neumorphicColors.semantic.success,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   loadMoreButton: {
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
 });

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  SafeAreaView,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -18,11 +17,19 @@ import {
   ShoppingBag,
   ArrowRight,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import agrimallService from "../services/agrimallService";
 import type { Cart, CartItem } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicIconButton from "../components/neumorphic/NeumorphicIconButton";
 
 export default function CartScreen() {
   const router = useRouter();
@@ -138,16 +145,17 @@ export default function CartScreen() {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="default">
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
+          <Text style={styles.loadingText}>Loading cart...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="default">
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -159,36 +167,41 @@ export default function CartScreen() {
           </Text>
         </View>
         {!isEmpty && (
-          <TouchableOpacity
-            style={styles.clearButton}
+          <NeumorphicIconButton
+            icon={<Trash2 size={20} color={neumorphicColors.semantic.error} />}
             onPress={handleClearCart}
-          >
-            <Trash2 size={20} color={theme.colors.error} />
-          </TouchableOpacity>
+            variant="flat"
+            size="md"
+          />
         )}
       </View>
 
       {/* Error */}
       {error ? (
-        <View style={styles.errorContainer}>
+        <NeumorphicCard style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadCart}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+          <NeumorphicButton
+            title="Retry"
+            onPress={loadCart}
+            variant="secondary"
+            size="sm"
+            style={{ marginTop: spacing.md }}
+          />
+        </NeumorphicCard>
       ) : null}
 
       {isEmpty ? (
         <View style={styles.emptyContainer}>
-          <ShoppingBag size={64} color={theme.colors.text.tertiary} />
+          <ShoppingBag size={64} color={neumorphicColors.text.tertiary} />
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
           <Text style={styles.emptyText}>Add some products to get started</Text>
-          <TouchableOpacity
-            style={styles.browseButton}
+          <NeumorphicButton
+            title="Browse Products"
             onPress={() => router.push("/agrimall")}
-          >
-            <Text style={styles.browseButtonText}>Browse Products</Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="lg"
+            style={{ marginTop: spacing.xl }}
+          />
         </View>
       ) : (
         <>
@@ -199,12 +212,12 @@ export default function CartScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={[theme.colors.primary[600]]}
+                colors={[neumorphicColors.primary.main]}
               />
             }
           >
             {cartItems.map((item) => (
-              <AnimatedCard key={item.productId} style={styles.cartItem}>
+              <NeumorphicCard key={item.productId} style={styles.cartItem}>
                 {/* Product Image */}
                 <View style={styles.itemImage}>
                   {item.product.images && item.product.images.length > 0 ? (
@@ -242,13 +255,17 @@ export default function CartScreen() {
                 {/* Quantity Controls */}
                 <View style={styles.quantityContainer}>
                   <TouchableOpacity
-                    style={styles.quantityButton}
+                    style={[
+                      styles.quantityButton,
+                      (updating === item.productId || item.quantity <= 1) &&
+                        styles.quantityButtonDisabled,
+                    ]}
                     onPress={() =>
                       handleUpdateQuantity(item.productId, item.quantity - 1)
                     }
                     disabled={updating === item.productId || item.quantity <= 1}
                   >
-                    <Minus size={16} color={theme.colors.text.primary} />
+                    <Minus size={16} color={neumorphicColors.text.primary} />
                   </TouchableOpacity>
 
                   <View style={styles.quantityValue}>
@@ -260,7 +277,12 @@ export default function CartScreen() {
                   </View>
 
                   <TouchableOpacity
-                    style={styles.quantityButton}
+                    style={[
+                      styles.quantityButton,
+                      (updating === item.productId ||
+                        item.quantity >= item.product.stockQuantity) &&
+                        styles.quantityButtonDisabled,
+                    ]}
                     onPress={() =>
                       handleUpdateQuantity(item.productId, item.quantity + 1)
                     }
@@ -269,14 +291,14 @@ export default function CartScreen() {
                       item.quantity >= item.product.stockQuantity
                     }
                   >
-                    <Plus size={16} color={theme.colors.text.primary} />
+                    <Plus size={16} color={neumorphicColors.text.primary} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.removeButton}
                     onPress={() => handleRemove(item.productId)}
                   >
-                    <Trash2 size={18} color={theme.colors.error} />
+                    <Trash2 size={18} color={neumorphicColors.semantic.error} />
                   </TouchableOpacity>
                 </View>
 
@@ -285,140 +307,107 @@ export default function CartScreen() {
                   <Text style={styles.subtotalLabel}>Subtotal</Text>
                   <Text style={styles.subtotalValue}>${item.subtotal}</Text>
                 </View>
-              </AnimatedCard>
+              </NeumorphicCard>
             ))}
 
             <View style={styles.bottomPadding} />
           </ScrollView>
 
           {/* Checkout Footer */}
-          <View style={styles.footer}>
+          <NeumorphicCard style={styles.footer} variant="elevated">
             <View style={styles.totalContainer}>
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue}>
                 ${cart?.totalAmount || "0.00"}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.checkoutButton}
+            <NeumorphicButton
+              title="Proceed to Checkout"
               onPress={() => router.push("/agrimall/checkout")}
-            >
-              <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-              <ArrowRight size={20} color={theme.colors.text.inverse} />
-            </TouchableOpacity>
-          </View>
+              variant="primary"
+              size="lg"
+              icon={
+                <ArrowRight size={20} color={neumorphicColors.text.inverse} />
+              }
+              iconPosition="right"
+            />
+          </NeumorphicCard>
         </>
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  loadingText: {
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
-  },
-  clearButton: {
-    width: 44,
-    height: 44,
-    backgroundColor: theme.colors.error + "15",
-    borderRadius: theme.borderRadius.full,
-    justifyContent: "center",
-    alignItems: "center",
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   errorContainer: {
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.error + "10",
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing.lg,
     alignItems: "center",
   },
   errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.sm,
+    color: neumorphicColors.semantic.error,
+    ...typography.body,
     textAlign: "center",
-  },
-  retryButton: {
-    marginTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.error,
-    borderRadius: theme.borderRadius.md,
-  },
-  retryText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.sm,
     textAlign: "center",
-  },
-  browseButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.xl,
-  },
-  browseButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontSize: theme.typography.fontSize.md,
   },
   scrollView: {
     flex: 1,
   },
   cartItem: {
-    marginHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
   },
   itemImage: {
     width: 80,
     height: 80,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
     position: "absolute",
-    top: theme.spacing.md,
-    left: theme.spacing.md,
+    top: spacing.md,
+    left: spacing.md,
   },
   image: {
     width: "100%",
@@ -427,7 +416,7 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.input,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -439,57 +428,57 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   itemName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   vendorName: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginTop: spacing.xs,
   },
   itemPrice: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
-    marginTop: theme.spacing.sm,
+    ...typography.h5,
+    color: neumorphicColors.primary.main,
+    marginTop: spacing.sm,
   },
   unavailableText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.error,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.semantic.error,
+    marginTop: spacing.xs,
   },
   quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.border,
   },
   quantityButton: {
     width: 36,
     height: 36,
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.md,
     justifyContent: "center",
     alignItems: "center",
+  },
+  quantityButtonDisabled: {
+    opacity: 0.5,
   },
   quantityValue: {
     width: 48,
     alignItems: "center",
   },
   quantityText: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   removeButton: {
     marginLeft: "auto",
     width: 36,
     height: 36,
-    backgroundColor: theme.colors.error + "15",
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: neumorphicColors.semantic.error + "15",
+    borderRadius: borderRadius.md,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -497,61 +486,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.border,
   },
   subtotalLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   subtotalValue: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   bottomPadding: {
-    height: 120,
+    height: 180,
   },
   footer: {
     position: "absolute",
     bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.colors.background.primary,
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    ...theme.shadows.lg,
+    left: spacing.lg,
+    right: spacing.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
   totalContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   totalLabel: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.secondary,
+    ...typography.h4,
+    color: neumorphicColors.text.secondary,
   },
   totalValue: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  checkoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary[600],
-    paddingVertical: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.sm,
-  },
-  checkoutButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.inverse,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
 });

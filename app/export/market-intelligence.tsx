@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Dimensions,
@@ -23,10 +22,19 @@ import {
   BarChart3,
   Filter,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import ModernInput from "../../src/components/ModernInput";
-import GlassCard from "../../src/components/GlassCard";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicIconButton,
+  NeumorphicSearchBar,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../../src/theme/neumorphic";
 import exportService from "../../src/services/exportService";
 
 interface MarketData {
@@ -99,35 +107,39 @@ export default function ExportMarketIntelligenceScreen() {
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case "up":
-        return <TrendingUp size={14} color={theme.colors.success} />;
+        return (
+          <TrendingUp size={14} color={neumorphicColors.semantic.success} />
+        );
       case "down":
-        return <TrendingDown size={14} color={theme.colors.error} />;
+        return (
+          <TrendingDown size={14} color={neumorphicColors.semantic.error} />
+        );
       default:
-        return <BarChart3 size={14} color={theme.colors.text.tertiary} />;
+        return <BarChart3 size={14} color={neumorphicColors.text.tertiary} />;
     }
   };
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
       case "up":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "down":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
   const getDemandColor = (demand: string) => {
     switch (demand) {
       case "high":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "medium":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "low":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
@@ -164,10 +176,11 @@ export default function ExportMarketIntelligenceScreen() {
   );
 
   const renderProduct = (product: any, index: number) => (
-    <AnimatedCard
+    <NeumorphicCard
       key={`${product.market}-${product.name}-${index}`}
       style={styles.productCard}
-      delay={index * 50}
+      animationDelay={index * 50}
+      variant="standard"
     >
       <View style={styles.productHeader}>
         <View style={styles.productInfo}>
@@ -225,41 +238,43 @@ export default function ExportMarketIntelligenceScreen() {
           <Text style={styles.seasonText}>{product.seasonality}</Text>
         </View>
       </View>
-    </AnimatedCard>
+    </NeumorphicCard>
   );
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list" showLeaves={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading market data...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="default"
+          size="medium"
+        />
         <Text style={styles.title}>Market Intelligence</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <ModernInput
+        <NeumorphicSearchBar
           placeholder="Search products..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          leftIcon={<Search size={20} color={theme.colors.text.tertiary} />}
         />
       </View>
 
@@ -278,6 +293,7 @@ export default function ExportMarketIntelligenceScreen() {
               selectedMarket === market.key && styles.activeTab,
             ]}
             onPress={() => setSelectedMarket(market.key)}
+            activeOpacity={0.7}
           >
             <Text style={styles.tabFlag}>{market.flag}</Text>
             <Text
@@ -293,9 +309,9 @@ export default function ExportMarketIntelligenceScreen() {
       </ScrollView>
 
       {/* Market Overview */}
-      <GlassCard style={styles.overviewCard}>
+      <NeumorphicCard style={styles.overviewCard} variant="elevated">
         <View style={styles.overviewHeader}>
-          <Globe size={20} color={theme.colors.primary[600]} />
+          <Globe size={20} color={neumorphicColors.primary[600]} />
           <Text style={styles.overviewTitle}>Market Overview</Text>
         </View>
         <View style={styles.overviewStats}>
@@ -318,7 +334,7 @@ export default function ExportMarketIntelligenceScreen() {
             <Text style={styles.overviewStatLabel}>High Demand</Text>
           </View>
         </View>
-      </GlassCard>
+      </NeumorphicCard>
 
       {/* Products List */}
       <ScrollView
@@ -329,8 +345,8 @@ export default function ExportMarketIntelligenceScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary[600]]}
-            tintColor={theme.colors.primary[600]}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
           />
         }
       >
@@ -338,7 +354,7 @@ export default function ExportMarketIntelligenceScreen() {
           <View style={styles.emptyState}>
             <BarChart3
               size={64}
-              color={theme.colors.text.tertiary}
+              color={neumorphicColors.text.tertiary}
               strokeWidth={1}
             />
             <Text style={styles.emptyTitle}>No Market Data</Text>
@@ -354,87 +370,82 @@ export default function ExportMarketIntelligenceScreen() {
           )
         )}
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   searchContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   tabsContainer: {
-    backgroundColor: theme.colors.background.primary,
-    maxHeight: 60,
+    backgroundColor: neumorphicColors.base.background,
+    maxHeight: 70,
   },
   tabsContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
   tab: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    marginRight: theme.spacing.sm,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.base.card,
+    marginRight: spacing.sm,
+    ...getNeumorphicShadow(1),
   },
   activeTab: {
-    backgroundColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[600],
   },
   tabFlag: {
     fontSize: 16,
   },
   tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
   },
   activeTabText: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
   },
   overviewCard: {
-    marginHorizontal: theme.spacing.lg,
-    marginVertical: theme.spacing.md,
-    padding: theme.spacing.lg,
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.md,
+    padding: spacing.lg,
   },
   overviewHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   overviewTitle: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   overviewStats: {
     flexDirection: "row",
@@ -444,21 +455,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   overviewStatValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h3,
+    color: neumorphicColors.primary[600],
   },
   overviewStatLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
     marginTop: 2,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing["2xl"],
+    padding: spacing.lg,
+    paddingBottom: spacing["2xl"],
   },
   loadingContainer: {
     flex: 1,
@@ -466,82 +476,80 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   productCard: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   productHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   productInfo: {
     flex: 1,
   },
   productName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   productCategory: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
     marginTop: 2,
   },
   marketBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.full,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.full,
   },
   marketFlag: {
     fontSize: 14,
   },
   marketName: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
   },
   priceContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    marginBottom: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
+    marginBottom: spacing.md,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.pressed,
   },
   priceMain: {},
   priceLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
     marginBottom: 2,
   },
   priceValue: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
   priceUnit: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.normal,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    fontWeight: "400",
+    color: neumorphicColors.text.tertiary,
   },
   priceChange: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   changeValue: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.bodySmall,
+    fontWeight: "600",
   },
   productFooter: {
     flexDirection: "row",
@@ -549,40 +557,39 @@ const styles = StyleSheet.create({
   },
   demandContainer: {},
   footerLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginBottom: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginBottom: spacing.xs,
   },
   demandBadge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
   },
   demandText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.caption,
+    fontWeight: "700",
   },
   seasonContainer: {},
   seasonText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.primary,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
 });

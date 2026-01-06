@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -14,17 +12,21 @@ import {
   FileText,
   TrendingUp,
   Truck,
-  CheckCircle,
   ChevronRight,
-  BarChart3,
   ClipboardList,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import exportService from "../services/exportService";
 import type { ExportAssessment, MarketIntelligence } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
-import GlassCard from "../components/GlassCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
 
 export default function ExportGatewayScreen() {
   const router = useRouter();
@@ -68,28 +70,28 @@ export default function ExportGatewayScreen() {
       icon: ClipboardList,
       title: "Export Assessment",
       description: "Evaluate your export readiness",
-      color: theme.colors.primary[600],
+      color: neumorphicColors.primary[600],
       route: "/export/assessment",
     },
     {
       icon: TrendingUp,
       title: "Market Intelligence",
       description: "Global market prices & trends",
-      color: theme.colors.secondary[600],
+      color: neumorphicColors.secondary[600],
       route: "/export/market-intelligence",
     },
     {
       icon: FileText,
       title: "Document Templates",
       description: "Required export documentation",
-      color: theme.colors.info,
+      color: neumorphicColors.semantic.info,
       route: "/export/documents",
     },
     {
       icon: Truck,
       title: "Logistics Partners",
       description: "Shipping & freight services",
-      color: theme.colors.warning,
+      color: neumorphicColors.semantic.warning,
       route: "/export/logistics",
     },
   ];
@@ -97,28 +99,28 @@ export default function ExportGatewayScreen() {
   const getReadinessColor = (level: string) => {
     switch (level?.toLowerCase()) {
       case "high":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "medium":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "low":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.secondary;
+        return neumorphicColors.text.secondary;
     }
   };
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list" showLeaves={false}>
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={true}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -126,13 +128,13 @@ export default function ExportGatewayScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Globe size={28} color={theme.colors.primary[600]} />
+          <Globe size={28} color={neumorphicColors.primary[600]} />
           <View style={styles.headerText}>
             <Text style={styles.title}>Export Gateway</Text>
             <Text style={styles.subtitle}>
@@ -142,32 +144,35 @@ export default function ExportGatewayScreen() {
         </View>
 
         {/* Hero Card */}
-        <GlassCard style={styles.heroCard}>
+        <NeumorphicCard variant="elevated" style={styles.heroCard}>
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Ready to Export?</Text>
             <Text style={styles.heroText}>
               Get personalized guidance on exporting your agricultural products
               to international markets
             </Text>
-            <TouchableOpacity
-              style={styles.heroButton}
+            <NeumorphicButton
+              title="Start Assessment"
+              variant="secondary"
               onPress={() => router.push("/export/assessment")}
-            >
-              <Text style={styles.heroButtonText}>Start Assessment</Text>
-              <ChevronRight size={20} color={theme.colors.text.inverse} />
-            </TouchableOpacity>
+              icon={
+                <ChevronRight size={20} color={neumorphicColors.primary[600]} />
+              }
+              iconPosition="right"
+              style={styles.heroButton}
+            />
           </View>
-        </GlassCard>
+        </NeumorphicCard>
 
         {/* Feature Grid */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Export Services</Text>
           <View style={styles.featureGrid}>
             {features.map((feature, index) => (
-              <AnimatedCard
+              <NeumorphicCard
                 key={index}
                 style={styles.featureCard}
-                delay={index * 100}
+                animationDelay={index * 100}
                 onPress={() => router.push(feature.route)}
               >
                 <View
@@ -182,7 +187,7 @@ export default function ExportGatewayScreen() {
                 <Text style={styles.featureDescription}>
                   {feature.description}
                 </Text>
-              </AnimatedCard>
+              </NeumorphicCard>
             ))}
           </View>
         </View>
@@ -192,14 +197,15 @@ export default function ExportGatewayScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Your Assessments</Text>
-              <TouchableOpacity
+              <NeumorphicButton
+                title="See All"
+                variant="tertiary"
+                size="small"
                 onPress={() => router.push("/export/assessments")}
-              >
-                <Text style={styles.seeAll}>See All</Text>
-              </TouchableOpacity>
+              />
             </View>
             {assessments.slice(0, 3).map((assessment) => (
-              <AnimatedCard
+              <NeumorphicCard
                 key={assessment.id}
                 style={styles.assessmentCard}
                 onPress={() =>
@@ -254,7 +260,7 @@ export default function ExportGatewayScreen() {
                     {assessment.overallScore || "0"}% Ready
                   </Text>
                 </View>
-              </AnimatedCard>
+              </NeumorphicCard>
             ))}
           </View>
         )}
@@ -264,11 +270,12 @@ export default function ExportGatewayScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Market Insights</Text>
-              <TouchableOpacity
+              <NeumorphicButton
+                title="See All"
+                variant="tertiary"
+                size="small"
                 onPress={() => router.push("/export/market-intelligence")}
-              >
-                <Text style={styles.seeAll}>See All</Text>
-              </TouchableOpacity>
+              />
             </View>
             <ScrollView
               horizontal
@@ -276,7 +283,7 @@ export default function ExportGatewayScreen() {
               contentContainerStyle={styles.marketScroll}
             >
               {marketData.slice(0, 5).map((market) => (
-                <AnimatedCard key={market.id} style={styles.marketCard}>
+                <NeumorphicCard key={market.id} style={styles.marketCard}>
                   <Text style={styles.marketName}>{market.market}</Text>
                   <Text style={styles.marketCategory}>
                     {market.productCategory}
@@ -295,10 +302,10 @@ export default function ExportGatewayScreen() {
                       {
                         backgroundColor:
                           market.priceTrend === "up"
-                            ? theme.colors.success + "15"
+                            ? neumorphicColors.semantic.success + "15"
                             : market.priceTrend === "down"
-                            ? theme.colors.error + "15"
-                            : theme.colors.neutral[100],
+                            ? neumorphicColors.semantic.error + "15"
+                            : neumorphicColors.base.input,
                       },
                     ]}
                   >
@@ -308,10 +315,10 @@ export default function ExportGatewayScreen() {
                         {
                           color:
                             market.priceTrend === "up"
-                              ? theme.colors.success
+                              ? neumorphicColors.semantic.success
                               : market.priceTrend === "down"
-                              ? theme.colors.error
-                              : theme.colors.text.secondary,
+                              ? neumorphicColors.semantic.error
+                              : neumorphicColors.text.secondary,
                         },
                       ]}
                     >
@@ -322,7 +329,7 @@ export default function ExportGatewayScreen() {
                         : "→ Stable"}
                     </Text>
                   </View>
-                </AnimatedCard>
+                </NeumorphicCard>
               ))}
             </ScrollView>
           </View>
@@ -330,15 +337,11 @@ export default function ExportGatewayScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   scrollView: {
     flex: 1,
   },
@@ -350,116 +353,85 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h3,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.bodySmall,
+    marginTop: spacing.xs,
   },
   heroCard: {
-    marginHorizontal: theme.spacing.lg,
-    padding: theme.spacing.xl,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.primary[600],
+    marginHorizontal: spacing.lg,
+    padding: spacing.xl,
+    backgroundColor: neumorphicColors.primary[600],
   },
   heroContent: {
     alignItems: "center",
   },
   heroTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
+    ...typography.h4,
+    color: neumorphicColors.text.inverse,
     textAlign: "center",
   },
   heroText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.inverse,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.inverse,
     opacity: 0.9,
     textAlign: "center",
-    marginTop: theme.spacing.sm,
-    lineHeight: 20,
+    marginTop: spacing.sm,
   },
   heroButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.text.inverse,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.full,
-    marginTop: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  heroButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary[600],
+    marginTop: spacing.lg,
+    backgroundColor: neumorphicColors.text.inverse,
   },
   section: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  seeAll: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.h5,
   },
   featureGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   featureCard: {
     width: "47%",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
+    padding: spacing.lg,
     alignItems: "center",
   },
   featureIcon: {
     width: 48,
     height: 48,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   featureTitle: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
     textAlign: "center",
   },
   featureDescription: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
     textAlign: "center",
-    marginTop: theme.spacing.xs,
+    marginTop: spacing.xs,
   },
   assessmentCard: {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   assessmentHeader: {
     flexDirection: "row",
@@ -467,88 +439,78 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   assessmentProduct: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
   },
   assessmentMarkets: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
   readinessBadge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
   },
   readinessText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.caption,
+    fontWeight: "600",
   },
   scoreContainer: {
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
   scoreBar: {
     height: 8,
-    backgroundColor: theme.colors.neutral[200],
-    borderRadius: 4,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.xs,
     overflow: "hidden",
   },
   scoreProgress: {
     height: "100%",
-    borderRadius: 4,
+    borderRadius: borderRadius.xs,
   },
   scoreText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    marginTop: spacing.xs,
     textAlign: "right",
   },
   marketScroll: {
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   marketCard: {
     width: 160,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
+    padding: spacing.lg,
   },
   marketName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
+    fontWeight: "700",
   },
   marketCategory: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
   marketPrice: {
     flexDirection: "row",
     alignItems: "baseline",
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
   marketPriceValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h4,
+    color: neumorphicColors.primary[600],
   },
   marketPriceUnit: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
   },
   trendBadge: {
     alignSelf: "flex-start",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    marginTop: theme.spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    marginTop: spacing.md,
   },
   trendText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.caption,
+    fontWeight: "500",
   },
   bottomPadding: {
-    height: theme.spacing["3xl"],
+    height: spacing["2xl"],
   },
 });

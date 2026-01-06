@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -22,9 +21,18 @@ import {
   AlertCircle,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import { theme } from "../../src/theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../src/theme/neumorphic";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicBadge,
+} from "../../src/components/neumorphic";
 import ordersService, {
   OrderWithDetails,
 } from "../../src/services/ordersService";
@@ -110,20 +118,20 @@ export default function OrdersScreen() {
     switch (status) {
       case "confirmed":
       case "delivered":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "in_transit":
       case "assigned":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "paid":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "pending":
       case "payment_pending":
-        return theme.colors.secondary[500];
+        return neumorphicColors.secondary[500];
       case "cancelled":
       case "disputed":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
@@ -189,27 +197,29 @@ export default function OrdersScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading orders...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={true}>
       <View style={styles.header}>
         <Text style={styles.title}>Orders</Text>
-        <AnimatedButton
+        <NeumorphicButton
           title="Filter"
-          variant="outline"
-          size="sm"
+          variant="tertiary"
+          size="small"
+          icon={<Filter size={16} color={neumorphicColors.primary[600]} />}
           onPress={() => console.log("Filter pressed")}
-        >
-          <Filter size={16} color={theme.colors.primary[600]} />
-        </AnimatedButton>
+        />
       </View>
 
       <ScrollView
@@ -244,14 +254,14 @@ export default function OrdersScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         <View style={styles.ordersContainer}>
           {orders.length === 0 ? (
             <View style={styles.emptyState}>
-              <Package size={64} color={theme.colors.text.tertiary} />
+              <Package size={64} color={neumorphicColors.text.tertiary} />
               <Text style={styles.emptyTitle}>No orders found</Text>
               <Text style={styles.emptyText}>
                 {user?.role === "buyer"
@@ -268,11 +278,12 @@ export default function OrdersScreen() {
                 order.listing?.cropName || order.listing?.cropType || "Product";
 
               return (
-                <AnimatedCard
+                <NeumorphicCard
                   key={order.id}
                   style={styles.orderCard}
-                  delay={index * 100}
+                  animationDelay={index * 100}
                   onPress={() => handleOrderPress(order.id)}
+                  variant="standard"
                 >
                   <View style={styles.orderHeader}>
                     <View style={styles.orderInfo}>
@@ -340,136 +351,136 @@ export default function OrdersScreen() {
                     </Text>
                     <ChevronRight
                       size={16}
-                      color={theme.colors.text.tertiary}
+                      color={neumorphicColors.text.tertiary}
                     />
                   </View>
-                </AnimatedCard>
+                </NeumorphicCard>
               );
             })
           )}
         </View>
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: theme.typography.fontSize["4xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h1,
+    color: neumorphicColors.text.primary,
     letterSpacing: -0.5,
   },
   tabsContainer: {
     maxHeight: 56,
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   tabs: {
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: spacing.xl,
     flexDirection: "row",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   tab: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.background.primary,
-    ...theme.shadows.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.xl,
+    backgroundColor: neumorphicColors.base.card,
+    // Neumorphic shadow
+    shadowColor: neumorphicColors.base.shadowDark,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   activeTab: {
-    backgroundColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[600],
   },
   tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.secondary,
   },
   activeTabText: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
   },
   scrollView: {
     flex: 1,
   },
   ordersContainer: {
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   orderCard: {
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
+    padding: spacing.lg,
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   orderInfo: {
     flex: 1,
   },
   orderId: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
+    ...typography.caption,
+    fontWeight: "600",
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.xs,
   },
   customerName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.lg,
+    gap: spacing.xs,
   },
   statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.caption,
+    fontWeight: "500",
   },
   orderDetails: {
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.xs,
+    marginBottom: spacing.xs,
   },
   detailLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    fontWeight: "500",
   },
   detailValue: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
+    fontWeight: "600",
   },
   orderFooter: {
     flexDirection: "row",
@@ -477,28 +488,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   orderDate: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.body,
+    color: neumorphicColors.text.tertiary,
     textAlign: "center",
-    marginTop: theme.spacing.sm,
+    marginTop: spacing.sm,
   },
   bottomPadding: {
-    height: theme.spacing.xl,
+    height: spacing.xl,
   },
 });

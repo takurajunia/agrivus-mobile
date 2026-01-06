@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  SafeAreaView,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -22,11 +21,20 @@ import {
   Plus,
   Check,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { agrimallService } from "../services/agrimallService";
 import type { Cart, CheckoutSummary } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicIconButton from "../components/neumorphic/NeumorphicIconButton";
+import NeumorphicInput from "../components/neumorphic/NeumorphicInput";
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -143,50 +151,54 @@ export default function CheckoutScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="default">
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
+          <Text style={styles.loadingText}>Loading checkout...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   if (!cart || cart.items.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="default">
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
+          <NeumorphicIconButton
+            icon={
+              <ChevronLeft size={24} color={neumorphicColors.text.primary} />
+            }
             onPress={() => router.back()}
-          >
-            <ChevronLeft size={24} color={theme.colors.text.primary} />
-          </TouchableOpacity>
+            variant="flat"
+            size="md"
+          />
           <Text style={styles.headerTitle}>Checkout</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <TouchableOpacity
-            style={styles.shopButton}
+          <NeumorphicButton
+            title="Continue Shopping"
             onPress={() => router.push("/agrimall")}
-          >
-            <Text style={styles.shopButtonText}>Continue Shopping</Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="lg"
+            style={{ marginTop: spacing.xl }}
+          />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="default">
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+        <NeumorphicIconButton
+          icon={<ChevronLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-        >
-          <ChevronLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="flat"
+          size="md"
+        />
         <Text style={styles.headerTitle}>Checkout</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -197,7 +209,7 @@ export default function CheckoutScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Order Summary */}
-        <AnimatedCard style={styles.section}>
+        <NeumorphicCard style={styles.section}>
           <Text style={styles.sectionTitle}>Order Summary</Text>
           {cart.items.map((item) => (
             <View key={item.productId} style={styles.orderItem}>
@@ -226,109 +238,82 @@ export default function CheckoutScreen() {
               </Text>
             </View>
           ))}
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Shipping Information */}
-        <AnimatedCard style={styles.section}>
+        <NeumorphicCard style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Truck size={20} color={theme.colors.primary[600]} />
+            <Truck size={20} color={neumorphicColors.primary.main} />
             <Text style={styles.sectionTitle}>Shipping Information</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={shippingInfo.fullName}
-              onChangeText={(text) =>
-                setShippingInfo({ ...shippingInfo, fullName: text })
-              }
-              placeholder="John Doe"
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-          </View>
+          <NeumorphicInput
+            label="Full Name *"
+            value={shippingInfo.fullName}
+            onChangeText={(text) =>
+              setShippingInfo({ ...shippingInfo, fullName: text })
+            }
+            placeholder="John Doe"
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number *</Text>
-            <TextInput
-              style={styles.input}
-              value={shippingInfo.phone}
-              onChangeText={(text) =>
-                setShippingInfo({ ...shippingInfo, phone: text })
-              }
-              placeholder="+254 700 000 000"
-              placeholderTextColor={theme.colors.text.tertiary}
-              keyboardType="phone-pad"
-            />
-          </View>
+          <NeumorphicInput
+            label="Phone Number *"
+            value={shippingInfo.phone}
+            onChangeText={(text) =>
+              setShippingInfo({ ...shippingInfo, phone: text })
+            }
+            placeholder="+254 700 000 000"
+            keyboardType="phone-pad"
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Address *</Text>
-            <TextInput
-              style={styles.input}
-              value={shippingInfo.address}
-              onChangeText={(text) =>
-                setShippingInfo({ ...shippingInfo, address: text })
-              }
-              placeholder="Street address"
-              placeholderTextColor={theme.colors.text.tertiary}
-            />
-          </View>
+          <NeumorphicInput
+            label="Address *"
+            value={shippingInfo.address}
+            onChangeText={(text) =>
+              setShippingInfo({ ...shippingInfo, address: text })
+            }
+            placeholder="Street address"
+          />
 
           <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>City *</Text>
-              <TextInput
-                style={styles.input}
+            <View style={{ flex: 1 }}>
+              <NeumorphicInput
+                label="City *"
                 value={shippingInfo.city}
                 onChangeText={(text) =>
                   setShippingInfo({ ...shippingInfo, city: text })
                 }
                 placeholder="Nairobi"
-                placeholderTextColor={theme.colors.text.tertiary}
               />
             </View>
-            <View
-              style={[
-                styles.inputGroup,
-                { flex: 1, marginLeft: theme.spacing.md },
-              ]}
-            >
-              <Text style={styles.label}>Postal Code</Text>
-              <TextInput
-                style={styles.input}
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <NeumorphicInput
+                label="Postal Code"
                 value={shippingInfo.postalCode}
                 onChangeText={(text) =>
                   setShippingInfo({ ...shippingInfo, postalCode: text })
                 }
                 placeholder="00100"
-                placeholderTextColor={theme.colors.text.tertiary}
                 keyboardType="number-pad"
               />
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Delivery Notes</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={shippingInfo.notes}
-              onChangeText={(text) =>
-                setShippingInfo({ ...shippingInfo, notes: text })
-              }
-              placeholder="Special delivery instructions..."
-              placeholderTextColor={theme.colors.text.tertiary}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-        </AnimatedCard>
-
+          <NeumorphicInput
+            label="Delivery Notes"
+            value={shippingInfo.notes}
+            onChangeText={(text) =>
+              setShippingInfo({ ...shippingInfo, notes: text })
+            }
+            placeholder="Special delivery instructions..."
+            multiline
+            numberOfLines={3}
+          />
+        </NeumorphicCard>
         {/* Payment Method */}
-        <AnimatedCard style={styles.section}>
+        <NeumorphicCard style={styles.section}>
           <View style={styles.sectionHeader}>
-            <CreditCard size={20} color={theme.colors.primary[600]} />
+            <CreditCard size={20} color={neumorphicColors.primary.main} />
             <Text style={styles.sectionTitle}>Payment Method</Text>
           </View>
 
@@ -342,7 +327,10 @@ export default function CheckoutScreen() {
               onPress={() => setPaymentMethod(method.id)}
             >
               <View style={styles.paymentInfo}>
-                <method.icon size={24} color={theme.colors.text.secondary} />
+                <method.icon
+                  size={24}
+                  color={neumorphicColors.text.secondary}
+                />
                 <Text style={styles.paymentLabel}>{method.label}</Text>
               </View>
               <View
@@ -352,46 +340,42 @@ export default function CheckoutScreen() {
                 ]}
               >
                 {paymentMethod === method.id && (
-                  <Check size={14} color={theme.colors.text.inverse} />
+                  <Check size={14} color={neumorphicColors.text.inverse} />
                 )}
               </View>
             </TouchableOpacity>
           ))}
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Promo Code */}
-        <AnimatedCard style={styles.section}>
+        <NeumorphicCard style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Tag size={20} color={theme.colors.primary[600]} />
+            <Tag size={20} color={neumorphicColors.primary.main} />
             <Text style={styles.sectionTitle}>Promo Code</Text>
           </View>
 
           <View style={styles.promoContainer}>
-            <TextInput
-              style={[styles.input, styles.promoInput]}
-              value={promoCode}
-              onChangeText={setPromoCode}
-              placeholder="Enter promo code"
-              placeholderTextColor={theme.colors.text.tertiary}
-              editable={!promoApplied}
-            />
-            <TouchableOpacity
-              style={[
-                styles.promoButton,
-                promoApplied && styles.promoButtonApplied,
-              ]}
+            <View style={{ flex: 1 }}>
+              <NeumorphicInput
+                value={promoCode}
+                onChangeText={setPromoCode}
+                placeholder="Enter promo code"
+                editable={!promoApplied}
+              />
+            </View>
+            <NeumorphicButton
+              title={promoApplied ? "Applied" : "Apply"}
               onPress={handleApplyPromo}
+              variant={promoApplied ? "secondary" : "primary"}
+              size="md"
               disabled={promoApplied}
-            >
-              <Text style={styles.promoButtonText}>
-                {promoApplied ? "Applied" : "Apply"}
-              </Text>
-            </TouchableOpacity>
+              style={{ marginLeft: spacing.md }}
+            />
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Order Total */}
-        <AnimatedCard style={styles.section}>
+        <NeumorphicCard style={styles.section}>
           <Text style={styles.sectionTitle}>Order Total</Text>
 
           <View style={styles.totalRow}>
@@ -421,11 +405,11 @@ export default function CheckoutScreen() {
               ${checkoutSummary?.pricing?.total || "0"}
             </Text>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Security Note */}
         <View style={styles.securityNote}>
-          <ShieldCheck size={16} color={theme.colors.success} />
+          <ShieldCheck size={16} color={neumorphicColors.semantic.success} />
           <Text style={styles.securityText}>
             Your payment is secure and encrypted
           </Text>
@@ -435,110 +419,84 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       {/* Place Order Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.placeOrderButton,
-            processing && styles.placeOrderButtonDisabled,
-          ]}
-          onPress={handlePlaceOrder}
-          disabled={processing}
-        >
-          <Text style={styles.placeOrderButtonText}>
-            {processing
+      <NeumorphicCard style={styles.footer} variant="elevated">
+        <NeumorphicButton
+          title={
+            processing
               ? "Processing..."
-              : `Place Order - $${checkoutSummary?.pricing?.total || "0"}`}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+              : `Place Order - $${checkoutSummary?.pricing?.total || "0"}`
+          }
+          onPress={handlePlaceOrder}
+          variant="primary"
+          size="lg"
+          loading={processing}
+          disabled={processing}
+        />
+      </NeumorphicCard>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  loadingText: {
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: spacing.lg,
   },
   headerTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  shopButton: {
-    marginTop: theme.spacing.xl,
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-  },
-  shopButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
   },
   scrollView: {
     flex: 1,
   },
   section: {
-    backgroundColor: theme.colors.background.primary,
-    margin: theme.spacing.lg,
+    margin: spacing.lg,
     marginBottom: 0,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
+    padding: spacing.lg,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   orderItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: theme.spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.border,
   },
   itemImage: {
     width: 50,
     height: 50,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
   },
   productImage: {
@@ -548,49 +506,27 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: theme.colors.primary[100],
+    backgroundColor: neumorphicColors.primary.light,
     justifyContent: "center",
     alignItems: "center",
   },
   itemDetails: {
     flex: 1,
-    marginLeft: theme.spacing.md,
+    marginLeft: spacing.md,
   },
   itemName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "500",
+    color: neumorphicColors.text.primary,
   },
   itemQuantity: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
   },
   itemPrice: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-  },
-  inputGroup: {
-    marginBottom: theme.spacing.md,
-  },
-  label: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-  },
-  input: {
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  textArea: {
-    height: 80,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
   },
   row: {
     flexDirection: "row",
@@ -599,121 +535,88 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    marginBottom: theme.spacing.sm,
+    borderColor: neumorphicColors.base.border,
+    marginBottom: spacing.sm,
+    backgroundColor: neumorphicColors.base.card,
   },
   paymentOptionSelected: {
-    borderColor: theme.colors.primary[600],
-    backgroundColor: theme.colors.primary[50],
+    borderColor: neumorphicColors.primary.main,
+    backgroundColor: neumorphicColors.primary.light,
   },
   paymentInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   paymentLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   radioButton: {
     width: 24,
     height: 24,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
     borderWidth: 2,
-    borderColor: theme.colors.border.medium,
+    borderColor: neumorphicColors.base.border,
     justifyContent: "center",
     alignItems: "center",
   },
   radioButtonSelected: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary.main,
+    borderColor: neumorphicColors.primary.main,
   },
   promoContainer: {
     flexDirection: "row",
-    gap: theme.spacing.md,
-  },
-  promoInput: {
-    flex: 1,
-  },
-  promoButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.lg,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: theme.borderRadius.md,
-  },
-  promoButtonApplied: {
-    backgroundColor: theme.colors.success,
-  },
-  promoButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.semibold,
+    alignItems: "flex-end",
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: spacing.sm,
   },
   totalLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   totalValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   grandTotalRow: {
-    marginTop: theme.spacing.sm,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.sm,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.border,
   },
   grandTotalLabel: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   grandTotalValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h3,
+    color: neumorphicColors.primary.main,
   },
   securityNote: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.sm,
-    padding: theme.spacing.lg,
+    gap: spacing.sm,
+    padding: spacing.lg,
   },
   securityText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
   },
   bottomPadding: {
-    height: theme.spacing.xl,
+    height: spacing["2xl"],
   },
   footer: {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-  },
-  placeOrderButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingVertical: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: "center",
-  },
-  placeOrderButtonDisabled: {
-    opacity: 0.6,
-  },
-  placeOrderButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
+    margin: spacing.lg,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
   },
 });

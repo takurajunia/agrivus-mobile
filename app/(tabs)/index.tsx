@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
+  RefreshControl,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
   TrendingUp,
@@ -16,268 +17,423 @@ import {
   ShoppingCart,
   BarChart3,
   AlertCircle,
-  Leaf,
+  Bell,
+  ChevronRight,
+  Store,
+  Globe,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import GlassCard from "../../src/components/GlassCard";
-import { theme } from "../../src/theme/tokens";
+
+// Neumorphic Components
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicStatCard,
+  NeumorphicIconButton,
+  NeumorphicAvatar,
+} from "../../src/components/neumorphic";
+
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+} from "../../src/theme/neumorphic";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { user } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
 
   const stats = [
     {
-      label: "Active Orders",
+      title: "Active Orders",
       value: "12",
-      icon: ShoppingCart,
-      color: theme.colors.primary[600],
+      icon: (
+        <ShoppingCart
+          size={24}
+          color={neumorphicColors.primary[600]}
+          strokeWidth={2}
+        />
+      ),
+      iconColor: neumorphicColors.primary[600],
+      trend: { value: 8, direction: "up" as const },
     },
     {
-      label: "Revenue",
-      value: "$8,450",
-      icon: DollarSign,
-      color: theme.colors.secondary[600],
+      title: "Revenue",
+      value: "₦84,500",
+      icon: (
+        <DollarSign
+          size={24}
+          color={neumorphicColors.semantic.success}
+          strokeWidth={2}
+        />
+      ),
+      iconColor: neumorphicColors.semantic.success,
+      trend: { value: 12, direction: "up" as const },
     },
     {
-      label: "Live Auctions",
+      title: "Live Auctions",
       value: "5",
-      icon: Gavel,
-      color: theme.colors.secondary[500],
+      icon: (
+        <Gavel
+          size={24}
+          color={neumorphicColors.secondary[600]}
+          strokeWidth={2}
+        />
+      ),
+      iconColor: neumorphicColors.secondary[600],
+      trend: { value: 2, direction: "down" as const },
     },
     {
-      label: "Products",
+      title: "Products",
       value: "24",
-      icon: Package,
-      color: theme.colors.primary[700],
+      icon: (
+        <Package
+          size={24}
+          color={neumorphicColors.primary[700]}
+          strokeWidth={2}
+        />
+      ),
+      iconColor: neumorphicColors.primary[700],
+      trend: { value: 0, direction: "neutral" as const },
     },
   ];
 
   const quickActions = [
-    { label: "New Listing", icon: Package, color: theme.colors.primary[600] },
-    { label: "Analytics", icon: BarChart3, color: theme.colors.secondary[600] },
     {
-      label: "Marketplace",
-      icon: ShoppingCart,
-      color: theme.colors.secondary[500],
+      label: "New Listing",
+      icon: (
+        <Package
+          size={28}
+          color={neumorphicColors.primary[600]}
+          strokeWidth={1.5}
+        />
+      ),
+      color: neumorphicColors.primary[600],
+      route: "/create-listing",
     },
-    { label: "Auctions", icon: Gavel, color: theme.colors.primary[700] },
+    {
+      label: "Auctions",
+      icon: (
+        <Gavel
+          size={28}
+          color={neumorphicColors.secondary[600]}
+          strokeWidth={1.5}
+        />
+      ),
+      color: neumorphicColors.secondary[600],
+      route: "/(tabs)/auctions",
+    },
+    {
+      label: "AgriMall",
+      icon: (
+        <Store
+          size={28}
+          color={neumorphicColors.primary[500]}
+          strokeWidth={1.5}
+        />
+      ),
+      color: neumorphicColors.primary[500],
+      route: "/agrimall",
+    },
+    {
+      label: "Export Hub",
+      icon: (
+        <Globe
+          size={28}
+          color={neumorphicColors.semantic.info}
+          strokeWidth={1.5}
+        />
+      ),
+      color: neumorphicColors.semantic.info,
+      route: "/export-gateway",
+    },
   ];
 
   const recentActivity = [
-    { title: "New order received", time: "5 min ago", type: "order" },
-    { title: "Auction bid placed", time: "1 hour ago", type: "auction" },
-    { title: "Payment received", time: "2 hours ago", type: "payment" },
-    { title: "Product listed", time: "1 day ago", type: "listing" },
+    {
+      id: 1,
+      title: "New order received",
+      subtitle: "Tomatoes - 50kg",
+      time: "5 min ago",
+      type: "order",
+    },
+    {
+      id: 2,
+      title: "Auction bid placed",
+      subtitle: "Maize lot #234",
+      time: "1 hour ago",
+      type: "auction",
+    },
+    {
+      id: 3,
+      title: "Payment received",
+      subtitle: "₦25,000",
+      time: "2 hours ago",
+      type: "payment",
+    },
+    {
+      id: 4,
+      title: "Product listed",
+      subtitle: "Fresh Cassava",
+      time: "1 day ago",
+      type: "listing",
+    },
   ];
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setRefreshing(false);
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "order":
+        return <ShoppingCart size={16} color={neumorphicColors.primary[600]} />;
+      case "auction":
+        return <Gavel size={16} color={neumorphicColors.secondary[600]} />;
+      case "payment":
+        return (
+          <DollarSign size={16} color={neumorphicColors.semantic.success} />
+        );
+      case "listing":
+        return <Package size={16} color={neumorphicColors.primary[500]} />;
+      default:
+        return <AlertCircle size={16} color={neumorphicColors.text.tertiary} />;
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="dashboard" showLeaves={true}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
+          />
+        }
       >
+        {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.userName}>{user?.name || "Farmer"}</Text>
+            <Text style={styles.userName}>{user?.fullName || "Farmer"}</Text>
           </View>
-          <View style={styles.logoContainer}>
-            <Leaf
-              size={32}
-              color={theme.colors.primary[600]}
-              strokeWidth={2.5}
+          <View style={styles.headerRight}>
+            <NeumorphicIconButton
+              icon={<Bell size={22} color={neumorphicColors.text.secondary} />}
+              onPress={() => router.push("/(tabs)/notifications")}
+              size="medium"
+              badge={3}
             />
+            <View style={styles.avatarContainer}>
+              <NeumorphicAvatar
+                name={user?.fullName}
+                size="medium"
+                status="online"
+                showStatus
+              />
+            </View>
           </View>
         </View>
 
-        <GlassCard style={styles.alertBanner} intensity="light">
-          <AlertCircle size={20} color={theme.colors.secondary[600]} />
-          <Text style={styles.alertText}>3 products need restocking</Text>
-        </GlassCard>
+        {/* Alert Banner */}
+        <NeumorphicCard
+          variant="glass"
+          style={styles.alertBanner}
+          animated={true}
+          animationDelay={100}
+        >
+          <View style={styles.alertContent}>
+            <View style={styles.alertIconContainer}>
+              <AlertCircle size={20} color={neumorphicColors.secondary[600]} />
+            </View>
+            <Text style={styles.alertText}>3 products need restocking</Text>
+            <ChevronRight size={18} color={neumorphicColors.text.tertiary} />
+          </View>
+        </NeumorphicCard>
 
+        {/* Stats Grid */}
         <View style={styles.statsContainer}>
           {stats.map((stat, index) => (
-            <AnimatedCard
+            <NeumorphicStatCard
               key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              iconColor={stat.iconColor}
+              trend={stat.trend}
               style={styles.statCard}
-              delay={index * 100}
-              onPress={() => console.log(`Pressed ${stat.label}`)}
-            >
-              <View
-                style={[
-                  styles.statIconContainer,
-                  { backgroundColor: `${stat.color}15` },
-                ]}
-              >
-                <stat.icon size={24} color={stat.color} strokeWidth={2} />
-              </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </AnimatedCard>
+              animationDelay={200 + index * 100}
+            />
           ))}
         </View>
 
+        {/* Quick Actions */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <TrendingUp size={20} color={theme.colors.primary[600]} />
+            <TrendingUp size={20} color={neumorphicColors.primary[600]} />
           </View>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action, index) => (
-              <AnimatedCard
+              <NeumorphicCard
                 key={index}
+                variant="standard"
                 style={styles.actionCard}
-                delay={400 + index * 100}
-                onPress={() => console.log(`Pressed ${action.label}`)}
+                onPress={() => router.push(action.route as any)}
+                animationDelay={600 + index * 100}
               >
                 <View
                   style={[
                     styles.actionIcon,
-                    { backgroundColor: `${action.color}15` },
+                    { backgroundColor: `${action.color}12` },
                   ]}
                 >
-                  <action.icon size={28} color={action.color} strokeWidth={2} />
+                  {action.icon}
                 </View>
                 <Text style={styles.actionLabel}>{action.label}</Text>
-              </AnimatedCard>
+              </NeumorphicCard>
             ))}
           </View>
         </View>
 
+        {/* Recent Activity */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/orders")}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
           {recentActivity.map((activity, index) => (
-            <AnimatedCard
-              key={index}
-              style={styles.activityItem}
-              delay={800 + index * 100}
+            <NeumorphicCard
+              key={activity.id}
               variant="bordered"
+              style={styles.activityItem}
+              animationDelay={1000 + index * 100}
             >
-              <View style={styles.activityDot} />
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{activity.title}</Text>
+              <View style={styles.activityRow}>
+                <View style={styles.activityIconContainer}>
+                  {getActivityIcon(activity.type)}
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activitySubtitle}>
+                    {activity.subtitle}
+                  </Text>
+                </View>
                 <Text style={styles.activityTime}>{activity.time}</Text>
               </View>
-            </AnimatedCard>
+            </NeumorphicCard>
           ))}
         </View>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: spacing.lg,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
   },
-  greeting: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.normal,
+  headerLeft: {
+    flex: 1,
   },
-  userName: {
-    fontSize: theme.typography.fontSize["3xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xs,
-    letterSpacing: -0.5,
-  },
-  logoContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary[50],
-    justifyContent: "center",
+  headerRight: {
+    flexDirection: "row",
     alignItems: "center",
   },
+  greeting: {
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+  },
+  userName: {
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.xs,
+  },
+  avatarContainer: {
+    marginLeft: spacing.md,
+  },
   alertBanner: {
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  alertContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  alertIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: neumorphicColors.secondary[50],
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.md,
   },
   alertText: {
-    marginLeft: theme.spacing.md,
-    color: theme.colors.secondary[700],
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
     flex: 1,
+    ...typography.bodySmall,
+    fontWeight: "600",
+    color: neumorphicColors.secondary[700],
   },
   statsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
   statCard: {
     width: "47%",
-    margin: theme.spacing.xs,
-  },
-  statIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-  },
-  statValue: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.medium,
+    margin: "1.5%",
   },
   section: {
-    paddingHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing["2xl"],
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    letterSpacing: -0.3,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   seeAll: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.bodySmall,
+    color: neumorphicColors.primary[600],
+    fontWeight: "600",
   },
   quickActionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginHorizontal: -theme.spacing.xs,
+    marginHorizontal: -spacing.xs,
   },
   actionCard: {
     width: "47%",
-    margin: theme.spacing.xs,
+    margin: "1.5%",
+    alignItems: "center",
   },
   actionIcon: {
     width: 64,
@@ -285,38 +441,48 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   actionLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.bodySmall,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
     textAlign: "center",
   },
   activityItem: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
-  activityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.primary[600],
-    marginRight: theme.spacing.lg,
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  activityIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: neumorphicColors.primary[50],
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.md,
   },
   activityContent: {
     flex: 1,
   },
   activityTitle: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
+  },
+  activitySubtitle: {
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginTop: 2,
   },
   activityTime: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
   },
   bottomPadding: {
-    height: theme.spacing.xl,
+    height: spacing["2xl"],
   },
 });

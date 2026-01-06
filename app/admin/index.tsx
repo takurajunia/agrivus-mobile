@@ -4,10 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
-  TouchableOpacity,
   Dimensions,
 } from "react-native";
 import {
@@ -27,15 +25,24 @@ import {
   ArrowLeft,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import StatCard from "../../src/components/StatCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../../src/theme/neumorphic";
 import adminService, { AdminStatistics } from "../../src/services/adminService";
 import { useAuth } from "../../src/contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
-const cardWidth = (width - theme.spacing.xl * 3) / 2;
+const cardWidth = (width - spacing.xl * 3) / 2;
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
@@ -79,44 +86,47 @@ export default function AdminDashboardScreen() {
 
   if (user?.role !== "admin") {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="dashboard">
         <View style={styles.accessDenied}>
-          <Shield size={64} color={theme.colors.error} />
+          <Shield size={64} color={neumorphicColors.semantic.error} />
           <Text style={styles.accessDeniedTitle}>Access Denied</Text>
           <Text style={styles.accessDeniedText}>
             You don't have permission to view this page.
           </Text>
-          <AnimatedButton
+          <NeumorphicButton
             title="Go Back"
             onPress={() => router.back()}
             variant="primary"
           />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="dashboard">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading dashboard...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="dashboard">
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <View>
+          variant="default"
+          size="medium"
+        />
+        <View style={styles.headerTextContainer}>
           <Text style={styles.title}>Admin Dashboard</Text>
           <Text style={styles.subtitle}>Platform Overview</Text>
         </View>
@@ -129,156 +139,168 @@ export default function AdminDashboardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         {/* User Statistics */}
         <Text style={styles.sectionTitle}>Users</Text>
         <View style={styles.statsGrid}>
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={0}
+            animationDelay={0}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.primary[100] },
+                { backgroundColor: neumorphicColors.primary[100] },
               ]}
             >
-              <Users size={24} color={theme.colors.primary[600]} />
+              <Users size={24} color={neumorphicColors.primary[600]} />
             </View>
             <Text style={styles.statValue}>{stats?.users.total || 0}</Text>
             <Text style={styles.statLabel}>Total Users</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={50}
+            animationDelay={50}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.success + "20" },
+                { backgroundColor: neumorphicColors.semantic.success + "20" },
               ]}
             >
-              <UserCheck size={24} color={theme.colors.success} />
+              <UserCheck size={24} color={neumorphicColors.semantic.success} />
             </View>
             <Text style={styles.statValue}>
               {stats?.users.activeToday || 0}
             </Text>
             <Text style={styles.statLabel}>Active Today</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={100}
+            animationDelay={100}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.secondary[100] },
+                { backgroundColor: neumorphicColors.secondary[100] },
               ]}
             >
-              <TrendingUp size={24} color={theme.colors.secondary[600]} />
+              <TrendingUp size={24} color={neumorphicColors.secondary[600]} />
             </View>
             <Text style={styles.statValue}>
               {stats?.users.newThisMonth || 0}
             </Text>
             <Text style={styles.statLabel}>New This Month</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={150}
+            animationDelay={150}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.info + "20" },
+                { backgroundColor: neumorphicColors.semantic.info + "20" },
               ]}
             >
-              <Package size={24} color={theme.colors.info} />
+              <Package size={24} color={neumorphicColors.semantic.info} />
             </View>
             <Text style={styles.statValue}>{stats?.users.farmers || 0}</Text>
             <Text style={styles.statLabel}>Farmers</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
         </View>
 
         {/* Orders Statistics */}
         <Text style={styles.sectionTitle}>Orders</Text>
         <View style={styles.statsGrid}>
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={200}
+            animationDelay={200}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.primary[100] },
+                { backgroundColor: neumorphicColors.primary[100] },
               ]}
             >
-              <ShoppingBag size={24} color={theme.colors.primary[600]} />
+              <ShoppingBag size={24} color={neumorphicColors.primary[600]} />
             </View>
             <Text style={styles.statValue}>{stats?.orders.total || 0}</Text>
             <Text style={styles.statLabel}>Total Orders</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={250}
+            animationDelay={250}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.warning + "20" },
+                { backgroundColor: neumorphicColors.semantic.warning + "20" },
               ]}
             >
-              <Package size={24} color={theme.colors.warning} />
+              <Package size={24} color={neumorphicColors.semantic.warning} />
             </View>
             <Text style={styles.statValue}>{stats?.orders.pending || 0}</Text>
             <Text style={styles.statLabel}>Pending</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={300}
+            animationDelay={300}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.info + "20" },
+                { backgroundColor: neumorphicColors.semantic.info + "20" },
               ]}
             >
-              <TrendingUp size={24} color={theme.colors.info} />
+              <TrendingUp size={24} color={neumorphicColors.semantic.info} />
             </View>
             <Text style={styles.statValue}>{stats?.orders.inTransit || 0}</Text>
             <Text style={styles.statLabel}>In Transit</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={350}
+            animationDelay={350}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.success + "20" },
+                { backgroundColor: neumorphicColors.semantic.success + "20" },
               ]}
             >
-              <UserCheck size={24} color={theme.colors.success} />
+              <UserCheck size={24} color={neumorphicColors.semantic.success} />
             </View>
             <Text style={styles.statValue}>{stats?.orders.delivered || 0}</Text>
             <Text style={styles.statLabel}>Delivered</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
         </View>
 
         {/* Financial Statistics */}
         <Text style={styles.sectionTitle}>Financials</Text>
-        <AnimatedCard style={styles.financialCard} delay={400}>
+        <NeumorphicCard
+          style={styles.financialCard}
+          animationDelay={400}
+          variant="elevated"
+        >
           <View style={styles.financialRow}>
             <View style={styles.financialItem}>
-              <DollarSign size={24} color={theme.colors.success} />
+              <DollarSign size={24} color={neumorphicColors.semantic.success} />
               <Text style={styles.financialLabel}>Total Volume</Text>
               <Text style={styles.financialValue}>
                 {formatCurrency(stats?.transactions.totalVolume || "0")}
@@ -286,7 +308,7 @@ export default function AdminDashboardScreen() {
             </View>
             <View style={styles.divider} />
             <View style={styles.financialItem}>
-              <TrendingUp size={24} color={theme.colors.primary[600]} />
+              <TrendingUp size={24} color={neumorphicColors.primary[600]} />
               <Text style={styles.financialLabel}>This Month</Text>
               <Text style={styles.financialValue}>
                 {formatCurrency(stats?.transactions.thisMonthVolume || "0")}
@@ -295,7 +317,7 @@ export default function AdminDashboardScreen() {
           </View>
           <View style={styles.financialRow}>
             <View style={styles.financialItem}>
-              <BarChart3 size={24} color={theme.colors.info} />
+              <BarChart3 size={24} color={neumorphicColors.semantic.info} />
               <Text style={styles.financialLabel}>Today</Text>
               <Text style={styles.financialValue}>
                 {formatCurrency(stats?.transactions.todayVolume || "0")}
@@ -303,110 +325,120 @@ export default function AdminDashboardScreen() {
             </View>
             <View style={styles.divider} />
             <View style={styles.financialItem}>
-              <DollarSign size={24} color={theme.colors.secondary[600]} />
+              <DollarSign size={24} color={neumorphicColors.secondary[600]} />
               <Text style={styles.financialLabel}>Avg Order</Text>
               <Text style={styles.financialValue}>
                 {formatCurrency(stats?.transactions.averageOrderValue || "0")}
               </Text>
             </View>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Listings & Auctions */}
         <Text style={styles.sectionTitle}>Marketplace</Text>
         <View style={styles.statsGrid}>
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={450}
+            animationDelay={450}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.primary[100] },
+                { backgroundColor: neumorphicColors.primary[100] },
               ]}
             >
-              <Package size={24} color={theme.colors.primary[600]} />
+              <Package size={24} color={neumorphicColors.primary[600]} />
             </View>
             <Text style={styles.statValue}>{stats?.listings.active || 0}</Text>
             <Text style={styles.statLabel}>Active Listings</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard
+          <NeumorphicCard
             style={[styles.statCard, { width: cardWidth }]}
-            delay={500}
+            animationDelay={500}
+            variant="stat"
           >
             <View
               style={[
                 styles.iconContainer,
-                { backgroundColor: theme.colors.warning + "20" },
+                { backgroundColor: neumorphicColors.semantic.warning + "20" },
               ]}
             >
-              <Gavel size={24} color={theme.colors.warning} />
+              <Gavel size={24} color={neumorphicColors.semantic.warning} />
             </View>
             <Text style={styles.statValue}>{stats?.auctions.live || 0}</Text>
             <Text style={styles.statLabel}>Live Auctions</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
         </View>
 
         {/* Quick Actions */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsContainer}>
-          <TouchableOpacity
+          <NeumorphicCard
             style={styles.actionButton}
             onPress={() => router.push("/admin/users")}
+            variant="standard"
           >
-            <Users size={20} color={theme.colors.primary[600]} />
+            <Users size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.actionText}>Manage Users</Text>
-            <ChevronRight size={16} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
+            <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+          </NeumorphicCard>
 
-          <TouchableOpacity
+          <NeumorphicCard
             style={styles.actionButton}
             onPress={() => router.push("/admin/orders")}
+            variant="standard"
           >
-            <ShoppingBag size={20} color={theme.colors.primary[600]} />
+            <ShoppingBag size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.actionText}>View All Orders</Text>
-            <ChevronRight size={16} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
+            <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+          </NeumorphicCard>
 
-          <TouchableOpacity
+          <NeumorphicCard
             style={styles.actionButton}
             onPress={() => router.push("/admin/transactions")}
+            variant="standard"
           >
-            <DollarSign size={20} color={theme.colors.primary[600]} />
+            <DollarSign size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.actionText}>Transactions</Text>
-            <ChevronRight size={16} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
+            <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+          </NeumorphicCard>
 
-          <TouchableOpacity
+          <NeumorphicCard
             style={styles.actionButton}
             onPress={() => router.push("/admin/security")}
+            variant="standard"
           >
-            <AlertTriangle size={20} color={theme.colors.warning} />
+            <AlertTriangle
+              size={20}
+              color={neumorphicColors.semantic.warning}
+            />
             <Text style={styles.actionText}>Security Incidents</Text>
-            <ChevronRight size={16} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
+            <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+          </NeumorphicCard>
 
-          <TouchableOpacity
+          <NeumorphicCard
             style={styles.actionButton}
             onPress={() => router.push("/admin/reports")}
+            variant="standard"
           >
-            <BarChart3 size={20} color={theme.colors.primary[600]} />
+            <BarChart3 size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.actionText}>Revenue Reports</Text>
-            <ChevronRight size={16} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
+            <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+          </NeumorphicCard>
         </View>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   loadingContainer: {
     flex: 1,
@@ -414,140 +446,130 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   accessDenied: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   accessDeniedTitle: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
   },
   accessDeniedText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
-    marginVertical: theme.spacing.lg,
+    marginVertical: spacing.lg,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
-  backButton: {
-    padding: theme.spacing.sm,
-    marginRight: theme.spacing.md,
+  headerTextContainer: {
+    marginLeft: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize["3xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h1,
+    color: neumorphicColors.text.primary,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   scrollView: {
     flex: 1,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: theme.spacing.xl,
-    gap: theme.spacing.md,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.md,
   },
   statCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
     alignItems: "center",
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   statValue: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.xs,
   },
   statLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   financialCard: {
-    marginHorizontal: theme.spacing.xl,
-    padding: theme.spacing.lg,
+    marginHorizontal: spacing.xl,
+    padding: spacing.lg,
   },
   financialRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   financialItem: {
     flex: 1,
     alignItems: "center",
   },
   financialLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.sm,
   },
   financialValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xs,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.xs,
   },
   divider: {
     width: 1,
     height: 60,
-    backgroundColor: theme.colors.border.light,
-    marginHorizontal: theme.spacing.md,
+    backgroundColor: neumorphicColors.base.shadowDark + "40",
+    marginHorizontal: spacing.md,
   },
   actionsContainer: {
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.background.primary,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm,
+    marginBottom: spacing.sm,
   },
   actionText: {
     flex: 1,
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginLeft: theme.spacing.md,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
+    marginLeft: spacing.md,
   },
   bottomPadding: {
-    height: theme.spacing["4xl"],
+    height: spacing["2xl"],
   },
 });

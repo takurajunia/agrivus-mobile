@@ -12,7 +12,11 @@ import {
   Gavel,
   Wallet,
 } from "lucide-react-native";
-import { theme } from "../../src/theme/tokens";
+import {
+  neumorphicColors,
+  spacing,
+  borderRadius as neumorphicBorderRadius,
+} from "../../src/theme/neumorphic";
 import LoadingSpinner from "../../src/components/LoadingSpinner";
 
 export default function TabLayout() {
@@ -37,28 +41,32 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary[600],
-        tabBarInactiveTintColor: theme.colors.text.tertiary,
+        tabBarActiveTintColor: neumorphicColors.primary[600],
+        tabBarInactiveTintColor: neumorphicColors.text.tertiary,
         tabBarStyle: {
-          backgroundColor: theme.colors.background.primary,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.border.light,
-          paddingTop: theme.spacing.sm,
-          paddingBottom: theme.spacing.sm,
+          backgroundColor: neumorphicColors.base.card,
+          borderTopWidth: 0,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.sm,
           height: 70,
-          ...theme.shadows.lg,
-          borderTopLeftRadius: theme.borderRadius.lg,
-          borderTopRightRadius: theme.borderRadius.lg,
+          // Neumorphic shadow
+          shadowColor: neumorphicColors.base.shadowDark,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          elevation: 10,
+          borderTopLeftRadius: neumorphicBorderRadius.xl,
+          borderTopRightRadius: neumorphicBorderRadius.xl,
         },
         tabBarLabelStyle: {
-          fontSize: theme.typography.fontSize.xs,
-          fontWeight: theme.typography.fontWeight.medium,
+          fontSize: 10,
+          fontWeight: "600",
           marginTop: 2,
         },
         tabBarItemStyle: {
-          paddingVertical: theme.spacing.xs,
+          paddingVertical: spacing.xs,
         },
-        tabBarActiveBackgroundColor: theme.colors.primary[50],
+        tabBarActiveBackgroundColor: `${neumorphicColors.primary[500]}15`,
         tabBarIconStyle: {
           marginTop: 2,
         },

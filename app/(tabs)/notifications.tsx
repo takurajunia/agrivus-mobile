@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -24,9 +23,17 @@ import {
   User,
   Trash2,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import { theme } from "../../src/theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../src/theme/neumorphic";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+} from "../../src/components/neumorphic";
 import notificationsService from "../../src/services/notificationsService";
 import type { Notification } from "../../src/types";
 
@@ -171,24 +178,24 @@ export default function NotificationsScreen() {
       case "order_received":
       case "success":
       case "order_delivered":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "bid":
       case "auction":
       case "auction_won":
       case "auction_outbid":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "payment":
       case "payment_received":
       case "wallet":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "alert":
       case "warning":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "message":
       case "chat":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       default:
-        return theme.colors.secondary[600];
+        return neumorphicColors.secondary[600];
     }
   };
 
@@ -210,17 +217,20 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading notifications...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={true}>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Notifications</Text>
@@ -229,10 +239,10 @@ export default function NotificationsScreen() {
           )}
         </View>
         {unreadCount > 0 && (
-          <AnimatedButton
+          <NeumorphicButton
             title="Mark all read"
-            variant="outline"
-            size="sm"
+            variant="tertiary"
+            size="small"
             onPress={handleMarkAllRead}
           />
         )}
@@ -245,13 +255,13 @@ export default function NotificationsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
-            <Bell size={64} color={theme.colors.text.tertiary} />
+            <Bell size={64} color={neumorphicColors.text.tertiary} />
             <Text style={styles.emptyTitle}>No notifications</Text>
             <Text style={styles.emptyText}>
               You're all caught up! New notifications will appear here.
@@ -263,109 +273,117 @@ export default function NotificationsScreen() {
             const iconColor = getNotificationColor(notification.type);
 
             return (
-              <AnimatedCard
+              <NeumorphicCard
                 key={notification.id}
                 style={[
                   styles.notificationCard,
                   !notification.isRead && styles.unreadCard,
                 ]}
-                delay={index * 50}
+                animationDelay={index * 50}
                 onPress={() => handleNotificationPress(notification)}
+                variant="standard"
               >
-                <View
-                  style={[
-                    styles.iconContainer,
-                    { backgroundColor: `${iconColor}20` },
-                  ]}
-                >
-                  <IconComponent size={24} color={iconColor} strokeWidth={2} />
-                </View>
-
-                <View style={styles.notificationContent}>
-                  <View style={styles.notificationHeader}>
-                    <Text style={styles.notificationTitle}>
-                      {notification.title}
-                    </Text>
-                    {!notification.isRead && <View style={styles.unreadDot} />}
+                <View style={styles.cardContent}>
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      { backgroundColor: `${iconColor}20` },
+                    ]}
+                  >
+                    <IconComponent
+                      size={24}
+                      color={iconColor}
+                      strokeWidth={2}
+                    />
                   </View>
-                  <Text style={styles.notificationMessage}>
-                    {notification.message}
-                  </Text>
-                  <Text style={styles.notificationTime}>
-                    {formatTime(notification.createdAt)}
-                  </Text>
-                </View>
 
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteNotification(notification.id)}
-                >
-                  <Trash2 size={18} color={theme.colors.text.tertiary} />
-                </TouchableOpacity>
-              </AnimatedCard>
+                  <View style={styles.notificationContent}>
+                    <View style={styles.notificationHeader}>
+                      <Text style={styles.notificationTitle}>
+                        {notification.title}
+                      </Text>
+                      {!notification.isRead && (
+                        <View style={styles.unreadDot} />
+                      )}
+                    </View>
+                    <Text style={styles.notificationMessage}>
+                      {notification.message}
+                    </Text>
+                    <Text style={styles.notificationTime}>
+                      {formatTime(notification.createdAt)}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteNotification(notification.id)}
+                  >
+                    <Trash2 size={18} color={neumorphicColors.text.tertiary} />
+                  </TouchableOpacity>
+                </View>
+              </NeumorphicCard>
             );
           })
         )}
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: theme.typography.fontSize["4xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h1,
+    color: neumorphicColors.text.primary,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.success,
-    fontWeight: theme.typography.fontWeight.semibold,
-    marginTop: theme.spacing.xs,
+    ...typography.body,
+    color: neumorphicColors.semantic.success,
+    fontWeight: "600",
+    marginTop: spacing.xs,
   },
   notificationsList: {
     flex: 1,
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   notificationCard: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+  },
+  cardContent: {
     flexDirection: "row",
-    marginBottom: theme.spacing.md,
+    alignItems: "flex-start",
   },
   unreadCard: {
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.success,
+    borderLeftColor: neumorphicColors.semantic.success,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: theme.spacing.md,
+    marginRight: spacing.md,
   },
   notificationContent: {
     flex: 1,
@@ -373,57 +391,55 @@ const styles = StyleSheet.create({
   notificationHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
+    marginBottom: spacing.xs,
   },
   notificationTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
     letterSpacing: -0.2,
     flex: 1,
   },
   unreadDot: {
     width: 8,
     height: 8,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.success,
-    marginLeft: theme.spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.semantic.success,
+    marginLeft: spacing.sm,
   },
   notificationMessage: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    lineHeight: theme.typography.lineHeight.normal,
-    marginBottom: theme.spacing.sm,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    lineHeight: 20,
+    marginBottom: spacing.sm,
   },
   notificationTime: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    fontWeight: "500",
   },
   deleteButton: {
-    padding: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
+    padding: spacing.sm,
+    marginLeft: spacing.sm,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.body,
+    color: neumorphicColors.text.tertiary,
     textAlign: "center",
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xl,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.xl,
   },
   bottomPadding: {
-    height: theme.spacing.xl,
+    height: spacing.xl,
   },
 });

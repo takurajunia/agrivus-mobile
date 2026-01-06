@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
@@ -21,9 +19,18 @@ import {
   ShoppingBag,
   Filter,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../src/theme/neumorphic";
 import { agrimallService } from "../../src/services/agrimallService";
 import { useAuth } from "../../src/contexts/AuthContext";
 
@@ -128,23 +135,23 @@ export default function AgriMallOrdersScreen() {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "pending":
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
       case "paid":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "processing":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "ready_for_pickup":
-        return theme.colors.secondary[600];
+        return neumorphicColors.secondary[600];
       case "shipped":
       case "in_transit":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "delivered":
       case "confirmed":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "cancelled":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
@@ -182,9 +189,10 @@ export default function AgriMallOrdersScreen() {
   };
 
   const renderOrderItem = ({ item }: { item: AgrimallOrder }) => (
-    <AnimatedCard
+    <NeumorphicCard
       style={styles.orderCard}
       onPress={() => handleOrderPress(item.id)}
+      variant="standard"
     >
       <View style={styles.orderHeader}>
         <View style={styles.orderNumberContainer}>
@@ -207,7 +215,7 @@ export default function AgriMallOrdersScreen() {
       </View>
 
       <View style={styles.productInfo}>
-        <Package size={20} color={theme.colors.primary[600]} />
+        <Package size={20} color={neumorphicColors.primary[600]} />
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.product?.name}</Text>
           <Text style={styles.productQuantity}>
@@ -221,46 +229,37 @@ export default function AgriMallOrdersScreen() {
 
       <View style={styles.orderFooter}>
         <Text style={styles.viewDetails}>View Details</Text>
-        <ChevronRight size={18} color={theme.colors.primary[600]} />
+        <ChevronRight size={18} color={neumorphicColors.primary[600]} />
       </View>
-    </AnimatedCard>
+    </NeumorphicCard>
   );
 
   const renderFilterChip = ({ item }: { item: (typeof STATUS_FILTERS)[0] }) => (
-    <TouchableOpacity
-      style={[
-        styles.filterChip,
-        statusFilter === item.value && styles.filterChipActive,
-      ]}
+    <NeumorphicButton
+      title={item.label}
+      variant={statusFilter === item.value ? "primary" : "secondary"}
+      size="small"
       onPress={() => setStatusFilter(item.value)}
-    >
-      <Text
-        style={[
-          styles.filterChipText,
-          statusFilter === item.value && styles.filterChipTextActive,
-        ]}
-      >
-        {item.label}
-      </Text>
-    </TouchableOpacity>
+      style={styles.filterChip}
+    />
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <ShoppingBag
         size={64}
-        color={theme.colors.text.tertiary}
+        color={neumorphicColors.text.tertiary}
         strokeWidth={1}
       />
       <Text style={styles.emptyTitle}>No Orders Yet</Text>
       <Text style={styles.emptySubtitle}>
         Your AgriMall orders will appear here
       </Text>
-      <AnimatedButton
+      <NeumorphicButton
         title="Browse Products"
         variant="primary"
-        size="md"
-        style={{ marginTop: theme.spacing.lg }}
+        size="medium"
+        style={{ marginTop: spacing.lg }}
         onPress={() => router.push("/agrimall" as any)}
       />
     </View>
@@ -270,39 +269,42 @@ export default function AgriMallOrdersScreen() {
     if (!loadingMore) return null;
     return (
       <View style={styles.loadMoreContainer}>
-        <ActivityIndicator size="small" color={theme.colors.primary[600]} />
+        <ActivityIndicator size="small" color={neumorphicColors.primary[600]} />
       </View>
     );
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list" showLeaves={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading orders...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+          size="medium"
+        />
         <Text style={styles.title}>My AgriMall Orders</Text>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<Filter size={24} color={neumorphicColors.text.primary} />}
           onPress={() => setShowFilters(!showFilters)}
-          style={styles.filterButton}
-        >
-          <Filter size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+          size="medium"
+        />
       </View>
 
       {/* Filters */}
@@ -333,8 +335,8 @@ export default function AgriMallOrdersScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary[600]]}
-            tintColor={theme.colors.primary[600]}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
           />
         }
         onEndReached={handleLoadMore}
@@ -342,33 +344,26 @@ export default function AgriMallOrdersScreen() {
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
       />
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  filterButton: {
-    padding: theme.spacing.xs,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   loadingContainer: {
     flex: 1,
@@ -376,136 +371,119 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   filtersContainer: {
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: neumorphicColors.base.background,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.shadowDark + "20",
   },
   filtersList: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
   filterChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    marginRight: theme.spacing.sm,
-  },
-  filterChipActive: {
-    backgroundColor: theme.colors.primary[600],
-  },
-  filterChipText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-  },
-  filterChipTextActive: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    marginRight: spacing.sm,
   },
   listContent: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   emptyList: {
     flex: 1,
   },
   orderCard: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   orderNumberContainer: {},
   orderNumber: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
+    color: neumorphicColors.text.primary,
   },
   orderDate: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
     marginTop: 2,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
   },
   statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.caption,
+    fontWeight: "600",
     textTransform: "capitalize",
   },
   productInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: spacing.md,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.shadowDark + "20",
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.shadowDark + "20",
   },
   productDetails: {
     flex: 1,
   },
   productName: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   productQuantity: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
     marginTop: 2,
   },
   orderTotal: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h5,
+    fontWeight: "700",
+    color: neumorphicColors.primary[600],
   },
   orderFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
   viewDetails: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.primary[600],
+    ...typography.bodySmall,
+    fontWeight: "600",
+    color: neumorphicColors.primary[600],
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   loadMoreContainer: {
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: spacing.lg,
     alignItems: "center",
   },
 });

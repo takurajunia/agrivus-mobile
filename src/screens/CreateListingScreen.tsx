@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  SafeAreaView,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -21,10 +20,18 @@ import {
   Image as ImageIcon,
   ChevronDown,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { listingsService } from "../services/listingsService";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicInput from "../components/neumorphic/NeumorphicInput";
 
 const CROP_TYPES = [
   "Maize",
@@ -116,7 +123,7 @@ export default function CreateListingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="default">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -127,7 +134,7 @@ export default function CreateListingScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Package size={28} color={theme.colors.primary[600]} />
+            <Package size={28} color={neumorphicColors.primary.main} />
             <View style={styles.headerText}>
               <Text style={styles.title}>Create Listing</Text>
               <Text style={styles.subtitle}>
@@ -152,76 +159,71 @@ export default function CreateListingScreen() {
                 >
                   {form.cropType || "Select crop type"}
                 </Text>
-                <ChevronDown size={20} color={theme.colors.text.secondary} />
+                <ChevronDown
+                  size={20}
+                  color={neumorphicColors.text.secondary}
+                />
               </TouchableOpacity>
               {errors.cropType && (
                 <Text style={styles.errorText}>{errors.cropType}</Text>
               )}
 
               {showCropPicker && (
-                <AnimatedCard style={styles.pickerOptions}>
-                  {CROP_TYPES.map((crop) => (
-                    <TouchableOpacity
-                      key={crop}
-                      style={styles.pickerOption}
-                      onPress={() => {
-                        updateForm("cropType", crop);
-                        setShowCropPicker(false);
-                      }}
-                    >
-                      <Text style={styles.pickerOptionText}>{crop}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </AnimatedCard>
+                <NeumorphicCard style={styles.pickerOptions}>
+                  <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+                    {CROP_TYPES.map((crop) => (
+                      <TouchableOpacity
+                        key={crop}
+                        style={styles.pickerOption}
+                        onPress={() => {
+                          updateForm("cropType", crop);
+                          setShowCropPicker(false);
+                        }}
+                      >
+                        <Text style={styles.pickerOptionText}>{crop}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </NeumorphicCard>
               )}
             </View>
 
             {/* Crop Name (Optional) */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Crop Name (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g., Hybrid Maize, Cherry Tomatoes"
-                placeholderTextColor={theme.colors.text.tertiary}
-                value={form.cropName}
-                onChangeText={(text) => updateForm("cropName", text)}
-              />
-            </View>
+            <NeumorphicInput
+              label="Crop Name (Optional)"
+              placeholder="e.g., Hybrid Maize, Cherry Tomatoes"
+              value={form.cropName}
+              onChangeText={(text) => updateForm("cropName", text)}
+            />
 
             {/* Quantity & Unit */}
             <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 2 }]}>
-                <Text style={styles.label}>Quantity *</Text>
-                <TextInput
-                  style={[styles.input, errors.quantity && styles.inputError]}
+              <View style={{ flex: 2 }}>
+                <NeumorphicInput
+                  label="Quantity *"
                   placeholder="Enter quantity"
-                  placeholderTextColor={theme.colors.text.tertiary}
                   keyboardType="decimal-pad"
                   value={form.quantity}
                   onChangeText={(text) => updateForm("quantity", text)}
+                  error={errors.quantity}
                 />
-                {errors.quantity && (
-                  <Text style={styles.errorText}>{errors.quantity}</Text>
-                )}
               </View>
 
-              <View
-                style={[
-                  styles.inputGroup,
-                  { flex: 1, marginLeft: theme.spacing.md },
-                ]}
-              >
+              <View style={{ flex: 1, marginLeft: spacing.md }}>
                 <Text style={styles.label}>Unit *</Text>
                 <TouchableOpacity
                   style={styles.picker}
                   onPress={() => setShowUnitPicker(!showUnitPicker)}
                 >
                   <Text style={styles.pickerText}>{form.unit}</Text>
-                  <ChevronDown size={16} color={theme.colors.text.secondary} />
+                  <ChevronDown
+                    size={16}
+                    color={neumorphicColors.text.secondary}
+                  />
                 </TouchableOpacity>
 
                 {showUnitPicker && (
-                  <AnimatedCard style={styles.pickerOptions}>
+                  <NeumorphicCard style={styles.pickerOptions}>
                     {UNITS.map((unit) => (
                       <TouchableOpacity
                         key={unit}
@@ -234,117 +236,78 @@ export default function CreateListingScreen() {
                         <Text style={styles.pickerOptionText}>{unit}</Text>
                       </TouchableOpacity>
                     ))}
-                  </AnimatedCard>
+                  </NeumorphicCard>
                 )}
               </View>
             </View>
 
             {/* Price */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Price per {form.unit} *</Text>
-              <View
-                style={[
-                  styles.inputWithIcon,
-                  errors.pricePerUnit && styles.inputError,
-                ]}
-              >
-                <DollarSign size={20} color={theme.colors.text.secondary} />
-                <TextInput
-                  style={styles.inputInner}
-                  placeholder="Enter price"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  keyboardType="decimal-pad"
-                  value={form.pricePerUnit}
-                  onChangeText={(text) => updateForm("pricePerUnit", text)}
-                />
-              </View>
-              {errors.pricePerUnit && (
-                <Text style={styles.errorText}>{errors.pricePerUnit}</Text>
-              )}
-            </View>
+            <NeumorphicInput
+              label={`Price per ${form.unit} *`}
+              placeholder="Enter price"
+              keyboardType="decimal-pad"
+              value={form.pricePerUnit}
+              onChangeText={(text) => updateForm("pricePerUnit", text)}
+              error={errors.pricePerUnit}
+              leftIcon={
+                <DollarSign size={20} color={neumorphicColors.text.secondary} />
+              }
+            />
 
             {/* Location */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Location *</Text>
-              <View
-                style={[
-                  styles.inputWithIcon,
-                  errors.location && styles.inputError,
-                ]}
-              >
-                <MapPin size={20} color={theme.colors.text.secondary} />
-                <TextInput
-                  style={styles.inputInner}
-                  placeholder="e.g., Harare, Mashonaland East"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={form.location}
-                  onChangeText={(text) => updateForm("location", text)}
-                />
-              </View>
-              {errors.location && (
-                <Text style={styles.errorText}>{errors.location}</Text>
-              )}
-            </View>
+            <NeumorphicInput
+              label="Location *"
+              placeholder="e.g., Harare, Mashonaland East"
+              value={form.location}
+              onChangeText={(text) => updateForm("location", text)}
+              error={errors.location}
+              leftIcon={
+                <MapPin size={20} color={neumorphicColors.text.secondary} />
+              }
+            />
 
             {/* Harvest Date */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Harvest Date (Optional)</Text>
-              <View style={styles.inputWithIcon}>
-                <Calendar size={20} color={theme.colors.text.secondary} />
-                <TextInput
-                  style={styles.inputInner}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  value={form.harvestDate}
-                  onChangeText={(text) => updateForm("harvestDate", text)}
-                />
-              </View>
-            </View>
+            <NeumorphicInput
+              label="Harvest Date (Optional)"
+              placeholder="YYYY-MM-DD"
+              value={form.harvestDate}
+              onChangeText={(text) => updateForm("harvestDate", text)}
+              leftIcon={
+                <Calendar size={20} color={neumorphicColors.text.secondary} />
+              }
+            />
 
             {/* Description */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description (Optional)</Text>
-              <View style={styles.inputWithIcon}>
-                <FileText size={20} color={theme.colors.text.secondary} />
-                <TextInput
-                  style={[styles.inputInner, styles.textArea]}
-                  placeholder="Describe your produce, quality, certifications..."
-                  placeholderTextColor={theme.colors.text.tertiary}
-                  multiline
-                  numberOfLines={4}
-                  value={form.description}
-                  onChangeText={(text) => updateForm("description", text)}
-                />
-              </View>
-            </View>
+            <NeumorphicInput
+              label="Description (Optional)"
+              placeholder="Describe your produce, quality, certifications..."
+              multiline
+              numberOfLines={4}
+              value={form.description}
+              onChangeText={(text) => updateForm("description", text)}
+              leftIcon={
+                <FileText size={20} color={neumorphicColors.text.secondary} />
+              }
+            />
 
             {/* Submit Button */}
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                loading && styles.submitButtonDisabled,
-              ]}
+            <NeumorphicButton
+              title="Create Listing"
               onPress={handleSubmit}
+              variant="primary"
+              size="lg"
+              loading={loading}
               disabled={loading}
-            >
-              {loading ? (
-                <LoadingSpinner size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>Create Listing</Text>
-              )}
-            </TouchableOpacity>
+              style={{ marginTop: spacing.lg }}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   keyboardView: {
     flex: 1,
   },
@@ -354,73 +317,41 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   form: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
     paddingTop: 0,
   },
   inputGroup: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
-  },
-  input: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  inputWithIcon: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.sm,
-  },
-  inputInner: {
-    flex: 1,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    padding: 0,
+    ...typography.caption,
+    fontWeight: "500",
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.sm,
   },
   inputError: {
-    borderColor: theme.colors.error,
+    borderColor: neumorphicColors.semantic.error,
   },
   errorText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.error,
-    marginTop: theme.spacing.xs,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
+    ...typography.caption,
+    color: neumorphicColors.semantic.error,
+    marginTop: spacing.xs,
   },
   row: {
     flexDirection: "row",
@@ -429,51 +360,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    borderColor: neumorphicColors.base.border,
   },
   pickerText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   pickerPlaceholder: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.tertiary,
+    ...typography.body,
+    color: neumorphicColors.text.tertiary,
   },
   pickerOptions: {
-    marginTop: theme.spacing.sm,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.md,
-    maxHeight: 200,
+    marginTop: spacing.sm,
+    padding: 0,
   },
   pickerOption: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.border,
   },
   pickerOptionText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-  },
-  submitButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingVertical: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: "center",
-    marginTop: theme.spacing.lg,
-  },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
-  submitButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.inverse,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
 });

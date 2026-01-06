@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
-  SafeAreaView,
   Modal,
   Alert,
 } from "react-native";
@@ -21,12 +20,21 @@ import {
   CreditCard,
   Smartphone,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { walletService } from "../services/walletService";
 import type { WalletBalance, Transaction } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
-import GlassCard from "../components/GlassCard";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicStatCard,
+} from "../components/neumorphic";
 
 const PAYMENT_METHODS = [
   { id: "ecocash", name: "EcoCash", icon: Smartphone },
@@ -130,32 +138,35 @@ export default function WalletScreen() {
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case "deposit":
-        return { icon: ArrowDownCircle, color: theme.colors.success };
+        return {
+          icon: ArrowDownCircle,
+          color: neumorphicColors.semantic.success,
+        };
       case "payment":
-        return { icon: DollarSign, color: theme.colors.success };
+        return { icon: DollarSign, color: neumorphicColors.semantic.success };
       case "withdrawal":
-        return { icon: ArrowUpCircle, color: theme.colors.error };
+        return { icon: ArrowUpCircle, color: neumorphicColors.semantic.error };
       case "escrow_hold":
-        return { icon: Lock, color: theme.colors.warning };
+        return { icon: Lock, color: neumorphicColors.semantic.warning };
       case "escrow_release":
-        return { icon: Lock, color: theme.colors.info };
+        return { icon: Lock, color: neumorphicColors.semantic.info };
       default:
-        return { icon: DollarSign, color: theme.colors.text.secondary };
+        return { icon: DollarSign, color: neumorphicColors.text.secondary };
     }
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="dashboard">
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="dashboard" showLeaves={true}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -163,64 +174,71 @@ export default function WalletScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Wallet size={28} color={theme.colors.primary[600]} />
+          <Wallet size={28} color={neumorphicColors.primary[600]} />
           <Text style={styles.title}>My Wallet</Text>
         </View>
 
         {/* Balance Cards */}
         <View style={styles.balanceCards}>
-          <GlassCard style={styles.mainBalanceCard}>
+          <NeumorphicCard variant="elevated" style={styles.mainBalanceCard}>
             <Text style={styles.balanceLabel}>Total Balance</Text>
             <Text style={styles.balanceAmount}>
               ${balance?.balance.toLocaleString() || "0.00"}
             </Text>
             <Text style={styles.currency}>{balance?.currency || "USD"}</Text>
-          </GlassCard>
+          </NeumorphicCard>
 
           <View style={styles.smallCardsRow}>
-            <AnimatedCard style={styles.smallCard}>
-              <Lock size={20} color={theme.colors.secondary[600]} />
-              <Text style={styles.smallCardLabel}>In Escrow</Text>
-              <Text style={styles.smallCardAmount}>
-                ${balance?.escrowBalance.toLocaleString() || "0.00"}
-              </Text>
-            </AnimatedCard>
+            <NeumorphicStatCard
+              title="In Escrow"
+              value={`$${balance?.escrowBalance.toLocaleString() || "0"}`}
+              icon={<Lock size={20} color={neumorphicColors.secondary[600]} />}
+              trend="neutral"
+              style={styles.smallCard}
+            />
 
-            <AnimatedCard style={styles.smallCard}>
-              <DollarSign size={20} color={theme.colors.info} />
-              <Text style={styles.smallCardLabel}>Available</Text>
-              <Text style={styles.smallCardAmount}>
-                ${balance?.availableBalance.toLocaleString() || "0.00"}
-              </Text>
-            </AnimatedCard>
+            <NeumorphicStatCard
+              title="Available"
+              value={`$${balance?.availableBalance.toLocaleString() || "0"}`}
+              icon={
+                <DollarSign size={20} color={neumorphicColors.semantic.info} />
+              }
+              trend="up"
+              style={styles.smallCard}
+            />
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.depositButton]}
+          <NeumorphicButton
+            title="Deposit"
+            variant="primary"
+            icon={
+              <ArrowDownCircle
+                size={20}
+                color={neumorphicColors.text.inverse}
+              />
+            }
             onPress={() => setShowDepositModal(true)}
-          >
-            <ArrowDownCircle size={24} color={theme.colors.text.inverse} />
-            <Text style={styles.actionButtonText}>Deposit</Text>
-          </TouchableOpacity>
+            style={styles.actionButton}
+          />
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.withdrawButton]}
+          <NeumorphicButton
+            title="Withdraw"
+            variant="secondary"
+            icon={
+              <ArrowUpCircle size={20} color={neumorphicColors.primary[600]} />
+            }
             onPress={() => setShowWithdrawModal(true)}
-          >
-            <ArrowUpCircle size={24} color={theme.colors.primary[600]} />
-            <Text style={[styles.actionButtonText, styles.withdrawButtonText]}>
-              Withdraw
-            </Text>
-          </TouchableOpacity>
+            style={styles.actionButton}
+          />
         </View>
 
         {/* Transaction History */}
@@ -229,12 +247,12 @@ export default function WalletScreen() {
 
           {transactions.length === 0 ? (
             <View style={styles.emptyTransactions}>
-              <Clock size={48} color={theme.colors.text.tertiary} />
+              <Clock size={48} color={neumorphicColors.text.tertiary} />
               <Text style={styles.emptyTitle}>No transactions yet</Text>
               <Text style={styles.emptyText}>Deposit funds to get started</Text>
             </View>
           ) : (
-            transactions.map((tx) => {
+            transactions.map((tx, index) => {
               const { icon: Icon, color } = getTransactionIcon(tx.type);
               const isPositive = [
                 "deposit",
@@ -243,41 +261,48 @@ export default function WalletScreen() {
               ].includes(tx.type);
 
               return (
-                <AnimatedCard key={tx.id} style={styles.transactionCard}>
-                  <View
-                    style={[
-                      styles.txIconContainer,
-                      { backgroundColor: color + "15" },
-                    ]}
-                  >
-                    <Icon size={24} color={color} />
-                  </View>
-                  <View style={styles.txInfo}>
-                    <Text style={styles.txDescription}>{tx.description}</Text>
-                    <Text style={styles.txDate}>
-                      {new Date(tx.createdAt).toLocaleDateString()} at{" "}
-                      {new Date(tx.createdAt).toLocaleTimeString()}
-                    </Text>
-                  </View>
-                  <View style={styles.txAmountContainer}>
-                    <Text
+                <NeumorphicCard
+                  key={tx.id}
+                  style={styles.transactionCard}
+                  variant="standard"
+                  animationDelay={index * 50}
+                >
+                  <View style={styles.txContent}>
+                    <View
                       style={[
-                        styles.txAmount,
-                        {
-                          color: isPositive
-                            ? theme.colors.success
-                            : theme.colors.error,
-                        },
+                        styles.txIconContainer,
+                        { backgroundColor: color + "15" },
                       ]}
                     >
-                      {isPositive ? "+" : "-"}$
-                      {parseFloat(tx.amount).toLocaleString()}
-                    </Text>
-                    <Text style={styles.txBalance}>
-                      Bal: ${parseFloat(tx.balanceAfter).toLocaleString()}
-                    </Text>
+                      <Icon size={24} color={color} />
+                    </View>
+                    <View style={styles.txInfo}>
+                      <Text style={styles.txDescription}>{tx.description}</Text>
+                      <Text style={styles.txDate}>
+                        {new Date(tx.createdAt).toLocaleDateString()} at{" "}
+                        {new Date(tx.createdAt).toLocaleTimeString()}
+                      </Text>
+                    </View>
+                    <View style={styles.txAmountContainer}>
+                      <Text
+                        style={[
+                          styles.txAmount,
+                          {
+                            color: isPositive
+                              ? neumorphicColors.semantic.success
+                              : neumorphicColors.semantic.error,
+                          },
+                        ]}
+                      >
+                        {isPositive ? "+" : "-"}$
+                        {parseFloat(tx.amount).toLocaleString()}
+                      </Text>
+                      <Text style={styles.txBalance}>
+                        Bal: ${parseFloat(tx.balanceAfter).toLocaleString()}
+                      </Text>
+                    </View>
                   </View>
-                </AnimatedCard>
+                </NeumorphicCard>
               );
             })
           )}
@@ -301,6 +326,7 @@ export default function WalletScreen() {
               <TextInput
                 style={styles.amountInput}
                 placeholder="0.00"
+                placeholderTextColor={neumorphicColors.text.tertiary}
                 keyboardType="decimal-pad"
                 value={depositAmount}
                 onChangeText={setDepositAmount}
@@ -322,8 +348,8 @@ export default function WalletScreen() {
                     size={20}
                     color={
                       paymentMethod === method.id
-                        ? theme.colors.primary[600]
-                        : theme.colors.text.secondary
+                        ? neumorphicColors.primary[600]
+                        : neumorphicColors.text.secondary
                     }
                   />
                   <Text
@@ -340,23 +366,19 @@ export default function WalletScreen() {
             </View>
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
+              <NeumorphicButton
+                title="Cancel"
+                variant="tertiary"
                 onPress={() => setShowDepositModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.confirmButton}
+                style={styles.modalButton}
+              />
+              <NeumorphicButton
+                title="Deposit"
+                variant="primary"
                 onPress={handleDeposit}
-                disabled={processing}
-              >
-                {processing ? (
-                  <LoadingSpinner size="small" />
-                ) : (
-                  <Text style={styles.confirmButtonText}>Deposit</Text>
-                )}
-              </TouchableOpacity>
+                loading={processing}
+                style={styles.modalButton}
+              />
             </View>
           </View>
         </View>
@@ -379,6 +401,7 @@ export default function WalletScreen() {
               <TextInput
                 style={styles.amountInput}
                 placeholder="0.00"
+                placeholderTextColor={neumorphicColors.text.tertiary}
                 keyboardType="decimal-pad"
                 value={withdrawAmount}
                 onChangeText={setWithdrawAmount}
@@ -400,8 +423,8 @@ export default function WalletScreen() {
                     size={20}
                     color={
                       paymentMethod === method.id
-                        ? theme.colors.primary[600]
-                        : theme.colors.text.secondary
+                        ? neumorphicColors.primary[600]
+                        : neumorphicColors.text.secondary
                     }
                   />
                   <Text
@@ -421,41 +444,34 @@ export default function WalletScreen() {
             <TextInput
               style={styles.textInput}
               placeholder="Enter phone number or account number"
+              placeholderTextColor={neumorphicColors.text.tertiary}
               value={accountDetails}
               onChangeText={setAccountDetails}
             />
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
+              <NeumorphicButton
+                title="Cancel"
+                variant="tertiary"
                 onPress={() => setShowWithdrawModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.confirmButton}
+                style={styles.modalButton}
+              />
+              <NeumorphicButton
+                title="Withdraw"
+                variant="primary"
                 onPress={handleWithdraw}
-                disabled={processing}
-              >
-                {processing ? (
-                  <LoadingSpinner size="small" />
-                ) : (
-                  <Text style={styles.confirmButtonText}>Withdraw</Text>
-                )}
-              </TouchableOpacity>
+                loading={processing}
+                style={styles.modalButton}
+              />
             </View>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   scrollView: {
     flex: 1,
   },
@@ -467,267 +483,200 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
   balanceCards: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
   mainBalanceCard: {
-    padding: theme.spacing.xl,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.primary[600],
-    marginBottom: theme.spacing.md,
+    padding: spacing.xl,
+    marginBottom: spacing.md,
+    backgroundColor: neumorphicColors.primary[600],
   },
   balanceLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.inverse,
+    ...typography.body,
+    color: neumorphicColors.text.inverse,
     opacity: 0.9,
   },
   balanceAmount: {
-    fontSize: theme.typography.fontSize["4xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
-    marginTop: theme.spacing.sm,
+    ...typography.h1,
+    color: neumorphicColors.text.inverse,
+    marginTop: spacing.sm,
   },
   currency: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.inverse,
+    ...typography.caption,
+    color: neumorphicColors.text.inverse,
     opacity: 0.75,
-    marginTop: theme.spacing.xs,
+    marginTop: spacing.xs,
   },
   smallCardsRow: {
     flexDirection: "row",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   smallCard: {
     flex: 1,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: "center",
-  },
-  smallCardLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
-  },
-  smallCardAmount: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xs,
   },
   actionButtons: {
     flexDirection: "row",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
-    gap: theme.spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    gap: spacing.md,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.sm,
-  },
-  depositButton: {
-    backgroundColor: theme.colors.primary[600],
-  },
-  withdrawButton: {
-    backgroundColor: theme.colors.background.primary,
-    borderWidth: 1,
-    borderColor: theme.colors.primary[600],
-  },
-  actionButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.inverse,
-  },
-  withdrawButtonText: {
-    color: theme.colors.primary[600],
   },
   transactionsSection: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.md,
   },
   emptyTransactions: {
     alignItems: "center",
-    paddingVertical: theme.spacing["3xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.md,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.md,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.sm,
   },
   transactionCard: {
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+  },
+  txContent: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.sm,
   },
   txIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
   },
   txInfo: {
     flex: 1,
-    marginLeft: theme.spacing.md,
+    marginLeft: spacing.md,
   },
   txDescription: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "500",
+    color: neumorphicColors.text.primary,
   },
   txDate: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginTop: spacing.xs,
   },
   txAmountContainer: {
     alignItems: "flex-end",
   },
   txAmount: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.h5,
   },
   txBalance: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginTop: spacing.xs,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: theme.colors.background.overlay,
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: theme.colors.background.primary,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
+    backgroundColor: neumorphicColors.base.card,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    padding: spacing.xl,
     maxHeight: "80%",
   },
   modalTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.lg,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.lg,
     textAlign: "center",
   },
   inputLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
-    marginTop: theme.spacing.md,
+    ...typography.body,
+    fontWeight: "500",
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
   },
   amountInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.lg,
-    paddingHorizontal: theme.spacing.md,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
   },
   currencyPrefix: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.secondary,
+    ...typography.h3,
+    color: neumorphicColors.text.secondary,
   },
   amountInput: {
     flex: 1,
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    paddingVertical: theme.spacing.md,
-    marginLeft: theme.spacing.sm,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    paddingVertical: spacing.md,
+    marginLeft: spacing.sm,
   },
   textInput: {
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.lg,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   paymentMethods: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   paymentMethod: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.sm,
+    borderColor: neumorphicColors.base.border,
+    gap: spacing.sm,
   },
   paymentMethodActive: {
-    borderColor: theme.colors.primary[600],
-    backgroundColor: theme.colors.primary[50],
+    borderColor: neumorphicColors.primary[600],
+    backgroundColor: `${neumorphicColors.primary[500]}15`,
   },
   paymentMethodText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   paymentMethodTextActive: {
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.medium,
+    color: neumorphicColors.primary[600],
+    fontWeight: "500",
   },
   modalButtons: {
     flexDirection: "row",
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.xl,
+    gap: spacing.md,
+    marginTop: spacing.xl,
   },
-  cancelButton: {
+  modalButton: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.background.secondary,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.primary[600],
-    alignItems: "center",
-  },
-  confirmButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.inverse,
   },
 });

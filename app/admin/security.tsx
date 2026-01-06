@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -20,7 +18,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Search,
   User,
   MapPin,
   Calendar,
@@ -28,10 +25,20 @@ import {
   Globe,
   ChevronRight,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import ModernInput from "../../src/components/ModernInput";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+  NeumorphicSearchBar,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../../src/theme/neumorphic";
 import adminService, {
   SecurityIncident,
 } from "../../src/services/adminService";
@@ -130,60 +137,66 @@ export default function AdminSecurityScreen() {
   const getSeverityIcon = (severity: string) => {
     switch (severity.toLowerCase()) {
       case "critical":
-        return <Ban size={16} color={theme.colors.error} />;
+        return <Ban size={16} color={neumorphicColors.semantic.error} />;
       case "high":
-        return <AlertTriangle size={16} color={theme.colors.warning} />;
+        return (
+          <AlertTriangle size={16} color={neumorphicColors.semantic.warning} />
+        );
       case "medium":
-        return <Eye size={16} color={theme.colors.info} />;
+        return <Eye size={16} color={neumorphicColors.semantic.info} />;
       case "low":
-        return <Shield size={16} color={theme.colors.success} />;
+        return <Shield size={16} color={neumorphicColors.semantic.success} />;
       default:
-        return <Shield size={16} color={theme.colors.text.tertiary} />;
+        return <Shield size={16} color={neumorphicColors.text.tertiary} />;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
       case "critical":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "high":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "medium":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       case "low":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "open":
-        return <AlertTriangle size={14} color={theme.colors.error} />;
+        return (
+          <AlertTriangle size={14} color={neumorphicColors.semantic.error} />
+        );
       case "investigating":
-        return <Eye size={14} color={theme.colors.warning} />;
+        return <Eye size={14} color={neumorphicColors.semantic.warning} />;
       case "resolved":
-        return <CheckCircle size={14} color={theme.colors.success} />;
+        return (
+          <CheckCircle size={14} color={neumorphicColors.semantic.success} />
+        );
       case "dismissed":
-        return <XCircle size={14} color={theme.colors.text.tertiary} />;
+        return <XCircle size={14} color={neumorphicColors.text.tertiary} />;
       default:
-        return <Clock size={14} color={theme.colors.text.tertiary} />;
+        return <Clock size={14} color={neumorphicColors.text.tertiary} />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "open":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "investigating":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "resolved":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "dismissed":
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
@@ -205,10 +218,10 @@ export default function AdminSecurityScreen() {
   );
 
   const renderIncident = (incident: SecurityIncident, index: number) => (
-    <AnimatedCard
+    <NeumorphicCard
       key={incident.id}
       style={styles.incidentCard}
-      delay={index * 50}
+      animationDelay={index * 50}
     >
       <View style={styles.incidentHeader}>
         <View style={styles.severityContainer}>
@@ -257,21 +270,21 @@ export default function AdminSecurityScreen() {
       <View style={styles.incidentDetails}>
         {incident.userId && (
           <View style={styles.detailRow}>
-            <User size={14} color={theme.colors.text.tertiary} />
+            <User size={14} color={neumorphicColors.text.tertiary} />
             <Text style={styles.detailText}>User: {incident.userId}</Text>
           </View>
         )}
 
         {incident.ipAddress && (
           <View style={styles.detailRow}>
-            <Globe size={14} color={theme.colors.text.tertiary} />
+            <Globe size={14} color={neumorphicColors.text.tertiary} />
             <Text style={styles.detailText}>{incident.ipAddress}</Text>
           </View>
         )}
 
         {incident.userAgent && (
           <View style={styles.detailRow}>
-            <Smartphone size={14} color={theme.colors.text.tertiary} />
+            <Smartphone size={14} color={neumorphicColors.text.tertiary} />
             <Text style={styles.detailText} numberOfLines={1}>
               {incident.userAgent}
             </Text>
@@ -280,7 +293,7 @@ export default function AdminSecurityScreen() {
 
         {incident.location && (
           <View style={styles.detailRow}>
-            <MapPin size={14} color={theme.colors.text.tertiary} />
+            <MapPin size={14} color={neumorphicColors.text.tertiary} />
             <Text style={styles.detailText}>{incident.location}</Text>
           </View>
         )}
@@ -288,43 +301,50 @@ export default function AdminSecurityScreen() {
 
       <View style={styles.incidentFooter}>
         <View style={styles.detailRow}>
-          <Calendar size={14} color={theme.colors.text.tertiary} />
+          <Calendar size={14} color={neumorphicColors.text.tertiary} />
           <Text style={styles.dateText}>{formatDate(incident.createdAt)}</Text>
         </View>
-        <ChevronRight size={20} color={theme.colors.text.tertiary} />
+        <ChevronRight size={20} color={neumorphicColors.text.tertiary} />
       </View>
-    </AnimatedCard>
+    </NeumorphicCard>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" safeArea>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+          size="medium"
+        />
         <Text style={styles.title}>Security</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Stats Overview */}
       <View style={styles.statsContainer}>
-        {renderStatCard("Total", stats.total, theme.colors.primary[600])}
-        {renderStatCard("Open", stats.open, theme.colors.error)}
-        {renderStatCard("Resolved", stats.resolved, theme.colors.success)}
-        {renderStatCard("Critical", stats.critical, theme.colors.warning)}
+        {renderStatCard("Total", stats.total, neumorphicColors.primary[600])}
+        {renderStatCard("Open", stats.open, neumorphicColors.semantic.error)}
+        {renderStatCard(
+          "Resolved",
+          stats.resolved,
+          neumorphicColors.semantic.success
+        )}
+        {renderStatCard(
+          "Critical",
+          stats.critical,
+          neumorphicColors.semantic.warning
+        )}
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <ModernInput
+        <NeumorphicSearchBar
           placeholder="Search incidents..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          leftIcon={<Search size={20} color={theme.colors.text.tertiary} />}
         />
       </View>
 
@@ -336,20 +356,14 @@ export default function AdminSecurityScreen() {
         contentContainerStyle={styles.tabsContent}
       >
         {severityTabs.map((tab) => (
-          <TouchableOpacity
+          <NeumorphicButton
             key={tab.key}
-            style={[styles.tab, severityFilter === tab.key && styles.activeTab]}
+            title={tab.label}
+            variant={severityFilter === tab.key ? "primary" : "tertiary"}
+            size="small"
             onPress={() => setSeverityFilter(tab.key)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                severityFilter === tab.key && styles.activeTabText,
-              ]}
-            >
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
+            style={styles.tabButton}
+          />
         ))}
       </ScrollView>
 
@@ -365,30 +379,24 @@ export default function AdminSecurityScreen() {
             "dismissed",
           ] as IncidentStatus[]
         ).map((status) => (
-          <TouchableOpacity
+          <NeumorphicButton
             key={status}
-            style={[
-              styles.statusFilterChip,
-              statusFilter === status && styles.activeStatusFilter,
-            ]}
+            title={status.charAt(0).toUpperCase() + status.slice(1)}
+            variant={statusFilter === status ? "secondary" : "tertiary"}
+            size="small"
             onPress={() => setStatusFilter(status)}
-          >
-            <Text
-              style={[
-                styles.statusFilterText,
-                statusFilter === status && styles.activeStatusFilterText,
-              ]}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Text>
-          </TouchableOpacity>
+            style={styles.statusFilterButton}
+          />
         ))}
       </View>
 
       {/* Incidents List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading incidents...</Text>
         </View>
       ) : (
@@ -400,14 +408,18 @@ export default function AdminSecurityScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={[theme.colors.primary[600]]}
-              tintColor={theme.colors.primary[600]}
+              colors={[neumorphicColors.primary[600]]}
+              tintColor={neumorphicColors.primary[600]}
             />
           }
         >
           {incidents.length === 0 ? (
             <View style={styles.emptyState}>
-              <Shield size={64} color={theme.colors.success} strokeWidth={1} />
+              <Shield
+                size={64}
+                color={neumorphicColors.semantic.success}
+                strokeWidth={1}
+              />
               <Text style={styles.emptyTitle}>All Clear!</Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery
@@ -422,10 +434,10 @@ export default function AdminSecurityScreen() {
               )}
 
               {hasMore && (
-                <AnimatedButton
+                <NeumorphicButton
                   title="Load More"
-                  variant="outline"
-                  size="md"
+                  variant="tertiary"
+                  size="medium"
                   style={styles.loadMoreButton}
                   onPress={() => {
                     setPage((prev) => prev + 1);
@@ -437,123 +449,81 @@ export default function AdminSecurityScreen() {
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   statsContainer: {
     flexDirection: "row",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
   statCard: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
+    backgroundColor: neumorphicColors.base.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     borderLeftWidth: 3,
-    ...theme.shadows.sm,
+    ...getNeumorphicShadow(2),
   },
   statValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
   },
   statLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    ...typography.caption,
     marginTop: 2,
   },
   searchContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
   tabsContainer: {
     maxHeight: 50,
   },
   tabsContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
-  tab: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    marginRight: theme.spacing.sm,
-  },
-  activeTab: {
-    backgroundColor: theme.colors.primary[600],
-  },
-  tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-  },
-  activeTabText: {
-    color: theme.colors.text.inverse,
+  tabButton: {
+    marginRight: spacing.sm,
   },
   statusFilterContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    gap: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.xs,
     flexWrap: "wrap",
   },
   filterLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginRight: theme.spacing.xs,
+    ...typography.bodySmall,
+    marginRight: spacing.xs,
   },
-  statusFilterChip: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-  },
-  activeStatusFilter: {
-    backgroundColor: theme.colors.secondary[600],
-  },
-  statusFilterText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-  },
-  activeStatusFilterText: {
-    color: theme.colors.text.inverse,
+  statusFilterButton: {
+    marginRight: spacing.xs,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing["2xl"],
+    padding: spacing.lg,
+    paddingBottom: spacing["2xl"],
   },
   loadingContainer: {
     flex: 1,
@@ -561,29 +531,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   incidentCard: {
-    marginBottom: theme.spacing.md,
-    padding: theme.spacing.lg,
+    marginBottom: spacing.md,
   },
   incidentHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   severityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   severityIcon: {
     width: 40,
     height: 40,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: borderRadius.full,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -591,80 +560,73 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   incidentType: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
   },
   severityText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.overline,
     letterSpacing: 0.5,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    gap: theme.spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
   },
   statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.caption,
+    fontWeight: "600",
     textTransform: "capitalize",
   },
   description: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     lineHeight: 20,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   incidentDetails: {
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   detailRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
     flex: 1,
   },
   detailText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
     flex: 1,
   },
   incidentFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.shadowDark + "20",
   },
   dateText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   loadMoreButton: {
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
 });

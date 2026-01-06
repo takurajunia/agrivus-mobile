@@ -1,30 +1,27 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import {
   ArrowLeft,
-  Globe,
   Package,
-  Award,
-  Truck,
   DollarSign,
   CheckCircle,
   ChevronRight,
-  AlertCircle,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import ModernInput from "../../src/components/ModernInput";
-import GlassCard from "../../src/components/GlassCard";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+  NeumorphicInput,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../../src/theme/neumorphic";
 import exportService from "../../src/services/exportService";
 
 const PRODUCT_TYPES = [
@@ -169,38 +166,41 @@ export default function ExportAssessmentScreen() {
 
       <View style={styles.optionsGrid}>
         {PRODUCT_TYPES.map((type, index) => (
-          <TouchableOpacity
+          <NeumorphicCard
             key={type}
+            variant={productType === type ? "elevated" : "standard"}
+            onPress={() => setProductType(type)}
             style={[
               styles.optionCard,
               productType === type && styles.optionCardSelected,
             ]}
-            onPress={() => setProductType(type)}
           >
-            <Package
-              size={24}
-              color={
-                productType === type
-                  ? theme.colors.primary[600]
-                  : theme.colors.text.secondary
-              }
-            />
-            <Text
-              style={[
-                styles.optionText,
-                productType === type && styles.optionTextSelected,
-              ]}
-            >
-              {type}
-            </Text>
-            {productType === type && (
-              <CheckCircle
-                size={18}
-                color={theme.colors.primary[600]}
-                style={styles.checkIcon}
+            <View style={styles.optionContent}>
+              <Package
+                size={24}
+                color={
+                  productType === type
+                    ? neumorphicColors.primary[600]
+                    : neumorphicColors.text.secondary
+                }
               />
-            )}
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.optionText,
+                  productType === type && styles.optionTextSelected,
+                ]}
+              >
+                {type}
+              </Text>
+              {productType === type && (
+                <CheckCircle
+                  size={18}
+                  color={neumorphicColors.primary[600]}
+                  style={styles.checkIcon}
+                />
+              )}
+            </View>
+          </NeumorphicCard>
         ))}
       </View>
     </View>
@@ -215,27 +215,33 @@ export default function ExportAssessmentScreen() {
 
       <View style={styles.marketsGrid}>
         {TARGET_MARKETS.map((market) => (
-          <TouchableOpacity
+          <NeumorphicCard
             key={market.id}
+            variant={
+              targetMarkets.includes(market.id) ? "elevated" : "standard"
+            }
+            onPress={() => toggleMarket(market.id)}
             style={[
               styles.marketCard,
               targetMarkets.includes(market.id) && styles.marketCardSelected,
             ]}
-            onPress={() => toggleMarket(market.id)}
           >
-            <Text style={styles.marketFlag}>{market.flag}</Text>
-            <Text
-              style={[
-                styles.marketName,
-                targetMarkets.includes(market.id) && styles.marketNameSelected,
-              ]}
-            >
-              {market.name}
-            </Text>
-            {targetMarkets.includes(market.id) && (
-              <CheckCircle size={16} color={theme.colors.primary[600]} />
-            )}
-          </TouchableOpacity>
+            <View style={styles.marketContent}>
+              <Text style={styles.marketFlag}>{market.flag}</Text>
+              <Text
+                style={[
+                  styles.marketName,
+                  targetMarkets.includes(market.id) &&
+                    styles.marketNameSelected,
+                ]}
+              >
+                {market.name}
+              </Text>
+              {targetMarkets.includes(market.id) && (
+                <CheckCircle size={16} color={neumorphicColors.primary[600]} />
+              )}
+            </View>
+          </NeumorphicCard>
         ))}
       </View>
     </View>
@@ -248,12 +254,12 @@ export default function ExportAssessmentScreen() {
         Tell us about your production capabilities
       </Text>
 
-      <ModernInput
+      <NeumorphicInput
         label="Monthly Production Capacity"
         placeholder="e.g., 10 tonnes per month"
         value={productionCapacity}
         onChangeText={setProductionCapacity}
-        leftIcon={<Package size={20} color={theme.colors.text.tertiary} />}
+        leftIcon={<Package size={20} color={neumorphicColors.text.tertiary} />}
       />
 
       <Text style={styles.fieldLabel}>
@@ -261,24 +267,14 @@ export default function ExportAssessmentScreen() {
       </Text>
       <View style={styles.certificationsGrid}>
         {CERTIFICATIONS.map((cert) => (
-          <TouchableOpacity
+          <NeumorphicButton
             key={cert}
-            style={[
-              styles.certificationChip,
-              certifications.includes(cert) && styles.certificationChipSelected,
-            ]}
+            title={cert}
+            variant={certifications.includes(cert) ? "primary" : "secondary"}
+            size="small"
             onPress={() => toggleCertification(cert)}
-          >
-            <Text
-              style={[
-                styles.certificationText,
-                certifications.includes(cert) &&
-                  styles.certificationTextSelected,
-              ]}
-            >
-              {cert}
-            </Text>
-          </TouchableOpacity>
+            style={styles.certificationChip}
+          />
         ))}
       </View>
     </View>
@@ -291,103 +287,72 @@ export default function ExportAssessmentScreen() {
         Help us understand your export readiness
       </Text>
 
-      <View style={styles.questionCard}>
+      <NeumorphicCard variant="standard" style={styles.questionCard}>
         <Text style={styles.questionText}>
           Do you have export-grade packaging capabilities?
         </Text>
         <View style={styles.booleanOptions}>
-          <TouchableOpacity
-            style={[
-              styles.booleanOption,
-              packagingCapability === true && styles.booleanOptionSelected,
-            ]}
+          <NeumorphicButton
+            title="Yes"
+            variant={packagingCapability === true ? "primary" : "secondary"}
+            size="medium"
             onPress={() => setPackagingCapability(true)}
-          >
-            <Text
-              style={[
-                styles.booleanText,
-                packagingCapability === true && styles.booleanTextSelected,
-              ]}
-            >
-              Yes
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.booleanOption,
-              packagingCapability === false && styles.booleanOptionSelected,
-            ]}
+            style={styles.booleanOption}
+          />
+          <NeumorphicButton
+            title="No"
+            variant={packagingCapability === false ? "primary" : "secondary"}
+            size="medium"
             onPress={() => setPackagingCapability(false)}
-          >
-            <Text
-              style={[
-                styles.booleanText,
-                packagingCapability === false && styles.booleanTextSelected,
-              ]}
-            >
-              No
-            </Text>
-          </TouchableOpacity>
+            style={styles.booleanOption}
+          />
         </View>
-      </View>
+      </NeumorphicCard>
 
-      <View style={styles.questionCard}>
+      <NeumorphicCard variant="standard" style={styles.questionCard}>
         <Text style={styles.questionText}>
           Do you have quality control processes in place?
         </Text>
         <View style={styles.booleanOptions}>
-          <TouchableOpacity
-            style={[
-              styles.booleanOption,
-              qualityControls === true && styles.booleanOptionSelected,
-            ]}
+          <NeumorphicButton
+            title="Yes"
+            variant={qualityControls === true ? "primary" : "secondary"}
+            size="medium"
             onPress={() => setQualityControls(true)}
-          >
-            <Text
-              style={[
-                styles.booleanText,
-                qualityControls === true && styles.booleanTextSelected,
-              ]}
-            >
-              Yes
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.booleanOption,
-              qualityControls === false && styles.booleanOptionSelected,
-            ]}
+            style={styles.booleanOption}
+          />
+          <NeumorphicButton
+            title="No"
+            variant={qualityControls === false ? "primary" : "secondary"}
+            size="medium"
             onPress={() => setQualityControls(false)}
-          >
-            <Text
-              style={[
-                styles.booleanText,
-                qualityControls === false && styles.booleanTextSelected,
-              ]}
-            >
-              No
-            </Text>
-          </TouchableOpacity>
+            style={styles.booleanOption}
+          />
         </View>
-      </View>
+      </NeumorphicCard>
 
-      <ModernInput
+      <NeumorphicInput
         label="Financial Capacity for Export Operations"
         placeholder="e.g., $10,000 - $50,000"
         value={financialCapacity}
         onChangeText={setFinancialCapacity}
-        leftIcon={<DollarSign size={20} color={theme.colors.text.tertiary} />}
+        leftIcon={
+          <DollarSign size={20} color={neumorphicColors.text.tertiary} />
+        }
       />
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="form" safeArea={true}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
+          onPress={handleBack}
+          variant="default"
+          size="medium"
+        />
         <Text style={styles.title}>Export Assessment</Text>
         <View style={styles.placeholder} />
       </View>
@@ -416,224 +381,177 @@ export default function ExportAssessmentScreen() {
       {/* Navigation Buttons */}
       <View style={styles.footer}>
         {step < 4 ? (
-          <AnimatedButton
+          <NeumorphicButton
             title="Continue"
             variant="primary"
-            size="lg"
+            size="large"
             onPress={handleNext}
-          >
-            <ChevronRight size={20} color={theme.colors.text.inverse} />
-          </AnimatedButton>
+            icon={
+              <ChevronRight size={20} color={neumorphicColors.text.inverse} />
+            }
+            iconPosition="right"
+            fullWidth
+          />
         ) : (
-          <AnimatedButton
+          <NeumorphicButton
             title="Submit Assessment"
             variant="primary"
-            size="lg"
+            size="large"
             loading={loading}
             onPress={handleSubmit}
-          >
-            <CheckCircle size={20} color={theme.colors.text.inverse} />
-          </AnimatedButton>
+            icon={
+              <CheckCircle size={20} color={neumorphicColors.text.inverse} />
+            }
+            iconPosition="right"
+            fullWidth
+          />
         )}
       </View>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   progressContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   progressBar: {
     height: 4,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: 2,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.xs,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: theme.colors.primary[600],
-    borderRadius: 2,
+    backgroundColor: neumorphicColors.primary[600],
+    borderRadius: borderRadius.xs,
   },
   progressText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.sm,
     textAlign: "center",
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing["2xl"],
+    padding: spacing.lg,
+    paddingBottom: spacing["2xl"],
   },
   stepTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.sm,
   },
   stepSubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xl,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.xl,
   },
   optionsGrid: {
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   optionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.md,
+    padding: 0,
   },
   optionCardSelected: {
-    borderColor: theme.colors.primary[600],
-    backgroundColor: theme.colors.primary[50],
+    borderWidth: 2,
+    borderColor: neumorphicColors.primary[600],
+  },
+  optionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
   },
   optionText: {
     flex: 1,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   optionTextSelected: {
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.semibold,
+    color: neumorphicColors.primary[600],
+    fontWeight: "600",
   },
   checkIcon: {
     marginLeft: "auto",
   },
   marketsGrid: {
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   marketCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.md,
+    padding: 0,
   },
   marketCardSelected: {
-    borderColor: theme.colors.primary[600],
-    backgroundColor: theme.colors.primary[50],
+    borderWidth: 2,
+    borderColor: neumorphicColors.primary[600],
+  },
+  marketContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
   },
   marketFlag: {
     fontSize: 24,
   },
   marketName: {
     flex: 1,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   marketNameSelected: {
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.semibold,
+    color: neumorphicColors.primary[600],
+    fontWeight: "600",
   },
   fieldLabel: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
+    ...typography.h6,
+    color: neumorphicColors.text.primary,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
   certificationsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   certificationChip: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  certificationChipSelected: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
-  },
-  certificationText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-  },
-  certificationTextSelected: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: spacing.xs,
   },
   questionCard: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   questionText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.md,
   },
   booleanOptions: {
     flexDirection: "row",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   booleanOption: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
-    alignItems: "center",
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 2,
-    borderColor: theme.colors.border.light,
-  },
-  booleanOptionSelected: {
-    borderColor: theme.colors.primary[600],
-    backgroundColor: theme.colors.primary[50],
-  },
-  booleanText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  booleanTextSelected: {
-    color: theme.colors.primary[600],
   },
   footer: {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    padding: spacing.lg,
+    backgroundColor: neumorphicColors.base.card,
+    ...getNeumorphicShadow(3),
   },
 });

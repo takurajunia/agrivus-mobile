@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Linking,
@@ -24,9 +22,18 @@ import {
   Truck,
   DollarSign,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import ModernInput from "../../src/components/ModernInput";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicIconButton,
+  NeumorphicSearchBar,
+} from "../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../src/theme/neumorphic";
 import exportService from "../../src/services/exportService";
 
 interface DocumentTemplate {
@@ -108,17 +115,17 @@ export default function ExportDocumentsScreen() {
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
       case "customs":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "phytosanitary":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "origin":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "shipping":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       case "financial":
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
       default:
-        return theme.colors.text.secondary;
+        return neumorphicColors.text.secondary;
     }
   };
 
@@ -127,10 +134,10 @@ export default function ExportDocumentsScreen() {
     const categoryColor = getCategoryColor(doc.category);
 
     return (
-      <AnimatedCard
+      <NeumorphicCard
         key={doc.id}
         style={styles.documentCard}
-        delay={index * 50}
+        animationDelay={index * 50}
         onPress={() => handleDownload(doc)}
       >
         <View style={styles.documentHeader}>
@@ -146,12 +153,12 @@ export default function ExportDocumentsScreen() {
             <Text style={styles.documentName}>{doc.name}</Text>
             <Text style={styles.documentCategory}>{doc.category}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.downloadButton}
+          <NeumorphicIconButton
+            icon={<Download size={20} color={neumorphicColors.primary[600]} />}
             onPress={() => handleDownload(doc)}
-          >
-            <Download size={20} color={theme.colors.primary[600]} />
-          </TouchableOpacity>
+            variant="secondary"
+            size="medium"
+          />
         </View>
 
         <Text style={styles.documentDescription} numberOfLines={2}>
@@ -160,7 +167,7 @@ export default function ExportDocumentsScreen() {
 
         <View style={styles.documentFooter}>
           <View style={styles.fileInfo}>
-            <File size={14} color={theme.colors.text.tertiary} />
+            <File size={14} color={neumorphicColors.text.tertiary} />
             <Text style={styles.fileInfoText}>
               {doc.fileType?.toUpperCase()} • {doc.fileSize}
             </Text>
@@ -181,42 +188,44 @@ export default function ExportDocumentsScreen() {
             </View>
           )}
         </View>
-      </AnimatedCard>
+      </NeumorphicCard>
     );
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list" showLeaves={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading documents...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="default"
+          size="medium"
+        />
         <Text style={styles.title}>Document Templates</Text>
         <View style={styles.placeholder} />
       </View>
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <ModernInput
+        <NeumorphicSearchBar
           placeholder="Search documents..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          leftIcon={<Search size={20} color={theme.colors.text.tertiary} />}
         />
       </View>
 
@@ -228,17 +237,19 @@ export default function ExportDocumentsScreen() {
         contentContainerStyle={styles.tabsContent}
       >
         {CATEGORIES.map((cat) => (
-          <TouchableOpacity
+          <NeumorphicCard
             key={cat.key}
             style={[styles.tab, activeCategory === cat.key && styles.activeTab]}
             onPress={() => setActiveCategory(cat.key)}
+            variant={activeCategory === cat.key ? "elevated" : "standard"}
+            shadowLevel={1}
           >
             <cat.icon
               size={16}
               color={
                 activeCategory === cat.key
-                  ? theme.colors.text.inverse
-                  : theme.colors.text.secondary
+                  ? neumorphicColors.text.inverse
+                  : neumorphicColors.text.secondary
               }
             />
             <Text
@@ -249,7 +260,7 @@ export default function ExportDocumentsScreen() {
             >
               {cat.label}
             </Text>
-          </TouchableOpacity>
+          </NeumorphicCard>
         ))}
       </ScrollView>
 
@@ -262,8 +273,8 @@ export default function ExportDocumentsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary[600]]}
-            tintColor={theme.colors.primary[600]}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
           />
         }
       >
@@ -271,7 +282,7 @@ export default function ExportDocumentsScreen() {
           <View style={styles.emptyState}>
             <FileText
               size={64}
-              color={theme.colors.text.tertiary}
+              color={neumorphicColors.text.tertiary}
               strokeWidth={1}
             />
             <Text style={styles.emptyTitle}>No Documents Found</Text>
@@ -285,75 +296,64 @@ export default function ExportDocumentsScreen() {
           filteredDocuments.map((doc, index) => renderDocument(doc, index))
         )}
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   searchContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   tabsContainer: {
-    backgroundColor: theme.colors.background.primary,
     maxHeight: 60,
   },
   tabsContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
   tab: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    marginRight: theme.spacing.sm,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
   },
   activeTab: {
-    backgroundColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[600],
   },
   tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    fontWeight: "500",
   },
   activeTabText: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing["2xl"],
+    padding: spacing.lg,
+    paddingBottom: spacing["2xl"],
   },
   loadingContainer: {
     flex: 1,
@@ -361,24 +361,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   documentCard: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   documentHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   categoryIcon: {
     width: 44,
     height: 44,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: borderRadius.lg,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -386,82 +385,67 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   documentName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
   },
   documentCategory: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     marginTop: 2,
     textTransform: "capitalize",
   },
-  downloadButton: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary[50],
-    justifyContent: "center",
-    alignItems: "center",
-  },
   documentDescription: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     lineHeight: 20,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   documentFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: theme.spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.shadowDark + "20",
   },
   fileInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   fileInfoText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
   },
   marketsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   marketChip: {
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    backgroundColor: theme.colors.primary[50],
-    borderRadius: theme.borderRadius.sm,
+    backgroundColor: neumorphicColors.primary[50],
+    borderRadius: borderRadius.sm,
   },
   marketChipText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.primary[600],
+    ...typography.caption,
+    color: neumorphicColors.primary[600],
   },
   moreMarkets: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
 });

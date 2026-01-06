@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -26,11 +24,19 @@ import {
   Star,
   AlertCircle,
 } from "lucide-react-native";
-import AnimatedCard from "../../../src/components/AnimatedCard";
-import AnimatedButton from "../../../src/components/AnimatedButton";
-import GlassCard from "../../../src/components/GlassCard";
-import ModernInput from "../../../src/components/ModernInput";
-import { theme } from "../../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+  NeumorphicInput,
+} from "../../../src/components/neumorphic";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../../src/theme/neumorphic";
 import { auctionsService } from "../../../src/services/auctionsService";
 import api from "../../../src/services/api";
 import { useAuth } from "../../../src/contexts/AuthContext";
@@ -215,54 +221,59 @@ export default function AuctionCheckoutScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading checkout...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   if (error && !auction) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail">
         <View style={styles.header}>
-          <TouchableOpacity
+          <NeumorphicIconButton
+            icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
             onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <ArrowLeft size={24} color={theme.colors.text.primary} />
-          </TouchableOpacity>
+            variant="ghost"
+          />
           <Text style={styles.title}>Auction Checkout</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.errorContainer}>
-          <AlertCircle size={64} color={theme.colors.error} strokeWidth={1} />
+          <AlertCircle
+            size={64}
+            color={neumorphicColors.semantic.error}
+            strokeWidth={1}
+          />
           <Text style={styles.errorTitle}>Access Denied</Text>
           <Text style={styles.errorSubtitle}>{error}</Text>
-          <AnimatedButton
+          <NeumorphicButton
             title="View Auction"
             variant="primary"
-            size="md"
-            style={{ marginTop: theme.spacing.lg }}
+            size="medium"
+            style={{ marginTop: spacing.lg }}
             onPress={() => router.push(`/auction/${id}` as any)}
           />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="form">
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+        />
         <Text style={styles.title}>Complete Purchase</Text>
         <View style={styles.placeholder} />
       </View>
@@ -275,15 +286,15 @@ export default function AuctionCheckoutScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary[600]]}
-            tintColor={theme.colors.primary[600]}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
           />
         }
       >
         {/* Winner Banner */}
-        <GlassCard style={styles.winnerBanner}>
+        <NeumorphicCard variant="bordered" style={styles.winnerBanner}>
           <View style={styles.bannerContent}>
-            <Trophy size={40} color={theme.colors.warning} />
+            <Trophy size={40} color={neumorphicColors.secondary[500]} />
             <View style={styles.bannerText}>
               <Text style={styles.bannerTitle}>
                 🎉 Congratulations! You Won!
@@ -295,12 +306,12 @@ export default function AuctionCheckoutScreen() {
               </Text>
             </View>
           </View>
-        </GlassCard>
+        </NeumorphicCard>
 
         {/* Deadline Warning */}
         {daysLeft > 0 && daysLeft <= 7 && (
           <View style={styles.deadlineWarning}>
-            <Clock size={20} color={theme.colors.warning} />
+            <Clock size={20} color={neumorphicColors.secondary[500]} />
             <Text style={styles.deadlineText}>
               ⏰ {daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining to complete
               checkout
@@ -310,9 +321,9 @@ export default function AuctionCheckoutScreen() {
 
         {/* Product Summary */}
         <Text style={styles.sectionTitle}>Auction Item</Text>
-        <AnimatedCard style={styles.productCard}>
+        <NeumorphicCard style={styles.productCard}>
           <View style={styles.productInfo}>
-            <Package size={40} color={theme.colors.primary[600]} />
+            <Package size={40} color={neumorphicColors.primary[600]} />
             <View style={styles.productDetails}>
               <Text style={styles.productName}>
                 {listing?.cropType ||
@@ -325,18 +336,19 @@ export default function AuctionCheckoutScreen() {
               </Text>
               {listing?.location && (
                 <View style={styles.locationRow}>
-                  <MapPin size={14} color={theme.colors.text.tertiary} />
+                  <MapPin size={14} color={neumorphicColors.text.tertiary} />
                   <Text style={styles.locationText}>{listing.location}</Text>
                 </View>
               )}
             </View>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Delivery Options */}
         <Text style={styles.sectionTitle}>Delivery Method</Text>
-        <AnimatedCard style={styles.deliveryCard}>
-          <TouchableOpacity
+        <NeumorphicCard style={styles.deliveryCard}>
+          <NeumorphicCard
+            variant={formData.usesTransport ? "bordered" : "standard"}
             style={[
               styles.deliveryOption,
               formData.usesTransport && styles.deliveryOptionSelected,
@@ -349,8 +361,8 @@ export default function AuctionCheckoutScreen() {
               size={24}
               color={
                 formData.usesTransport
-                  ? theme.colors.primary[600]
-                  : theme.colors.text.tertiary
+                  ? neumorphicColors.primary[600]
+                  : neumorphicColors.text.tertiary
               }
             />
             <View style={styles.deliveryOptionText}>
@@ -367,11 +379,12 @@ export default function AuctionCheckoutScreen() {
               </Text>
             </View>
             {formData.usesTransport && (
-              <CheckCircle size={20} color={theme.colors.primary[600]} />
+              <CheckCircle size={20} color={neumorphicColors.primary[600]} />
             )}
-          </TouchableOpacity>
+          </NeumorphicCard>
 
-          <TouchableOpacity
+          <NeumorphicCard
+            variant={!formData.usesTransport ? "bordered" : "standard"}
             style={[
               styles.deliveryOption,
               !formData.usesTransport && styles.deliveryOptionSelected,
@@ -384,8 +397,8 @@ export default function AuctionCheckoutScreen() {
               size={24}
               color={
                 !formData.usesTransport
-                  ? theme.colors.primary[600]
-                  : theme.colors.text.tertiary
+                  ? neumorphicColors.primary[600]
+                  : neumorphicColors.text.tertiary
               }
             />
             <View style={styles.deliveryOptionText}>
@@ -402,26 +415,28 @@ export default function AuctionCheckoutScreen() {
               </Text>
             </View>
             {!formData.usesTransport && (
-              <CheckCircle size={20} color={theme.colors.primary[600]} />
+              <CheckCircle size={20} color={neumorphicColors.primary[600]} />
             )}
-          </TouchableOpacity>
-        </AnimatedCard>
+          </NeumorphicCard>
+        </NeumorphicCard>
 
         {/* Delivery Location */}
         {formData.usesTransport && (
           <>
             <Text style={styles.sectionTitle}>Delivery Address</Text>
-            <AnimatedCard style={styles.inputCard}>
-              <ModernInput
+            <NeumorphicCard style={styles.inputCard}>
+              <NeumorphicInput
                 label="Enter your delivery location"
                 placeholder="123 Farm Road, Agricultural District"
                 value={formData.deliveryLocation}
                 onChangeText={(text) =>
                   setFormData((prev) => ({ ...prev, deliveryLocation: text }))
                 }
-                icon={<MapPin size={20} color={theme.colors.text.tertiary} />}
+                leftIcon={
+                  <MapPin size={20} color={neumorphicColors.text.tertiary} />
+                }
               />
-            </AnimatedCard>
+            </NeumorphicCard>
           </>
         )}
 
@@ -430,8 +445,13 @@ export default function AuctionCheckoutScreen() {
           <>
             <Text style={styles.sectionTitle}>Select Transporter</Text>
             {transporters.map((transporter) => (
-              <AnimatedCard
+              <NeumorphicCard
                 key={transporter.id}
+                variant={
+                  formData.transporterId === transporter.id
+                    ? "bordered"
+                    : "standard"
+                }
                 style={[
                   styles.transporterCard,
                   formData.transporterId === transporter.id &&
@@ -441,7 +461,7 @@ export default function AuctionCheckoutScreen() {
               >
                 <View style={styles.transporterHeader}>
                   <View style={styles.transporterAvatar}>
-                    <Truck size={24} color={theme.colors.primary[600]} />
+                    <Truck size={24} color={neumorphicColors.primary[600]} />
                   </View>
                   <View style={styles.transporterInfo}>
                     <Text style={styles.transporterName}>
@@ -455,25 +475,31 @@ export default function AuctionCheckoutScreen() {
                     </View>
                   </View>
                   {formData.transporterId === transporter.id && (
-                    <CheckCircle size={24} color={theme.colors.primary[600]} />
+                    <CheckCircle
+                      size={24}
+                      color={neumorphicColors.primary[600]}
+                    />
                   )}
                 </View>
 
                 <View style={styles.transporterStats}>
                   <View style={styles.transporterStat}>
-                    <Star size={16} color={theme.colors.warning} />
+                    <Star size={16} color={neumorphicColors.secondary[500]} />
                     <Text style={styles.transporterStatValue}>
                       {transporter.platformScore.toFixed(1)}
                     </Text>
                   </View>
                   <View style={styles.transporterStat}>
-                    <Package size={16} color={theme.colors.text.tertiary} />
+                    <Package size={16} color={neumorphicColors.text.tertiary} />
                     <Text style={styles.transporterStatValue}>
                       {transporter.totalTransactions} deliveries
                     </Text>
                   </View>
                   <View style={styles.transporterStat}>
-                    <DollarSign size={16} color={theme.colors.success} />
+                    <DollarSign
+                      size={16}
+                      color={neumorphicColors.semantic.success}
+                    />
                     <Text style={styles.transporterStatValue}>
                       {formatCurrency(
                         transporter.estimatedCost || transporter.baseRate
@@ -482,17 +508,18 @@ export default function AuctionCheckoutScreen() {
                     </Text>
                   </View>
                 </View>
-              </AnimatedCard>
+              </NeumorphicCard>
             ))}
           </>
         )}
 
         {/* Notes */}
         <Text style={styles.sectionTitle}>Additional Notes (Optional)</Text>
-        <AnimatedCard style={styles.inputCard}>
+        <NeumorphicCard style={styles.inputCard}>
           <TextInput
             style={styles.notesInput}
             placeholder="Any special instructions for delivery..."
+            placeholderTextColor={neumorphicColors.text.tertiary}
             value={formData.notes}
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, notes: text }))
@@ -501,11 +528,11 @@ export default function AuctionCheckoutScreen() {
             numberOfLines={4}
             textAlignVertical="top"
           />
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Order Summary */}
         <Text style={styles.sectionTitle}>Order Summary</Text>
-        <AnimatedCard style={styles.summaryCard}>
+        <NeumorphicCard style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Winning Bid</Text>
             <Text style={styles.summaryValue}>
@@ -529,24 +556,25 @@ export default function AuctionCheckoutScreen() {
               )}
             </Text>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Error */}
         {error && (
           <View style={styles.errorBox}>
-            <AlertCircle size={20} color={theme.colors.error} />
+            <AlertCircle size={20} color={neumorphicColors.semantic.error} />
             <Text style={styles.errorBoxText}>{error}</Text>
           </View>
         )}
 
         {/* Submit Button */}
-        <AnimatedButton
+        <NeumorphicButton
           title={submitting ? "Processing..." : "Complete Purchase"}
           variant="primary"
-          size="lg"
+          size="large"
           loading={submitting}
           onPress={handleSubmit}
           style={styles.submitButton}
+          fullWidth
         />
 
         <Text style={styles.disclaimer}>
@@ -556,39 +584,37 @@ export default function AuctionCheckoutScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   backButton: {
-    padding: theme.spacing.xs,
+    padding: spacing.xs,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   loadingContainer: {
     flex: 1,
@@ -596,168 +622,151 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   errorTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   errorSubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   winnerBanner: {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.success + "15",
-    borderWidth: 1,
-    borderColor: theme.colors.success + "30",
+    padding: spacing.lg,
+    backgroundColor: neumorphicColors.badge.success.bg,
   },
   bannerContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   bannerText: {
     flex: 1,
   },
   bannerTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.success,
+    ...typography.h5,
+    color: neumorphicColors.semantic.success,
   },
   bannerSubtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     marginTop: 4,
   },
   deadlineWarning: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.warning + "15",
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.lg,
+    gap: spacing.sm,
+    backgroundColor: neumorphicColors.badge.warning.bg,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.lg,
   },
   deadlineText: {
     flex: 1,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.warning,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.bodySmall,
+    color: neumorphicColors.secondary[700],
+    fontWeight: "500",
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
+    ...typography.h5,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
   productCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   productInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   productDetails: {
     flex: 1,
   },
   productName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
   },
   productQuantity: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.primary[600],
+    ...typography.body,
+    color: neumorphicColors.primary[600],
     marginTop: 2,
   },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: theme.spacing.xs,
+    marginTop: spacing.xs,
   },
   locationText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
   },
   deliveryCard: {
-    padding: theme.spacing.md,
+    padding: spacing.md,
+    backgroundColor: "transparent",
   },
   deliveryOption: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.border.light,
-    marginBottom: theme.spacing.sm,
+    gap: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   deliveryOptionSelected: {
-    borderColor: theme.colors.primary[600],
-    backgroundColor: theme.colors.primary[50],
+    backgroundColor: neumorphicColors.primary[50],
   },
   deliveryOptionText: {
     flex: 1,
   },
   deliveryOptionTitle: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.secondary,
   },
   deliveryOptionTitleSelected: {
-    color: theme.colors.primary[600],
+    color: neumorphicColors.primary[600],
   },
   deliveryOptionSubtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
     marginTop: 2,
   },
   inputCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   notesInput: {
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...typography.body,
     minHeight: 100,
   },
   transporterCard: {
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    borderWidth: 2,
-    borderColor: "transparent",
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   transporterCardSelected: {
-    borderColor: theme.colors.primary[600],
+    backgroundColor: neumorphicColors.primary[50],
   },
   transporterHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   transporterAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.primary[50],
+    backgroundColor: neumorphicColors.primary[50],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -765,24 +774,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transporterName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
   },
   transporterMeta: {
     marginTop: 2,
   },
   transporterVehicle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
   },
   transporterStats: {
     flexDirection: "row",
-    gap: theme.spacing.lg,
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    gap: spacing.lg,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.pressed,
   },
   transporterStat: {
     flexDirection: "row",
@@ -790,67 +798,62 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   transporterStatValue: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
   },
   summaryCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   summaryLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   summaryValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
   },
   totalRow: {
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.pressed,
     marginBottom: 0,
   },
   totalLabel: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
   },
   totalValue: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h5,
+    color: neumorphicColors.primary[600],
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.error + "15",
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.lg,
+    gap: spacing.sm,
+    backgroundColor: neumorphicColors.badge.error.bg,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.lg,
   },
   errorBoxText: {
     flex: 1,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.error,
+    ...typography.bodySmall,
+    color: neumorphicColors.semantic.error,
   },
   submitButton: {
-    marginTop: theme.spacing.xl,
+    marginTop: spacing.xl,
   },
   disclaimer: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
     textAlign: "center",
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
     lineHeight: 18,
   },
   bottomPadding: {
-    height: theme.spacing["2xl"],
+    height: spacing["2xl"],
   },
 });

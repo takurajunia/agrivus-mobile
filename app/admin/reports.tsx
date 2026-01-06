@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -24,10 +22,18 @@ import {
   PieChart,
   ArrowUpRight,
 } from "lucide-react-native";
-import AnimatedCard from "../../src/components/AnimatedCard";
-import AnimatedButton from "../../src/components/AnimatedButton";
-import GlassCard from "../../src/components/GlassCard";
-import { theme } from "../../src/theme/tokens";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+} from "../../src/components/neumorphic/";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../src/theme/neumorphic";
 import adminService, { RevenueReport } from "../../src/services/adminService";
 
 type TimePeriod = "week" | "month" | "quarter" | "year";
@@ -120,27 +126,32 @@ export default function AdminReportsScreen() {
     change: number,
     isCurrency: boolean = true
   ) => (
-    <GlassCard style={styles.metricCard}>
+    <NeumorphicCard style={styles.metricCard} variant="stat">
       <Text style={styles.metricLabel}>{label}</Text>
       <Text style={styles.metricValue}>
         {isCurrency ? formatCurrency(value) : value.toLocaleString()}
       </Text>
       <View style={styles.changeContainer}>
         {change >= 0 ? (
-          <TrendingUp size={14} color={theme.colors.success} />
+          <TrendingUp size={14} color={neumorphicColors.semantic.success} />
         ) : (
-          <TrendingDown size={14} color={theme.colors.error} />
+          <TrendingDown size={14} color={neumorphicColors.semantic.error} />
         )}
         <Text
           style={[
             styles.changeText,
-            { color: change >= 0 ? theme.colors.success : theme.colors.error },
+            {
+              color:
+                change >= 0
+                  ? neumorphicColors.semantic.success
+                  : neumorphicColors.semantic.error,
+            },
           ]}
         >
           {formatPercentage(change)}
         </Text>
       </View>
-    </GlassCard>
+    </NeumorphicCard>
   );
 
   const renderBreakdownItem = (
@@ -173,10 +184,10 @@ export default function AdminReportsScreen() {
   };
 
   const renderTopProduct = (product: any, index: number) => (
-    <AnimatedCard
+    <NeumorphicCard
       key={product.id || index}
       style={styles.productCard}
-      delay={index * 50}
+      animationDelay={index * 50}
     >
       <View style={styles.productRank}>
         <Text style={styles.rankNumber}>{index + 1}</Text>
@@ -193,22 +204,22 @@ export default function AdminReportsScreen() {
         </Text>
         <Text style={styles.productSales}>{product.sales} sales</Text>
       </View>
-    </AnimatedCard>
+    </NeumorphicCard>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen leafPattern="dashboard">
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="default"
+          size="medium"
+        />
         <Text style={styles.title}>Reports</Text>
-        <TouchableOpacity
-          style={styles.exportButton}
+        <NeumorphicIconButton
+          icon={<Download size={24} color={neumorphicColors.primary[600]} />}
           onPress={() => {
             Alert.alert("Export Report", "Choose export format", [
               { text: "CSV", onPress: () => handleExport("csv") },
@@ -217,9 +228,9 @@ export default function AdminReportsScreen() {
               { text: "Cancel", style: "cancel" },
             ]);
           }}
-        >
-          <Download size={24} color={theme.colors.primary[600]} />
-        </TouchableOpacity>
+          variant="default"
+          size="medium"
+        />
       </View>
 
       {/* Period Tabs */}
@@ -230,26 +241,23 @@ export default function AdminReportsScreen() {
         contentContainerStyle={styles.tabsContent}
       >
         {periodTabs.map((tab) => (
-          <TouchableOpacity
+          <NeumorphicButton
             key={tab.key}
-            style={[styles.tab, timePeriod === tab.key && styles.activeTab]}
+            title={tab.label}
             onPress={() => setTimePeriod(tab.key)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                timePeriod === tab.key && styles.activeTabText,
-              ]}
-            >
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
+            variant={timePeriod === tab.key ? "primary" : "secondary"}
+            size="small"
+            style={styles.tabButton}
+          />
         ))}
       </ScrollView>
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading report...</Text>
         </View>
       ) : (
@@ -261,8 +269,8 @@ export default function AdminReportsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={[theme.colors.primary[600]]}
-              tintColor={theme.colors.primary[600]}
+              colors={[neumorphicColors.primary[600]]}
+              tintColor={neumorphicColors.primary[600]}
             />
           }
         >
@@ -294,41 +302,41 @@ export default function AdminReportsScreen() {
 
           {/* Revenue Breakdown */}
           <Text style={styles.sectionTitle}>Revenue Breakdown</Text>
-          <AnimatedCard style={styles.breakdownCard}>
+          <NeumorphicCard style={styles.breakdownCard}>
             <View style={styles.breakdownChart}>
-              <PieChart size={40} color={theme.colors.primary[600]} />
+              <PieChart size={40} color={neumorphicColors.primary[600]} />
             </View>
             {renderBreakdownItem(
               "Marketplace Sales",
               parseFloat(report?.revenue?.marketplace || "0"),
               report?.totalRevenue || parseFloat(report?.revenue?.total || "1"),
-              theme.colors.primary[600]
+              neumorphicColors.primary[600]
             )}
             {renderBreakdownItem(
               "Auction Sales",
               parseFloat(report?.revenue?.auctions || "0"),
               report?.totalRevenue || parseFloat(report?.revenue?.total || "1"),
-              theme.colors.secondary[600]
+              neumorphicColors.secondary[600]
             )}
             {renderBreakdownItem(
               "Export Gateway",
               parseFloat(report?.revenue?.exports || "0"),
               report?.totalRevenue || parseFloat(report?.revenue?.total || "1"),
-              theme.colors.success
+              neumorphicColors.semantic.success
             )}
             {renderBreakdownItem(
               "AgriMall",
               parseFloat(report?.revenue?.agrimall || "0"),
               report?.totalRevenue || parseFloat(report?.revenue?.total || "1"),
-              theme.colors.warning
+              neumorphicColors.semantic.warning
             )}
-          </AnimatedCard>
+          </NeumorphicCard>
 
           {/* Growth Trends */}
           <Text style={styles.sectionTitle}>Growth Trends</Text>
-          <AnimatedCard style={styles.trendsCard}>
+          <NeumorphicCard style={styles.trendsCard}>
             <View style={styles.trendHeader}>
-              <BarChart3 size={24} color={theme.colors.primary[600]} />
+              <BarChart3 size={24} color={neumorphicColors.primary[600]} />
               <Text style={styles.trendTitle}>Revenue Trend</Text>
             </View>
 
@@ -350,7 +358,7 @@ export default function AdminReportsScreen() {
                 <Text style={styles.noDataText}>No trend data available</Text>
               )}
             </View>
-          </AnimatedCard>
+          </NeumorphicCard>
 
           {/* Top Products */}
           <Text style={styles.sectionTitle}>Top Products</Text>
@@ -359,14 +367,14 @@ export default function AdminReportsScreen() {
               renderTopProduct(product, index)
             )
           ) : (
-            <AnimatedCard style={styles.emptyCard}>
+            <NeumorphicCard style={styles.emptyCard}>
               <Text style={styles.emptyText}>No product data available</Text>
-            </AnimatedCard>
+            </NeumorphicCard>
           )}
 
           {/* Top Categories */}
           <Text style={styles.sectionTitle}>Top Categories</Text>
-          <AnimatedCard style={styles.categoriesCard}>
+          <NeumorphicCard style={styles.categoriesCard}>
             {(report?.topCategories || []).length > 0 ? (
               report?.topCategories?.map((category: any, index: number) => (
                 <View key={index} style={styles.categoryItem}>
@@ -379,7 +387,10 @@ export default function AdminReportsScreen() {
                       {formatCurrency(category.revenue)}
                     </Text>
                     <View style={styles.categoryTrend}>
-                      <ArrowUpRight size={12} color={theme.colors.success} />
+                      <ArrowUpRight
+                        size={12}
+                        color={neumorphicColors.semantic.success}
+                      />
                       <Text style={styles.categoryChange}>
                         {formatPercentage(category.change)}
                       </Text>
@@ -390,7 +401,7 @@ export default function AdminReportsScreen() {
             ) : (
               <Text style={styles.emptyText}>No category data available</Text>
             )}
-          </AnimatedCard>
+          </NeumorphicCard>
 
           <View style={styles.bottomPadding} />
         </ScrollView>
@@ -398,70 +409,48 @@ export default function AdminReportsScreen() {
 
       {exporting && (
         <View style={styles.exportingOverlay}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.exportingText}>Exporting report...</Text>
         </View>
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  exportButton: {
-    padding: theme.spacing.xs,
+    ...typography.h4,
   },
   tabsContainer: {
-    backgroundColor: theme.colors.background.primary,
-    maxHeight: 50,
+    maxHeight: 60,
   },
   tabsContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
-  tab: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    marginRight: theme.spacing.sm,
-  },
-  activeTab: {
-    backgroundColor: theme.colors.primary[600],
-  },
-  tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-  },
-  activeTabText: {
-    color: theme.colors.text.inverse,
+  tabButton: {
+    marginRight: spacing.sm,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   loadingContainer: {
     flex: 1,
@@ -469,66 +458,63 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
-    marginTop: theme.spacing.lg,
+    ...typography.h5,
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
   },
   metricsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   metricCard: {
-    width: (screenWidth - theme.spacing.lg * 2 - theme.spacing.md) / 2,
-    padding: theme.spacing.lg,
+    width: (screenWidth - spacing.lg * 2 - spacing.md) / 2,
+    padding: spacing.lg,
   },
   metricLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
+    ...typography.bodySmall,
+    marginBottom: spacing.xs,
   },
   metricValue: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 24,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.sm,
   },
   changeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   changeText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
+    ...typography.bodySmall,
+    fontWeight: "600",
   },
   breakdownCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   breakdownChart: {
     alignItems: "center",
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   breakdownItem: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   breakdownHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   breakdownLabel: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   colorDot: {
     width: 12,
@@ -536,50 +522,46 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   breakdownLabelText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
   },
   breakdownValue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
   },
   progressBarContainer: {
     height: 8,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: 4,
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.xs,
     overflow: "hidden",
   },
   progressBar: {
     height: "100%",
-    borderRadius: 4,
+    borderRadius: borderRadius.xs,
   },
   percentageText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.xs,
+    ...typography.caption,
+    marginTop: spacing.xs,
     textAlign: "right",
   },
   trendsCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   trendHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   trendTitle: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
   },
   chartContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "flex-end",
     height: 120,
-    paddingTop: theme.spacing.md,
+    paddingTop: spacing.md,
   },
   chartBarContainer: {
     alignItems: "center",
@@ -587,98 +569,96 @@ const styles = StyleSheet.create({
   },
   chartBar: {
     width: 24,
-    backgroundColor: theme.colors.primary[600],
-    borderRadius: 4,
+    backgroundColor: neumorphicColors.primary[600],
+    borderRadius: borderRadius.xs,
     minHeight: 4,
   },
   chartLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.sm,
+    ...typography.caption,
+    marginTop: spacing.sm,
   },
   noDataText: {
     flex: 1,
     textAlign: "center",
-    color: theme.colors.text.tertiary,
-    fontSize: theme.typography.fontSize.sm,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
   },
   productCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   productRank: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary[100],
+    backgroundColor: neumorphicColors.primary[100],
     justifyContent: "center",
     alignItems: "center",
-    marginRight: theme.spacing.md,
+    marginRight: spacing.md,
   },
   rankNumber: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.bodySmall,
+    fontWeight: "700",
+    color: neumorphicColors.primary[600],
   },
   productInfo: {
     flex: 1,
   },
   productName: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
   },
   productCategory: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
   },
   productStats: {
     alignItems: "flex-end",
   },
   productRevenue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.success,
+    ...typography.body,
+    fontWeight: "700",
+    color: neumorphicColors.semantic.success,
   },
   productSales: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
   },
   categoriesCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   categoryItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: theme.spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.input,
   },
   categoryInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   categoryRank: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.bodySmall,
+    fontWeight: "700",
+    color: neumorphicColors.primary[600],
     width: 24,
   },
   categoryName: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
   },
   categoryStats: {
     alignItems: "flex-end",
   },
   categoryRevenue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
   },
   categoryTrend: {
     flexDirection: "row",
@@ -686,20 +666,20 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   categoryChange: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.success,
+    ...typography.caption,
+    color: neumorphicColors.semantic.success,
   },
   emptyCard: {
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
     alignItems: "center",
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
     textAlign: "center",
   },
   bottomPadding: {
-    height: theme.spacing["2xl"],
+    height: spacing["2xl"],
   },
   exportingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -708,8 +688,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   exportingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.inverse,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.inverse,
   },
 });

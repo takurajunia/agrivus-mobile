@@ -19,9 +19,16 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react-native";
-import ModernInput from "../components/ModernInput";
-import AnimatedButton from "../components/AnimatedButton";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicInput from "../components/neumorphic/NeumorphicInput";
 import type { RegisterData, UserRole } from "../types";
 
 const userRoles: { label: string; value: UserRole; description: string }[] = [
@@ -95,242 +102,272 @@ export default function RegisterScreen() {
   const selectedRole = userRoles.find((role) => role.value === formData.role);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <NeumorphicScreen variant="default" showLeaves={true}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join the Agrivus community today</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <ModernInput
-            label="Full Name"
-            placeholder="John Doe"
-            value={formData.fullName}
-            onChangeText={(text: string) =>
-              setFormData((prev: RegisterData) => ({ ...prev, fullName: text }))
-            }
-            autoCapitalize="words"
-            leftIcon={<User size={20} color={theme.colors.text.tertiary} />}
-            style={styles.inputSpacing}
-          />
-
-          <ModernInput
-            label="Email Address"
-            placeholder="john@example.com"
-            value={formData.email}
-            onChangeText={(text: string) =>
-              setFormData((prev: RegisterData) => ({ ...prev, email: text }))
-            }
-            keyboardType="email-address"
-            autoCapitalize="none"
-            leftIcon={<Mail size={20} color={theme.colors.text.tertiary} />}
-            style={styles.inputSpacing}
-          />
-
-          <ModernInput
-            label="Phone Number"
-            placeholder="+1 234 567 890"
-            value={formData.phone}
-            onChangeText={(text: string) =>
-              setFormData((prev: RegisterData) => ({ ...prev, phone: text }))
-            }
-            keyboardType="phone-pad"
-            leftIcon={<Phone size={20} color={theme.colors.text.tertiary} />}
-            style={styles.inputSpacing}
-          />
-
-          {/* Custom Role Selector styled to match ModernInput */}
-          <View style={styles.roleContainer}>
-            <Text style={styles.roleLabel}>I am a...</Text>
-            <TouchableOpacity
-              style={[
-                styles.roleSelector,
-                showRolePicker && styles.roleSelectorActive,
-              ]}
-              onPress={() => setShowRolePicker(!showRolePicker)}
-              activeOpacity={0.7}
-            >
-              <View>
-                <Text style={styles.roleSelectorText}>
-                  {selectedRole?.label}
-                </Text>
-                <Text style={styles.roleSelectorSubtext}>
-                  {selectedRole?.description}
-                </Text>
-              </View>
-              <ChevronDown
-                size={20}
-                color={theme.colors.text.tertiary}
-                style={{
-                  transform: showRolePicker ? "rotate(180deg)" : "rotate(0deg)",
-                }}
-              />
-            </TouchableOpacity>
-
-            {showRolePicker && (
-              <View style={styles.roleDropdown}>
-                {userRoles.map((role, index) => (
-                  <TouchableOpacity
-                    key={role.value}
-                    style={[
-                      styles.roleOption,
-                      index === userRoles.length - 1 && styles.roleOptionLast,
-                      formData.role === role.value && styles.roleOptionSelected,
-                    ]}
-                    onPress={() => {
-                      setFormData((prev: RegisterData) => ({
-                        ...prev,
-                        role: role.value,
-                      }));
-                      setShowRolePicker(false);
-                    }}
-                  >
-                    <View style={styles.roleOptionContent}>
-                      <Text
-                        style={[
-                          styles.roleOptionText,
-                          formData.role === role.value &&
-                            styles.roleOptionTextSelected,
-                        ]}
-                      >
-                        {role.label}
-                      </Text>
-                      <Text style={styles.roleOptionDescription}>
-                        {role.description}
-                      </Text>
-                    </View>
-                    {formData.role === role.value && (
-                      <Check size={18} color={theme.colors.primary[600]} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-
-          <ModernInput
-            label="Password"
-            placeholder="Create a password"
-            value={formData.password}
-            onChangeText={(text: string) =>
-              setFormData((prev: RegisterData) => ({ ...prev, password: text }))
-            }
-            secureTextEntry
-            autoCapitalize="none"
-            leftIcon={<Lock size={20} color={theme.colors.text.tertiary} />}
-            style={styles.inputSpacing}
-          />
-
-          <ModernInput
-            label="Confirm Password"
-            placeholder="Confirm your password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            leftIcon={<Lock size={20} color={theme.colors.text.tertiary} />}
-            style={styles.inputSpacing}
-          />
-
-          <View style={styles.termsContainer}>
-            <Text style={styles.termsText}>
-              By creating an account, you agree to our Terms of Service and
-              Privacy Policy.
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>
+              Join the Agrivus community today
             </Text>
           </View>
 
-          <AnimatedButton
-            title="Create Account"
-            onPress={handleRegister}
-            loading={isLoading}
-            variant="primary"
-            size="lg"
-            style={styles.registerButton}
-          />
+          <View style={styles.formContainer}>
+            <NeumorphicInput
+              label="Full Name"
+              placeholder="John Doe"
+              value={formData.fullName}
+              onChangeText={(text: string) =>
+                setFormData((prev: RegisterData) => ({
+                  ...prev,
+                  fullName: text,
+                }))
+              }
+              autoCapitalize="words"
+              leftIcon={
+                <User size={20} color={neumorphicColors.text.tertiary} />
+              }
+              containerStyle={styles.inputSpacing}
+            />
 
-          <View style={styles.footerContainer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={navigateToLogin}>
-              <Text style={styles.loginText}>Sign In</Text>
-            </TouchableOpacity>
+            <NeumorphicInput
+              label="Email Address"
+              placeholder="john@example.com"
+              value={formData.email}
+              onChangeText={(text: string) =>
+                setFormData((prev: RegisterData) => ({ ...prev, email: text }))
+              }
+              keyboardType="email-address"
+              autoCapitalize="none"
+              leftIcon={
+                <Mail size={20} color={neumorphicColors.text.tertiary} />
+              }
+              containerStyle={styles.inputSpacing}
+            />
+
+            <NeumorphicInput
+              label="Phone Number"
+              placeholder="+1 234 567 890"
+              value={formData.phone}
+              onChangeText={(text: string) =>
+                setFormData((prev: RegisterData) => ({ ...prev, phone: text }))
+              }
+              keyboardType="phone-pad"
+              leftIcon={
+                <Phone size={20} color={neumorphicColors.text.tertiary} />
+              }
+              containerStyle={styles.inputSpacing}
+            />
+
+            {/* Custom Role Selector */}
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>I am a...</Text>
+              <TouchableOpacity
+                style={[
+                  styles.roleSelector,
+                  showRolePicker && styles.roleSelectorActive,
+                ]}
+                onPress={() => setShowRolePicker(!showRolePicker)}
+                activeOpacity={0.7}
+              >
+                <View>
+                  <Text style={styles.roleSelectorText}>
+                    {selectedRole?.label}
+                  </Text>
+                  <Text style={styles.roleSelectorSubtext}>
+                    {selectedRole?.description}
+                  </Text>
+                </View>
+                <ChevronDown
+                  size={20}
+                  color={neumorphicColors.text.tertiary}
+                  style={{
+                    transform: showRolePicker
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                  }}
+                />
+              </TouchableOpacity>
+
+              {showRolePicker && (
+                <NeumorphicCard
+                  variant="elevated"
+                  style={styles.roleDropdown}
+                  animated={false}
+                >
+                  {userRoles.map((role, index) => (
+                    <TouchableOpacity
+                      key={role.value}
+                      style={[
+                        styles.roleOption,
+                        index === userRoles.length - 1 && styles.roleOptionLast,
+                        formData.role === role.value &&
+                          styles.roleOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setFormData((prev: RegisterData) => ({
+                          ...prev,
+                          role: role.value,
+                        }));
+                        setShowRolePicker(false);
+                      }}
+                    >
+                      <View style={styles.roleOptionContent}>
+                        <Text
+                          style={[
+                            styles.roleOptionText,
+                            formData.role === role.value &&
+                              styles.roleOptionTextSelected,
+                          ]}
+                        >
+                          {role.label}
+                        </Text>
+                        <Text style={styles.roleOptionDescription}>
+                          {role.description}
+                        </Text>
+                      </View>
+                      {formData.role === role.value && (
+                        <Check
+                          size={18}
+                          color={neumorphicColors.primary[600]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </NeumorphicCard>
+              )}
+            </View>
+
+            <NeumorphicInput
+              label="Password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChangeText={(text: string) =>
+                setFormData((prev: RegisterData) => ({
+                  ...prev,
+                  password: text,
+                }))
+              }
+              secureTextEntry
+              showPasswordToggle
+              autoCapitalize="none"
+              leftIcon={
+                <Lock size={20} color={neumorphicColors.text.tertiary} />
+              }
+              containerStyle={styles.inputSpacing}
+            />
+
+            <NeumorphicInput
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              showPasswordToggle
+              autoCapitalize="none"
+              leftIcon={
+                <Lock size={20} color={neumorphicColors.text.tertiary} />
+              }
+              containerStyle={styles.inputSpacing}
+            />
+
+            <View style={styles.termsContainer}>
+              <Text style={styles.termsText}>
+                By creating an account, you agree to our Terms of Service and
+                Privacy Policy.
+              </Text>
+            </View>
+
+            <NeumorphicButton
+              title="Create Account"
+              onPress={handleRegister}
+              loading={isLoading}
+              variant="primary"
+              size="large"
+              fullWidth
+              style={styles.registerButton}
+            />
+
+            <View style={styles.footerContainer}>
+              <Text style={styles.footerText}>Already have an account? </Text>
+              <TouchableOpacity onPress={navigateToLogin}>
+                <Text style={styles.loginText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardView: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: theme.spacing.xl,
-    paddingTop: theme.spacing["3xl"],
+    padding: spacing.xl,
+    paddingTop: spacing["2xl"],
   },
   header: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: theme.typography.fontSize["4xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-    letterSpacing: -1,
+    ...typography.h1,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.xs,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   formContainer: {
     width: "100%",
   },
   inputSpacing: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   roleContainer: {
-    marginBottom: theme.spacing.md,
-    zIndex: theme.zIndex.dropdown,
+    marginBottom: spacing.md,
+    zIndex: 100,
   },
   roleLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
-    marginBottom: theme.spacing.xs,
-    marginLeft: theme.spacing.xs,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginBottom: spacing.xs,
+    marginLeft: spacing.xs,
   },
   roleSelector: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: neumorphicColors.base.input,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
+    borderColor: neumorphicColors.base.background,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
     minHeight: 64,
   },
   roleSelectorActive: {
-    borderColor: theme.colors.primary[500],
-    backgroundColor: theme.colors.primary[50],
+    borderColor: neumorphicColors.primary[500],
+    backgroundColor: neumorphicColors.primary[50],
   },
   roleSelectorText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
   },
   roleSelectorSubtext: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
     marginTop: 2,
   },
   roleDropdown: {
@@ -338,71 +375,66 @@ const styles = StyleSheet.create({
     top: "100%",
     left: 0,
     right: 0,
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    marginTop: 4,
-    ...theme.shadows.lg,
+    marginTop: spacing.xs,
+    padding: 0,
     zIndex: 1000,
   },
   roleOption: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: theme.spacing.md,
+    padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral[100],
+    borderBottomColor: neumorphicColors.base.background,
   },
   roleOptionLast: {
     borderBottomWidth: 0,
   },
   roleOptionSelected: {
-    backgroundColor: theme.colors.primary[50],
+    backgroundColor: neumorphicColors.primary[50],
   },
   roleOptionContent: {
     flex: 1,
   },
   roleOptionText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.body,
+    color: neumorphicColors.text.primary,
+    fontWeight: "500",
   },
   roleOptionTextSelected: {
-    color: theme.colors.primary[700],
-    fontWeight: theme.typography.fontWeight.bold,
+    color: neumorphicColors.primary[700],
+    fontWeight: "700",
   },
   roleOptionDescription: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
     marginTop: 2,
   },
   termsContainer: {
-    marginVertical: theme.spacing.lg,
+    marginVertical: spacing.lg,
   },
   termsText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
     textAlign: "center",
     lineHeight: 18,
   },
   registerButton: {
-    marginBottom: theme.spacing.xl,
-    ...theme.shadows.colored,
+    marginBottom: spacing.xl,
   },
   footerContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   footerText: {
-    color: theme.colors.text.secondary,
-    fontSize: theme.typography.fontSize.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   loginText: {
-    color: theme.colors.primary[600],
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.body,
+    color: neumorphicColors.primary[600],
+    fontWeight: "700",
   },
 });

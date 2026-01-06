@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   MapPin,
   Calendar,
   User,
-  Phone,
   Star,
   Package,
   ChevronLeft,
   ShoppingCart,
   MessageCircle,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../theme/neumorphic";
 import { listingsService } from "../services/listingsService";
-import type { Listing, ListingWithFarmer } from "../types";
+import type { ListingWithFarmer } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import { NeumorphicScreen } from "../components/neumorphic/NeumorphicScreen";
+import { NeumorphicCard } from "../components/neumorphic/NeumorphicCard";
+import { NeumorphicButton } from "../components/neumorphic/NeumorphicButton";
+import { NeumorphicIconButton } from "../components/neumorphic/NeumorphicIconButton";
+import { NeumorphicBadge } from "../components/neumorphic/NeumorphicBadge";
 
 export default function ListingDetailScreen() {
   const router = useRouter();
@@ -78,51 +78,54 @@ export default function ListingDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail" showLeaves={false}>
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   if (error || !listingData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail" showLeaves={false}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
+          <NeumorphicIconButton
+            icon={
+              <ChevronLeft size={24} color={neumorphicColors.text.primary} />
+            }
             onPress={() => router.back()}
-          >
-            <ChevronLeft size={24} color={theme.colors.text.primary} />
-          </TouchableOpacity>
+            variant="ghost"
+          />
           <Text style={styles.headerTitle}>Listing Details</Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 48 }} />
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error || "Listing not found"}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchListing}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+          <NeumorphicButton
+            title="Retry"
+            onPress={fetchListing}
+            variant="primary"
+            size="medium"
+          />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   const { listing, farmer } = listingData;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="detail" showLeaves={false}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+        <NeumorphicIconButton
+          icon={<ChevronLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-        >
-          <ChevronLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+        />
         <Text style={styles.headerTitle}>{listing.cropType}</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 48 }} />
       </View>
 
       <ScrollView
@@ -154,20 +157,23 @@ export default function ListingDetailScreen() {
               contentContainerStyle={styles.thumbnailContainer}
             >
               {listing.images.map((image: string, index: number) => (
-                <TouchableOpacity
+                <NeumorphicCard
                   key={index}
                   onPress={() => setSelectedImageIndex(index)}
                   style={[
                     styles.thumbnail,
                     selectedImageIndex === index && styles.selectedThumbnail,
                   ]}
+                  variant="standard"
+                  shadowLevel={1}
+                  animated={false}
                 >
                   <Image
                     source={{ uri: image }}
                     style={styles.thumbnailImage}
                     resizeMode="cover"
                   />
-                </TouchableOpacity>
+                </NeumorphicCard>
               ))}
             </ScrollView>
           )}
@@ -177,11 +183,11 @@ export default function ListingDetailScreen() {
         <View style={styles.infoSection}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{listing.cropType}</Text>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {listing.status.toUpperCase()}
-              </Text>
-            </View>
+            <NeumorphicBadge
+              label={listing.status.toUpperCase()}
+              variant="success"
+              size="small"
+            />
           </View>
 
           <Text style={styles.price}>
@@ -191,7 +197,7 @@ export default function ListingDetailScreen() {
 
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
-              <Package size={20} color={theme.colors.primary[600]} />
+              <Package size={20} color={neumorphicColors.primary[600]} />
               <View>
                 <Text style={styles.detailLabel}>Quantity</Text>
                 <Text style={styles.detailValue}>
@@ -201,7 +207,7 @@ export default function ListingDetailScreen() {
             </View>
 
             <View style={styles.detailItem}>
-              <MapPin size={20} color={theme.colors.primary[600]} />
+              <MapPin size={20} color={neumorphicColors.primary[600]} />
               <View>
                 <Text style={styles.detailLabel}>Location</Text>
                 <Text style={styles.detailValue}>{listing.location}</Text>
@@ -209,7 +215,7 @@ export default function ListingDetailScreen() {
             </View>
 
             <View style={styles.detailItem}>
-              <Calendar size={20} color={theme.colors.primary[600]} />
+              <Calendar size={20} color={neumorphicColors.primary[600]} />
               <View>
                 <Text style={styles.detailLabel}>Listed</Text>
                 <Text style={styles.detailValue}>
@@ -220,7 +226,7 @@ export default function ListingDetailScreen() {
 
             {listing.harvestDate && (
               <View style={styles.detailItem}>
-                <Calendar size={20} color={theme.colors.success} />
+                <Calendar size={20} color={neumorphicColors.semantic.success} />
                 <View>
                   <Text style={styles.detailLabel}>Harvest Date</Text>
                   <Text style={styles.detailValue}>
@@ -241,11 +247,11 @@ export default function ListingDetailScreen() {
 
         {/* Farmer Info */}
         {farmer && (
-          <AnimatedCard style={styles.farmerCard}>
+          <NeumorphicCard style={styles.farmerCard} variant="elevated">
             <Text style={styles.sectionTitle}>Seller Information</Text>
             <View style={styles.farmerInfo}>
               <View style={styles.farmerAvatar}>
-                <User size={28} color={theme.colors.primary[600]} />
+                <User size={28} color={neumorphicColors.primary[600]} />
               </View>
               <View style={styles.farmerDetails}>
                 <Text style={styles.farmerName}>{farmer.fullName}</Text>
@@ -253,8 +259,8 @@ export default function ListingDetailScreen() {
                   <View style={styles.ratingContainer}>
                     <Star
                       size={14}
-                      color={theme.colors.warning}
-                      fill={theme.colors.warning}
+                      color={neumorphicColors.semantic.warning}
+                      fill={neumorphicColors.semantic.warning}
                     />
                     <Text style={styles.ratingText}>
                       {farmer.platformScore} platform score
@@ -263,11 +269,11 @@ export default function ListingDetailScreen() {
                 )}
               </View>
             </View>
-          </AnimatedCard>
+          </NeumorphicCard>
         )}
 
         {/* Total Value */}
-        <View style={styles.totalSection}>
+        <NeumorphicCard style={styles.totalSection} variant="standard">
           <Text style={styles.totalLabel}>Total Value</Text>
           <Text style={styles.totalValue}>
             $
@@ -275,31 +281,37 @@ export default function ListingDetailScreen() {
               parseFloat(listing.pricePerUnit) * parseFloat(listing.quantity)
             ).toLocaleString()}
           </Text>
-        </View>
+        </NeumorphicCard>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
 
       {/* Bottom Actions */}
       <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.contactButton} onPress={handleContact}>
-          <MessageCircle size={20} color={theme.colors.primary[600]} />
-          <Text style={styles.contactButtonText}>Contact Seller</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
-          <ShoppingCart size={20} color={theme.colors.text.inverse} />
-          <Text style={styles.orderButtonText}>Place Order</Text>
-        </TouchableOpacity>
+        <NeumorphicButton
+          title="Contact Seller"
+          onPress={handleContact}
+          variant="secondary"
+          icon={
+            <MessageCircle size={20} color={neumorphicColors.primary[600]} />
+          }
+          style={styles.actionButton}
+        />
+        <NeumorphicButton
+          title="Place Order"
+          onPress={handleOrder}
+          variant="primary"
+          icon={
+            <ShoppingCart size={20} color={neumorphicColors.text.inverse} />
+          }
+          style={styles.actionButton}
+        />
       </View>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -309,49 +321,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
+    padding: spacing.lg,
+    backgroundColor: neumorphicColors.base.card,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
+    borderBottomColor: neumorphicColors.base.shadowDark,
   },
   headerTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.lg,
   },
   errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.md,
+    ...typography.body,
+    color: neumorphicColors.semantic.error,
     textAlign: "center",
-  },
-  retryButton: {
-    marginTop: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.primary[600],
-    borderRadius: theme.borderRadius.md,
-  },
-  retryText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
   },
   scrollView: {
     flex: 1,
   },
   imageGallery: {
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: neumorphicColors.base.card,
   },
   mainImageContainer: {
     width: "100%",
@@ -364,7 +359,7 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: theme.colors.primary[100],
+    backgroundColor: neumorphicColors.primary[100],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -372,31 +367,31 @@ const styles = StyleSheet.create({
     fontSize: 80,
   },
   thumbnailScroll: {
-    paddingVertical: theme.spacing.md,
+    paddingVertical: spacing.md,
   },
   thumbnailContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   thumbnail: {
     width: 60,
     height: 60,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: borderRadius.md,
     overflow: "hidden",
-    borderWidth: 2,
-    borderColor: "transparent",
+    padding: 0,
   },
   selectedThumbnail: {
-    borderColor: theme.colors.primary[600],
+    borderWidth: 2,
+    borderColor: neumorphicColors.primary[600],
   },
   thumbnailImage: {
     width: "100%",
     height: "100%",
   },
   infoSection: {
-    backgroundColor: theme.colors.background.primary,
-    padding: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
+    backgroundColor: neumorphicColors.base.card,
+    padding: spacing.lg,
+    marginTop: spacing.sm,
   },
   titleRow: {
     flexDirection: "row",
@@ -404,76 +399,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  statusBadge: {
-    backgroundColor: theme.colors.success + "20",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-  },
-  statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.success,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
   },
   price: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
-    marginTop: theme.spacing.sm,
+    ...typography.h4,
+    color: neumorphicColors.primary[600],
+    marginTop: spacing.sm,
   },
   detailsGrid: {
-    marginTop: theme.spacing.lg,
-    gap: theme.spacing.md,
+    marginTop: spacing.lg,
+    gap: spacing.md,
   },
   detailItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   detailLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
   },
   detailValue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "500",
+    color: neumorphicColors.text.primary,
   },
   descriptionSection: {
-    marginTop: theme.spacing.xl,
+    marginTop: spacing.xl,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.md,
   },
   description: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     lineHeight: 24,
   },
   farmerCard: {
-    backgroundColor: theme.colors.background.primary,
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.sm,
+    margin: spacing.lg,
+    padding: spacing.lg,
   },
   farmerInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   farmerAvatar: {
     width: 56,
     height: 56,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary[100],
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.primary[100],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -481,90 +459,57 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   farmerName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   farmerLocation: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: theme.spacing.xs,
+    marginTop: spacing.xs,
   },
   farmerLocationText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
   },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: theme.spacing.xs,
+    marginTop: spacing.xs,
   },
   ratingText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
   },
   totalSection: {
-    backgroundColor: theme.colors.background.primary,
-    padding: theme.spacing.lg,
-    marginHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    ...theme.shadows.sm,
+    padding: spacing.lg,
   },
   totalLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   totalValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   bottomPadding: {
-    height: theme.spacing["3xl"],
+    height: spacing["2xl"],
   },
   bottomActions: {
     flexDirection: "row",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background.primary,
+    padding: spacing.lg,
+    backgroundColor: neumorphicColors.base.card,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    gap: theme.spacing.md,
+    borderTopColor: neumorphicColors.base.shadowDark,
+    gap: spacing.md,
   },
-  contactButton: {
+  actionButton: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.primary[600],
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.sm,
-  },
-  contactButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary[600],
-  },
-  orderButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.primary[600],
-    borderRadius: theme.borderRadius.lg,
-    gap: theme.spacing.sm,
-  },
-  orderButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.inverse,
   },
 });

@@ -3,19 +3,28 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   RefreshControl,
-  SafeAreaView,
   FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Gavel, Clock, TrendingUp, Plus, Users } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { auctionsService } from "../services/auctionsService";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicBadge,
+  NeumorphicIconButton,
+  NeumorphicButton,
+} from "../components/neumorphic";
 
 interface AuctionItem {
   auction: {
@@ -92,9 +101,10 @@ export default function AuctionsScreen() {
       timeRemaining.includes("m left") && !timeRemaining.includes("h");
 
     return (
-      <AnimatedCard
+      <NeumorphicCard
         style={styles.auctionCard}
         onPress={() => router.push(`/auction/${auction.id}`)}
+        variant="elevated"
       >
         {/* Live Badge */}
         <View style={styles.liveBadge}>
@@ -140,14 +150,16 @@ export default function AuctionsScreen() {
           {/* Stats */}
           <View style={styles.statsRow}>
             <View style={styles.stat}>
-              <Users size={14} color={theme.colors.text.secondary} />
+              <Users size={14} color={neumorphicColors.text.secondary} />
               <Text style={styles.statText}>{bidCount || 0} bids</Text>
             </View>
             <View style={[styles.stat, isEnding && styles.endingSoon]}>
               <Clock
                 size={14}
                 color={
-                  isEnding ? theme.colors.error : theme.colors.text.secondary
+                  isEnding
+                    ? neumorphicColors.semantic.error
+                    : neumorphicColors.text.secondary
                 }
               />
               <Text
@@ -159,16 +171,20 @@ export default function AuctionsScreen() {
           </View>
 
           {/* Action Button */}
-          <TouchableOpacity style={styles.bidButton}>
-            <Text style={styles.bidButtonText}>View & Bid</Text>
-          </TouchableOpacity>
+          <NeumorphicButton
+            title="View & Bid"
+            variant="secondary"
+            onPress={() => router.push(`/auction/${auction.id}`)}
+            fullWidth
+            style={styles.bidButton}
+          />
         </View>
-      </AnimatedCard>
+      </NeumorphicCard>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list" showLeaves={true}>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -178,40 +194,49 @@ export default function AuctionsScreen() {
           </Text>
         </View>
         {user?.role === "farmer" && (
-          <TouchableOpacity
-            style={styles.createButton}
+          <NeumorphicIconButton
+            icon={<Plus size={20} color={neumorphicColors.text.inverse} />}
             onPress={() => router.push("/create-auction")}
-          >
-            <Plus size={20} color={theme.colors.text.inverse} />
-          </TouchableOpacity>
+            variant="primary"
+            size="medium"
+          />
         )}
       </View>
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <TouchableOpacity
+        <NeumorphicCard
           style={styles.actionButton}
           onPress={() => router.push("/my-bids")}
+          variant="standard"
         >
-          <Gavel size={18} color={theme.colors.primary[600]} />
-          <Text style={styles.actionText}>My Bids</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+          <View style={styles.actionButtonContent}>
+            <Gavel size={18} color={neumorphicColors.primary[600]} />
+            <Text style={styles.actionText}>My Bids</Text>
+          </View>
+        </NeumorphicCard>
+        <NeumorphicCard
           style={styles.actionButton}
           onPress={() => router.push("/marketplace")}
+          variant="standard"
         >
-          <TrendingUp size={18} color={theme.colors.primary[600]} />
-          <Text style={styles.actionText}>Marketplace</Text>
-        </TouchableOpacity>
+          <View style={styles.actionButtonContent}>
+            <TrendingUp size={18} color={neumorphicColors.primary[600]} />
+            <Text style={styles.actionText}>Marketplace</Text>
+          </View>
+        </NeumorphicCard>
       </View>
 
       {/* Error */}
       {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchAuctions}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+          <NeumorphicButton
+            title="Retry"
+            variant="danger"
+            size="small"
+            onPress={fetchAuctions}
+          />
         </View>
       ) : null}
 
@@ -230,7 +255,7 @@ export default function AuctionsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[theme.colors.primary[600]]}
+              colors={[neumorphicColors.primary[600]]}
             />
           }
           ListEmptyComponent={
@@ -240,72 +265,56 @@ export default function AuctionsScreen() {
               <Text style={styles.emptyText}>
                 Check back later for new auctions
               </Text>
-              <TouchableOpacity
-                style={styles.browseButton}
+              <NeumorphicButton
+                title="Browse Marketplace"
+                variant="primary"
                 onPress={() => router.push("/marketplace")}
-              >
-                <Text style={styles.browseButtonText}>Browse Marketplace</Text>
-              </TouchableOpacity>
+              />
             </View>
           }
         />
       )}
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
+    color: neumorphicColors.text.primary,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
-  },
-  createButton: {
-    width: 44,
-    height: 44,
-    backgroundColor: theme.colors.primary[600],
-    borderRadius: theme.borderRadius.full,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadows.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   quickActions: {
     flexDirection: "row",
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   actionButton: {
     flex: 1,
+    paddingVertical: spacing.md,
+  },
+  actionButtonContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.background.primary,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.sm,
+    gap: spacing.sm,
   },
   actionText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.primary[600],
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.primary[600],
   },
   loadingContainer: {
     flex: 1,
@@ -313,49 +322,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorContainer: {
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.error + "10",
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing.lg,
+    backgroundColor: `${neumorphicColors.semantic.error}15`,
+    borderRadius: borderRadius.lg,
     alignItems: "center",
   },
   errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.sm,
+    color: neumorphicColors.semantic.error,
+    ...typography.body,
     textAlign: "center",
-  },
-  retryButton: {
-    marginTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.error,
-    borderRadius: theme.borderRadius.md,
-  },
-  retryText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: spacing.md,
   },
   listContent: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
     paddingTop: 0,
   },
   auctionCard: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.xl,
     overflow: "hidden",
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.md,
+    marginBottom: spacing.md,
+    padding: 0,
   },
   liveBadge: {
     position: "absolute",
-    top: theme.spacing.md,
-    right: theme.spacing.md,
+    top: spacing.md,
+    right: spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.error,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
+    backgroundColor: neumorphicColors.semantic.error,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
     zIndex: 10,
     gap: 4,
   },
@@ -363,12 +360,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.colors.text.inverse,
+    backgroundColor: neumorphicColors.text.inverse,
   },
   liveText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.inverse,
+    ...typography.caption,
+    fontWeight: "700",
+    color: neumorphicColors.text.inverse,
   },
   imageContainer: {
     height: 150,
@@ -376,122 +373,103 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: theme.colors.primary[100],
+    backgroundColor: neumorphicColors.primary[100],
     justifyContent: "center",
     alignItems: "center",
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
   },
   placeholderText: {
     fontSize: 56,
   },
   cardContent: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   cropType: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
   },
   quantity: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   location: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.xs,
   },
   priceContainer: {
-    backgroundColor: theme.colors.primary[50],
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.md,
+    backgroundColor: `${neumorphicColors.primary[500]}10`,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.md,
   },
   priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: theme.spacing.xs,
+    marginBottom: spacing.xs,
   },
   priceLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   currentPrice: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    ...typography.h4,
+    color: neumorphicColors.primary[600],
   },
   reservePrice: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
   },
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
   stat: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   statText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   endingSoon: {
-    backgroundColor: theme.colors.error + "15",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: `${neumorphicColors.semantic.error}15`,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
   },
   endingSoonText: {
-    color: theme.colors.error,
-    fontWeight: theme.typography.fontWeight.semibold,
+    color: neumorphicColors.semantic.error,
+    fontWeight: "600",
   },
   bidButton: {
-    backgroundColor: theme.colors.secondary[500],
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: "center",
-    marginTop: theme.spacing.md,
-  },
-  bidButtonText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    marginTop: spacing.md,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["3xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyIcon: {
     fontSize: 64,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    ...typography.h3,
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.sm,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
-    marginBottom: theme.spacing.lg,
-  },
-  browseButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-  },
-  browseButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: spacing.lg,
   },
 });

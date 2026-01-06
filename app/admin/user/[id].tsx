@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -34,11 +32,19 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react-native";
-import AnimatedCard from "../../../src/components/AnimatedCard";
-import AnimatedButton from "../../../src/components/AnimatedButton";
-import GlassCard from "../../../src/components/GlassCard";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+} from "../../../src/components/neumorphic";
 import BoostBadge from "../../../src/components/BoostBadge";
-import { theme } from "../../../src/theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../../../src/theme/neumorphic";
 import adminService, {
   UserWithDetails,
 } from "../../../src/services/adminService";
@@ -159,74 +165,79 @@ export default function AdminUserDetailScreen() {
   const getRoleColor = (role?: string) => {
     switch (role?.toLowerCase()) {
       case "admin":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "vendor":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "transporter":
-        return theme.colors.warning;
+        return neumorphicColors.secondary[600];
       default:
-        return theme.colors.info;
+        return neumorphicColors.semantic.info;
     }
   };
 
   const getStatusColor = (status?: string) => {
     switch (status?.toLowerCase()) {
       case "active":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "suspended":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "pending":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       default:
-        return theme.colors.text.tertiary;
+        return neumorphicColors.text.tertiary;
     }
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading user details...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail">
         <View style={styles.header}>
-          <TouchableOpacity
+          <NeumorphicIconButton
+            icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
             onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <ArrowLeft size={24} color={theme.colors.text.primary} />
-          </TouchableOpacity>
+            variant="default"
+          />
           <Text style={styles.title}>User Details</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.errorContainer}>
-          <User size={64} color={theme.colors.text.tertiary} strokeWidth={1} />
+          <User
+            size={64}
+            color={neumorphicColors.text.tertiary}
+            strokeWidth={1}
+          />
           <Text style={styles.errorTitle}>User Not Found</Text>
           <Text style={styles.errorSubtitle}>
             The user you're looking for doesn't exist or has been removed.
           </Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="detail">
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="default"
+        />
         <Text style={styles.title}>User Details</Text>
         <View style={styles.placeholder} />
       </View>
@@ -239,18 +250,18 @@ export default function AdminUserDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[theme.colors.primary[600]]}
-            tintColor={theme.colors.primary[600]}
+            colors={[neumorphicColors.primary[600]]}
+            tintColor={neumorphicColors.primary[600]}
           />
         }
       >
         {/* Profile Card */}
-        <GlassCard style={styles.profileCard}>
+        <NeumorphicCard variant="elevated" style={styles.profileCard}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
               <User
                 size={40}
-                color={theme.colors.primary[600]}
+                color={neumorphicColors.primary[600]}
                 strokeWidth={2}
               />
             </View>
@@ -301,30 +312,41 @@ export default function AdminUserDetailScreen() {
 
           {user.isVerified && (
             <View style={styles.verifiedBadge}>
-              <Award size={16} color={theme.colors.primary[600]} />
+              <Award size={16} color={neumorphicColors.primary[600]} />
               <Text style={styles.verifiedText}>Verified Account</Text>
             </View>
           )}
 
           {/* Quick Actions */}
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleCall}>
-              <Phone size={20} color={theme.colors.primary[600]} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={handleEmail}>
-              <Mail size={20} color={theme.colors.primary[600]} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={handleChat}>
-              <MessageSquare size={20} color={theme.colors.primary[600]} />
-            </TouchableOpacity>
+            <NeumorphicIconButton
+              icon={<Phone size={20} color={neumorphicColors.primary[600]} />}
+              onPress={handleCall}
+              variant="secondary"
+            />
+            <NeumorphicIconButton
+              icon={<Mail size={20} color={neumorphicColors.primary[600]} />}
+              onPress={handleEmail}
+              variant="secondary"
+            />
+            <NeumorphicIconButton
+              icon={
+                <MessageSquare
+                  size={20}
+                  color={neumorphicColors.primary[600]}
+                />
+              }
+              onPress={handleChat}
+              variant="secondary"
+            />
           </View>
-        </GlassCard>
+        </NeumorphicCard>
 
         {/* Contact Information */}
         <Text style={styles.sectionTitle}>Contact Information</Text>
-        <AnimatedCard style={styles.infoCard}>
+        <NeumorphicCard style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <Mail size={18} color={theme.colors.text.tertiary} />
+            <Mail size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Email</Text>
               <Text style={styles.infoValue}>{user.email}</Text>
@@ -332,7 +354,7 @@ export default function AdminUserDetailScreen() {
           </View>
 
           <View style={styles.infoRow}>
-            <Phone size={18} color={theme.colors.text.tertiary} />
+            <Phone size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Phone</Text>
               <Text style={styles.infoValue}>
@@ -342,7 +364,7 @@ export default function AdminUserDetailScreen() {
           </View>
 
           <View style={styles.infoRow}>
-            <MapPin size={18} color={theme.colors.text.tertiary} />
+            <MapPin size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Location</Text>
               <Text style={styles.infoValue}>
@@ -352,53 +374,53 @@ export default function AdminUserDetailScreen() {
           </View>
 
           <View style={styles.infoRow}>
-            <Calendar size={18} color={theme.colors.text.tertiary} />
+            <Calendar size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Joined</Text>
               <Text style={styles.infoValue}>{formatDate(user.createdAt)}</Text>
             </View>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Statistics */}
         <Text style={styles.sectionTitle}>Statistics</Text>
         <View style={styles.statsGrid}>
-          <AnimatedCard style={styles.statCard}>
-            <Star size={24} color={theme.colors.warning} />
+          <NeumorphicCard variant="stat" style={styles.statCard}>
+            <Star size={24} color={neumorphicColors.secondary[600]} />
             <Text style={styles.statValue}>
               {user.rating?.toFixed(1) || "0.0"}
             </Text>
             <Text style={styles.statLabel}>Rating</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard style={styles.statCard}>
-            <Package size={24} color={theme.colors.primary[600]} />
+          <NeumorphicCard variant="stat" style={styles.statCard}>
+            <Package size={24} color={neumorphicColors.primary[600]} />
             <Text style={styles.statValue}>{user.totalProducts || 0}</Text>
             <Text style={styles.statLabel}>Products</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard style={styles.statCard}>
-            <ShoppingCart size={24} color={theme.colors.info} />
+          <NeumorphicCard variant="stat" style={styles.statCard}>
+            <ShoppingCart size={24} color={neumorphicColors.semantic.info} />
             <Text style={styles.statValue}>{user.totalOrders || 0}</Text>
             <Text style={styles.statLabel}>Orders</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
 
-          <AnimatedCard style={styles.statCard}>
-            <DollarSign size={24} color={theme.colors.success} />
+          <NeumorphicCard variant="stat" style={styles.statCard}>
+            <DollarSign size={24} color={neumorphicColors.semantic.success} />
             <Text style={styles.statValue}>
               {formatCurrency(user.totalRevenue)}
             </Text>
             <Text style={styles.statLabel}>Revenue</Text>
-          </AnimatedCard>
+          </NeumorphicCard>
         </View>
 
         {/* Boost Information */}
         {user.boostTier && user.boostTier !== "none" && (
           <>
             <Text style={styles.sectionTitle}>Boost Status</Text>
-            <AnimatedCard style={styles.boostCard}>
+            <NeumorphicCard style={styles.boostCard}>
               <View style={styles.boostHeader}>
-                <Zap size={24} color={theme.colors.warning} />
+                <Zap size={24} color={neumorphicColors.secondary[600]} />
                 <View style={styles.boostInfo}>
                   <Text style={styles.boostTier}>
                     {user.boostTier.charAt(0).toUpperCase() +
@@ -412,21 +434,24 @@ export default function AdminUserDetailScreen() {
               </View>
               <View style={styles.boostStats}>
                 <View style={styles.boostStatItem}>
-                  <TrendingUp size={16} color={theme.colors.success} />
+                  <TrendingUp
+                    size={16}
+                    color={neumorphicColors.semantic.success}
+                  />
                   <Text style={styles.boostStatText}>
                     {user.boostMultiplier || 1}x visibility boost
                   </Text>
                 </View>
               </View>
-            </AnimatedCard>
+            </NeumorphicCard>
           </>
         )}
 
         {/* Recent Activity */}
         <Text style={styles.sectionTitle}>Recent Activity</Text>
-        <AnimatedCard style={styles.activityCard}>
+        <NeumorphicCard style={styles.activityCard}>
           <View style={styles.activityRow}>
-            <Clock size={18} color={theme.colors.text.tertiary} />
+            <Clock size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.activityContent}>
               <Text style={styles.activityLabel}>Last Active</Text>
               <Text style={styles.activityValue}>
@@ -436,7 +461,7 @@ export default function AdminUserDetailScreen() {
           </View>
 
           <View style={styles.activityRow}>
-            <ShoppingCart size={18} color={theme.colors.text.tertiary} />
+            <ShoppingCart size={18} color={neumorphicColors.text.tertiary} />
             <View style={styles.activityContent}>
               <Text style={styles.activityLabel}>Last Order</Text>
               <Text style={styles.activityValue}>
@@ -446,68 +471,65 @@ export default function AdminUserDetailScreen() {
               </Text>
             </View>
           </View>
-        </AnimatedCard>
+        </NeumorphicCard>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           {user.status === "active" ? (
-            <AnimatedButton
+            <NeumorphicButton
               title="Suspend User"
               variant="danger"
-              size="lg"
+              size="large"
               loading={actionLoading}
               onPress={() => handleStatusChange("suspended")}
-            >
-              <Ban size={20} color={theme.colors.text.inverse} />
-            </AnimatedButton>
+              icon={<Ban size={20} color={neumorphicColors.text.inverse} />}
+              fullWidth
+            />
           ) : (
-            <AnimatedButton
+            <NeumorphicButton
               title="Activate User"
               variant="primary"
-              size="lg"
+              size="large"
               loading={actionLoading}
               onPress={() => handleStatusChange("active")}
-            >
-              <UserCheck size={20} color={theme.colors.text.inverse} />
-            </AnimatedButton>
+              icon={
+                <UserCheck size={20} color={neumorphicColors.text.inverse} />
+              }
+              fullWidth
+            />
           )}
         </View>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-  },
-  backButton: {
-    padding: theme.spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: neumorphicColors.base.background,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h4,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   loadingContainer: {
     flex: 1,
@@ -515,41 +537,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   errorTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
+    ...typography.h4,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   errorSubtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
   },
   profileCard: {
     alignItems: "center",
-    padding: theme.spacing.xl,
+    padding: spacing.xl,
   },
   avatarContainer: {
     position: "relative",
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.lg,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: theme.colors.primary[50],
+    backgroundColor: neumorphicColors.primary[50],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -559,177 +579,155 @@ const styles = StyleSheet.create({
     right: -4,
   },
   userName: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    ...typography.h3,
+    marginBottom: spacing.md,
   },
   badges: {
     flexDirection: "row",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   roleBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    gap: theme.spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
   },
   roleText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.caption,
+    fontWeight: "700",
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    gap: theme.spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
   },
   statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.caption,
+    fontWeight: "700",
   },
   verifiedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   verifiedText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary[600],
-    fontWeight: theme.typography.fontWeight.medium,
+    ...typography.bodySmall,
+    color: neumorphicColors.primary[600],
+    fontWeight: "500",
   },
   quickActions: {
     flexDirection: "row",
-    gap: theme.spacing.md,
-  },
-  actionButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.primary[50],
-    justifyContent: "center",
-    alignItems: "center",
+    gap: spacing.md,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
+    ...typography.h5,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
   infoCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.pressed,
   },
   infoContent: {
     flex: 1,
   },
   infoLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
     marginBottom: 2,
   },
   infoValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.spacing.md,
+    gap: spacing.md,
   },
   statCard: {
     width: "47%",
     alignItems: "center",
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   statValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.sm,
+    ...typography.h4,
+    marginTop: spacing.sm,
   },
   statLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.bodySmall,
+    marginTop: spacing.xs,
   },
   boostCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   boostHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   boostInfo: {
     flex: 1,
   },
   boostTier: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.warning,
+    ...typography.h5,
+    color: neumorphicColors.secondary[600],
   },
   boostExpiry: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
     marginTop: 2,
   },
   boostStats: {
-    paddingTop: theme.spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.pressed,
   },
   boostStatItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   boostStatText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    ...typography.bodySmall,
   },
   activityCard: {
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
   },
   activityRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    borderBottomColor: neumorphicColors.base.pressed,
   },
   activityContent: {
     flex: 1,
   },
   activityLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
     marginBottom: 2,
   },
   activityValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
+    ...typography.body,
   },
   actionButtons: {
-    marginTop: theme.spacing.xl,
+    marginTop: spacing.xl,
   },
   bottomPadding: {
-    height: theme.spacing["2xl"],
+    height: spacing["2xl"],
   },
 });

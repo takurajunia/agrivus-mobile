@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -17,11 +15,19 @@ import {
   ChevronRight,
   DollarSign,
 } from "lucide-react-native";
-import { theme } from "../theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+} from "../theme/neumorphic";
 import { auctionsService } from "../services/auctionsService";
 import type { Bid } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AnimatedCard from "../components/AnimatedCard";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicBadge from "../components/neumorphic/NeumorphicBadge";
 
 interface BidWithAuction extends Bid {
   auction?: {
@@ -85,15 +91,30 @@ export default function MyBidsScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "won":
-        return theme.colors.success;
+        return neumorphicColors.semantic.success;
       case "winning":
-        return theme.colors.primary[600];
+        return neumorphicColors.primary[600];
       case "lost":
-        return theme.colors.error;
+        return neumorphicColors.semantic.error;
       case "outbid":
-        return theme.colors.warning;
+        return neumorphicColors.semantic.warning;
       default:
-        return theme.colors.text.secondary;
+        return neumorphicColors.text.secondary;
+    }
+  };
+
+  const getStatusVariant = (status: string): "success" | "warning" | "error" | "info" | "neutral" | "primary" => {
+    switch (status) {
+      case "won":
+        return "success";
+      case "winning":
+        return "primary";
+      case "lost":
+        return "error";
+      case "outbid":
+        return "warning";
+      default:
+        return "neutral";
     }
   };
 
@@ -159,16 +180,16 @@ export default function MyBidsScreen() {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="list">
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="list">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>My Bids</Text>
@@ -185,23 +206,14 @@ export default function MyBidsScreen() {
         contentContainerStyle={styles.filters}
       >
         {(["all", "winning", "outbid", "ended"] as const).map((f) => (
-          <TouchableOpacity
+          <NeumorphicButton
             key={f}
-            style={[
-              styles.filterButton,
-              filter === f && styles.filterButtonActive,
-            ]}
+            title={f.charAt(0).toUpperCase() + f.slice(1)}
+            variant={filter === f ? "primary" : "secondary"}
+            size="small"
             onPress={() => setFilter(f)}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                filter === f && styles.filterTextActive,
-              ]}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
-            </Text>
-          </TouchableOpacity>
+            style={styles.filterButton}
+          />
         ))}
       </ScrollView>
 
@@ -209,9 +221,13 @@ export default function MyBidsScreen() {
       {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchBids}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+          <NeumorphicButton
+            title="Retry"
+            variant="danger"
+            size="small"
+            onPress={fetchBids}
+            style={styles.retryButton}
+          />
         </View>
       ) : null}
 
@@ -223,25 +239,25 @@ export default function MyBidsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.colors.primary[600]]}
+            colors={[neumorphicColors.primary[600]]}
           />
         }
       >
         {filteredBids.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Gavel size={64} color={theme.colors.text.tertiary} />
+            <Gavel size={64} color={neumorphicColors.text.tertiary} />
             <Text style={styles.emptyTitle}>No bids found</Text>
             <Text style={styles.emptyText}>
               {filter === "all"
                 ? "Start bidding on auctions to see your bids here"
                 : `No ${filter} bids at the moment`}
             </Text>
-            <TouchableOpacity
-              style={styles.browseButton}
+            <NeumorphicButton
+              title="Browse Auctions"
+              variant="primary"
               onPress={() => router.push("/auctions")}
-            >
-              <Text style={styles.browseButtonText}>Browse Auctions</Text>
-            </TouchableOpacity>
+              style={styles.browseButton}
+            />
           </View>
         ) : (
           Object.entries(groupedBids).map(([auctionId, auctionBids]) => {
@@ -249,10 +265,12 @@ export default function MyBidsScreen() {
             const status = getBidStatus(latestBid);
             const StatusIcon = getStatusIcon(status);
             const statusColor = getStatusColor(status);
+            const statusVariant = getStatusVariant(status);
 
             return (
-              <AnimatedCard
+              <NeumorphicCard
                 key={auctionId}
+                variant="elevated"
                 style={styles.bidCard}
                 onPress={() => router.push(`/auction/${auctionId}`)}
               >
@@ -266,22 +284,17 @@ export default function MyBidsScreen() {
                       {latestBid.auction?.listing?.unit || "kg"}
                     </Text>
                   </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: statusColor + "20" },
-                    ]}
-                  >
-                    <StatusIcon size={14} color={statusColor} />
-                    <Text style={[styles.statusText, { color: statusColor }]}>
-                      {status.toUpperCase()}
-                    </Text>
-                  </View>
+                  <NeumorphicBadge
+                    label={status.toUpperCase()}
+                    variant={statusVariant}
+                    size="small"
+                    icon={<StatusIcon size={12} color={statusColor} />}
+                  />
                 </View>
 
                 <View style={styles.bidInfo}>
                   <View style={styles.bidDetail}>
-                    <DollarSign size={16} color={theme.colors.primary[600]} />
+                    <DollarSign size={16} color={neumorphicColors.primary[600]} />
                     <View>
                       <Text style={styles.bidLabel}>Your Bid</Text>
                       <Text style={styles.bidValue}>
@@ -290,14 +303,14 @@ export default function MyBidsScreen() {
                     </View>
                   </View>
                   <View style={styles.bidDetail}>
-                    <TrendingUp size={16} color={theme.colors.text.secondary} />
+                    <TrendingUp size={16} color={neumorphicColors.text.secondary} />
                     <View>
                       <Text style={styles.bidLabel}>Current Price</Text>
                       <Text style={styles.bidValue}>
                         $
                         {parseFloat(
                           latestBid.auction?.currentPrice || "0"
-                        ).toLocaleString()}
+                        ).toLocaleString()}}
                       </Text>
                     </View>
                   </View>
@@ -305,7 +318,7 @@ export default function MyBidsScreen() {
 
                 <View style={styles.cardFooter}>
                   <View style={styles.timeInfo}>
-                    <Clock size={14} color={theme.colors.text.tertiary} />
+                    <Clock size={14} color={neumorphicColors.text.tertiary} />
                     <Text style={styles.timeText}>
                       {latestBid.auction?.endTime
                         ? calculateTimeRemaining(latestBid.auction.endTime)
@@ -314,7 +327,7 @@ export default function MyBidsScreen() {
                   </View>
                   <View style={styles.viewAction}>
                     <Text style={styles.viewText}>View Auction</Text>
-                    <ChevronRight size={16} color={theme.colors.primary[600]} />
+                    <ChevronRight size={16} color={neumorphicColors.primary[600]} />
                   </View>
                 </View>
 
@@ -336,133 +349,85 @@ export default function MyBidsScreen() {
                     ))}
                   </View>
                 )}
-              </AnimatedCard>
+              </NeumorphicCard>
             );
           })
         )}
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.secondary,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   header: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
-    fontSize: theme.typography.fontSize["2xl"],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h2,
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
+    ...typography.bodySmall,
+    marginTop: spacing.xs,
   },
   filtersContainer: {
     maxHeight: 50,
   },
   filters: {
     flexDirection: "row",
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   filterButton: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.primary,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  filterButtonActive: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
-  },
-  filterText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-  },
-  filterTextActive: {
-    color: theme.colors.text.inverse,
+    marginRight: spacing.xs,
   },
   errorContainer: {
-    margin: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.error + "10",
-    borderRadius: theme.borderRadius.lg,
+    margin: spacing.lg,
+    padding: spacing.lg,
+    backgroundColor: neumorphicColors.badge.error.bg,
+    borderRadius: borderRadius.lg,
     alignItems: "center",
   },
   errorText: {
-    color: theme.colors.error,
-    fontSize: theme.typography.fontSize.sm,
+    color: neumorphicColors.semantic.error,
+    ...typography.bodySmall,
     textAlign: "center",
   },
   retryButton: {
-    marginTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.error,
-    borderRadius: theme.borderRadius.md,
-  },
-  retryText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.medium,
+    marginTop: spacing.md,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["3xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+    ...typography.h4,
+    marginTop: spacing.lg,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.sm,
+    ...typography.bodySmall,
+    marginTop: spacing.sm,
     textAlign: "center",
   },
   browseButton: {
-    backgroundColor: theme.colors.primary[600],
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    marginTop: theme.spacing.xl,
-  },
-  browseButtonText: {
-    color: theme.colors.text.inverse,
-    fontWeight: theme.typography.fontWeight.semibold,
-    fontSize: theme.typography.fontSize.md,
+    marginTop: spacing.xl,
   },
   bidCard: {
-    backgroundColor: theme.colors.background.primary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.sm,
+    marginBottom: spacing.md,
   },
   cardHeader: {
     flexDirection: "row",
@@ -471,63 +436,46 @@ const styles = StyleSheet.create({
   },
   auctionInfo: {},
   cropType: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
   },
   quantity: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    gap: 4,
-  },
-  statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    ...typography.bodySmall,
+    marginTop: spacing.xs,
   },
   bidInfo: {
     flexDirection: "row",
-    marginTop: theme.spacing.lg,
-    gap: theme.spacing.xl,
+    marginTop: spacing.lg,
+    gap: spacing.xl,
   },
   bidDetail: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.sm,
+    gap: spacing.sm,
   },
   bidLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
   },
   bidValue: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h6,
+    fontWeight: "600",
   },
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.pressed,
   },
   timeInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.xs,
+    gap: spacing.xs,
   },
   timeText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
   },
   viewAction: {
     flexDirection: "row",
@@ -535,36 +483,35 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   viewText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.primary[600],
+    ...typography.bodySmall,
+    fontWeight: "500",
+    color: neumorphicColors.primary[600],
   },
   bidHistory: {
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: neumorphicColors.base.pressed,
   },
   historyTitle: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
+    ...typography.bodySmall,
+    fontWeight: "500",
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.sm,
   },
   historyItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: spacing.xs,
   },
   historyAmount: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.primary,
   },
   historyTime: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    ...typography.caption,
   },
   bottomPadding: {
-    height: theme.spacing["3xl"],
+    height: spacing["2xl"],
   },
 });

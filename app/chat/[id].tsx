@@ -4,10 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   ActivityIndicator,
-  TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -20,7 +17,18 @@ import {
   CheckCheck,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { theme } from "../../src/theme/tokens";
+import {
+  neumorphicColors,
+  typography,
+  spacing,
+  borderRadius,
+  getNeumorphicShadow,
+} from "../../src/theme/neumorphic";
+import { NeumorphicScreen } from "../../src/components/neumorphic/NeumorphicScreen";
+import { NeumorphicCard } from "../../src/components/neumorphic/NeumorphicCard";
+import { NeumorphicIconButton } from "../../src/components/neumorphic/NeumorphicIconButton";
+import { NeumorphicInput } from "../../src/components/neumorphic/NeumorphicInput";
+import { NeumorphicAvatar } from "../../src/components/neumorphic/NeumorphicAvatar";
 import chatService, {
   MessageWithSender,
   ConversationWithUser,
@@ -138,34 +146,38 @@ export default function ChatConversationScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <NeumorphicScreen variant="detail" showLeaves={false}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <ActivityIndicator
+            size="large"
+            color={neumorphicColors.primary[600]}
+          />
           <Text style={styles.loadingText}>Loading messages...</Text>
         </View>
-      </SafeAreaView>
+      </NeumorphicScreen>
     );
   }
 
   const otherUserName = messages[0]?.sender?.fullName || "Chat";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NeumorphicScreen variant="detail" showLeaves={false}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
+      <NeumorphicCard style={styles.header} variant="standard" animated={false}>
+        <NeumorphicIconButton
+          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+          variant="ghost"
+          size="medium"
+        />
 
         <View style={styles.headerInfo}>
-          <View style={styles.avatarSmall}>
-            <Text style={styles.avatarTextSmall}>
-              {getInitials(otherUserName)}
-            </Text>
-          </View>
+          <NeumorphicAvatar
+            name={otherUserName}
+            size="small"
+            status="online"
+            showStatus
+          />
           <View style={styles.headerText}>
             <Text style={styles.headerName}>{otherUserName}</Text>
             <Text style={styles.headerStatus}>Online</Text>
@@ -173,14 +185,22 @@ export default function ChatConversationScreen() {
         </View>
 
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton}>
-            <Phone size={20} color={theme.colors.text.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
-            <MoreVertical size={20} color={theme.colors.text.primary} />
-          </TouchableOpacity>
+          <NeumorphicIconButton
+            icon={<Phone size={20} color={neumorphicColors.text.primary} />}
+            onPress={() => {}}
+            variant="ghost"
+            size="small"
+          />
+          <NeumorphicIconButton
+            icon={
+              <MoreVertical size={20} color={neumorphicColors.text.primary} />
+            }
+            onPress={() => {}}
+            variant="ghost"
+            size="small"
+          />
         </View>
-      </View>
+      </NeumorphicCard>
 
       {/* Messages */}
       <KeyboardAvoidingView
@@ -223,11 +243,11 @@ export default function ChatConversationScreen() {
                     ]}
                   >
                     {!isMine && showAvatar && (
-                      <View style={styles.messageAvatar}>
-                        <Text style={styles.messageAvatarText}>
-                          {getInitials(msg.sender.fullName)}
-                        </Text>
-                      </View>
+                      <NeumorphicAvatar
+                        name={msg.sender.fullName}
+                        size="small"
+                        style={styles.messageAvatar}
+                      />
                     )}
                     {!isMine && !showAvatar && (
                       <View style={styles.avatarPlaceholder} />
@@ -266,12 +286,12 @@ export default function ChatConversationScreen() {
                           (msg.message.isRead ? (
                             <CheckCheck
                               size={14}
-                              color={theme.colors.primary[300]}
+                              color={neumorphicColors.primary[300]}
                             />
                           ) : (
                             <Check
                               size={14}
-                              color={theme.colors.text.inverse}
+                              color={neumorphicColors.text.inverse}
                             />
                           ))}
                       </View>
@@ -291,43 +311,46 @@ export default function ChatConversationScreen() {
         </ScrollView>
 
         {/* Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
+        <NeumorphicCard
+          style={styles.inputContainer}
+          variant="standard"
+          animated={false}
+        >
+          <NeumorphicInput
             style={styles.textInput}
             placeholder="Type a message..."
-            placeholderTextColor={theme.colors.text.tertiary}
             value={inputText}
             onChangeText={setInputText}
             multiline
             maxLength={1000}
+            variant="default"
           />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!inputText.trim() || sending) && styles.sendButtonDisabled,
-            ]}
+          <NeumorphicIconButton
+            icon={
+              sending ? (
+                <ActivityIndicator
+                  size="small"
+                  color={neumorphicColors.text.inverse}
+                />
+              ) : (
+                <Send size={20} color={neumorphicColors.text.inverse} />
+              )
+            }
             onPress={handleSendMessage}
             disabled={!inputText.trim() || sending}
-          >
-            {sending ? (
-              <ActivityIndicator
-                size="small"
-                color={theme.colors.text.inverse}
-              />
-            ) : (
-              <Send size={20} color={theme.colors.text.inverse} />
-            )}
-          </TouchableOpacity>
-        </View>
+            variant="primary"
+            size="medium"
+          />
+        </NeumorphicCard>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </NeumorphicScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.secondary,
+    backgroundColor: neumorphicColors.base.background,
   },
   loadingContainer: {
     flex: 1,
@@ -335,60 +358,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    marginTop: spacing.md,
+    ...typography.body,
+    color: neumorphicColors.text.secondary,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
-  },
-  backButton: {
-    padding: theme.spacing.sm,
-    marginRight: theme.spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    borderRadius: borderRadius.lg,
   },
   headerInfo: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-  },
-  avatarSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.primary[100],
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: theme.spacing.sm,
-  },
-  avatarTextSmall: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    marginLeft: spacing.sm,
   },
   headerText: {
     flex: 1,
+    marginLeft: spacing.sm,
   },
   headerName: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    ...typography.h5,
+    color: neumorphicColors.text.primary,
   },
   headerStatus: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.success,
+    ...typography.caption,
+    color: neumorphicColors.semantic.success,
   },
   headerActions: {
     flexDirection: "row",
-  },
-  headerButton: {
-    padding: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
+    gap: spacing.xs,
   },
   keyboardView: {
     flex: 1,
@@ -397,24 +400,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messagesContent: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   dateHeader: {
     alignItems: "center",
-    marginVertical: theme.spacing.md,
+    marginVertical: spacing.md,
   },
   dateHeaderText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    backgroundColor: theme.colors.background.tertiary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    backgroundColor: neumorphicColors.base.input,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
   },
   messageRow: {
     flexDirection: "row",
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
     alignItems: "flex-end",
   },
   myMessageRow: {
@@ -424,110 +427,80 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   messageAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.primary[100],
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: theme.spacing.sm,
-  },
-  messageAvatarText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary[600],
+    marginRight: spacing.sm,
   },
   avatarPlaceholder: {
-    width: 32,
-    marginRight: theme.spacing.sm,
+    width: 40,
+    marginRight: spacing.sm,
   },
   messageBubble: {
     maxWidth: "75%",
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.xl,
   },
   myMessageBubble: {
-    backgroundColor: theme.colors.primary[600],
-    borderBottomRightRadius: theme.borderRadius.sm,
+    backgroundColor: neumorphicColors.primary[600],
+    borderBottomRightRadius: borderRadius.sm,
   },
   theirMessageBubble: {
-    backgroundColor: theme.colors.background.primary,
-    borderBottomLeftRadius: theme.borderRadius.sm,
-    ...theme.shadows.sm,
+    backgroundColor: neumorphicColors.base.card,
+    borderBottomLeftRadius: borderRadius.sm,
+    ...getNeumorphicShadow(2),
   },
   messageText: {
-    fontSize: theme.typography.fontSize.md,
-    lineHeight: theme.typography.lineHeight.relaxed,
+    ...typography.body,
   },
   myMessageText: {
-    color: theme.colors.text.inverse,
+    color: neumorphicColors.text.inverse,
   },
   theirMessageText: {
-    color: theme.colors.text.primary,
+    color: neumorphicColors.text.primary,
   },
   messageFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: theme.spacing.xs,
-    gap: theme.spacing.xs,
+    marginTop: spacing.xs,
+    gap: spacing.xs,
   },
   messageTime: {
-    fontSize: theme.typography.fontSize.xs,
+    ...typography.caption,
   },
   myMessageTime: {
-    color: theme.colors.primary[200],
+    color: neumorphicColors.primary[200],
   },
   theirMessageTime: {
-    color: theme.colors.text.tertiary,
+    color: neumorphicColors.text.tertiary,
   },
   emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: theme.spacing["4xl"],
+    paddingVertical: spacing["2xl"],
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    ...typography.h5,
+    color: neumorphicColors.text.secondary,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing.xs,
+    ...typography.bodySmall,
+    color: neumorphicColors.text.tertiary,
+    marginTop: spacing.xs,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.primary,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
   },
   textInput: {
     flex: 1,
     minHeight: 44,
     maxHeight: 120,
-    backgroundColor: theme.colors.background.secondary,
-    borderRadius: theme.borderRadius.xl,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    marginRight: theme.spacing.sm,
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.primary[600],
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.primary[300],
   },
 });
