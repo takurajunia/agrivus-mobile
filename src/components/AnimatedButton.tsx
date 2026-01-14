@@ -111,13 +111,15 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
           backgroundColor: disabled
             ? theme.colors.neutral[400]
             : theme.colors.error,
-          ...(disabled ? {} : {
-            shadowColor: theme.colors.error,
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.3,
-            shadowRadius: 12,
-            elevation: 6,
-          }),
+          ...(disabled
+            ? {}
+            : {
+                shadowColor: theme.colors.error,
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 6,
+              }),
         };
       default:
         return baseStyle;
@@ -212,9 +214,12 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       >
         {loading ? (
           <ActivityIndicator
-            color={variant === "primary" || variant === "secondary" || variant === "danger"
-              ? theme.colors.text.inverse
-              : theme.colors.primary[600]
+            color={
+              variant === "primary" ||
+              variant === "secondary" ||
+              variant === "danger"
+                ? theme.colors.text.inverse
+                : theme.colors.primary[600]
             }
             size="small"
           />

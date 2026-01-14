@@ -44,7 +44,23 @@ export default function ChatScreen() {
     try {
       const response = await chatService.getConversations();
       if (response.success && response.data) {
-        setConversations(response.data.conversations);
+        // Handle both formats: array directly or nested in conversations property
+        const conversationsData = Array.isArray(response.data)
+          ? response.data
+          : response.data.conversations || [];
+
+        // Ensure each conversation has the expected structure
+        const normalizedConversations = conversationsData.map((conv: any) => ({
+          conversation: conv.conversation || conv,
+          otherUser: conv.otherUser || {
+            id: "",
+            fullName: "Unknown User",
+            email: "",
+          },
+          unreadCount: conv.unreadCount || 0,
+        }));
+
+        setConversations(normalizedConversations);
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -81,7 +97,8 @@ export default function ChatScreen() {
     return date.toLocaleDateString();
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined | null) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -94,8 +111,11 @@ export default function ChatScreen() {
     router.push(`/chat/${conversation.conversation.id}`);
   };
 
-  const filteredConversations = conversations.filter((conv) =>
-    conv.otherUser.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = conversations.filter(
+    (conv) =>
+      conv.otherUser?.fullName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ?? false
   );
 
   if (loading) {
@@ -147,7 +167,7 @@ export default function ChatScreen() {
         {filteredConversations.length > 0 ? (
           filteredConversations.map((conv, index) => (
             <NeumorphicCard
-              key={conv.conversation.id}
+              key={conv.conversation?.id || index}
               style={styles.conversationCard}
               animationDelay={index * 50}
               onPress={() => handleConversationPress(conv)}
@@ -155,32 +175,32 @@ export default function ChatScreen() {
             >
               <View style={styles.cardContent}>
                 <NeumorphicAvatar
-                  name={conv.otherUser.fullName}
+                  name={conv.otherUser?.fullName || "Unknown"}
                   size="large"
-                  status={conv.unreadCount > 0 ? "online" : undefined}
-                  showStatus={conv.unreadCount > 0}
+                  status={(conv.unreadCount || 0) > 0 ? "online" : undefined}
+                  showStatus={(conv.unreadCount || 0) > 0}
                 />
 
                 <View style={styles.conversationContent}>
                   <View style={styles.conversationHeader}>
                     <Text style={styles.conversationName}>
-                      {conv.otherUser.fullName}
+                      {conv.otherUser?.fullName || "Unknown User"}
                     </Text>
                     <Text style={styles.time}>
-                      {formatTime(conv.conversation.lastMessageAt)}
+                      {formatTime(conv.conversation?.lastMessageAt)}
                     </Text>
                   </View>
                   <View style={styles.messageRow}>
                     <Text
                       style={[
                         styles.lastMessage,
-                        conv.unreadCount > 0 && styles.unreadMessage,
+                        (conv.unreadCount || 0) > 0 && styles.unreadMessage,
                       ]}
                       numberOfLines={1}
                     >
-                      {conv.conversation.lastMessageText || "No messages yet"}
+                      {conv.conversation?.lastMessageText || "No messages yet"}
                     </Text>
-                    {conv.unreadCount > 0 && (
+                    {(conv.unreadCount || 0) > 0 && (
                       <View style={styles.unreadBadge}>
                         <Text style={styles.unreadCount}>
                           {conv.unreadCount}

@@ -46,8 +46,8 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const handleLogout = () => {
+    // Just call logout - AuthNavigator will handle the redirect
     logout();
-    router.replace("/");
   };
 
   // Build menu sections dynamically based on user role

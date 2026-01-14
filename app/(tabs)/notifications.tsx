@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import {
   Bell,
   Package,
@@ -38,6 +39,7 @@ import notificationsService from "../../src/services/notificationsService";
 import type { Notification } from "../../src/types";
 
 export default function NotificationsScreen() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,8 +98,57 @@ export default function NotificationsScreen() {
         console.error("Error marking notification as read:", error);
       }
     }
+
     // Navigate based on notification type and data
-    // This can be expanded to navigate to relevant screens
+    const notificationData = notification.data;
+
+    switch (notification.type) {
+      case "order":
+      case "order_placed":
+      case "order_received":
+      case "order_update":
+      case "order_delivered":
+        if (notificationData?.orderId) {
+          router.push(`/order/${notificationData.orderId}`);
+        } else {
+          // Go to orders list if no specific order ID
+          router.push("/(tabs)/orders");
+        }
+        break;
+      case "bid":
+      case "auction":
+      case "auction_won":
+      case "auction_outbid":
+        if (notificationData?.auctionId) {
+          router.push(`/auction/${notificationData.auctionId}`);
+        } else {
+          router.push("/(tabs)/auctions");
+        }
+        break;
+      case "message":
+      case "chat":
+        if (notificationData?.conversationId) {
+          router.push(`/chat/${notificationData.conversationId}`);
+        } else {
+          router.push("/(tabs)/chat");
+        }
+        break;
+      case "payment":
+      case "payment_received":
+      case "wallet":
+        router.push("/(tabs)/wallet");
+        break;
+      case "listing":
+        if (notificationData?.listingId) {
+          router.push(`/listing/${notificationData.listingId}`);
+        } else {
+          router.push("/(tabs)/marketplace");
+        }
+        break;
+      default:
+        // For other notification types, just mark as read
+        break;
+    }
   };
 
   const handleDeleteNotification = async (notificationId: string) => {

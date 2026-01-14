@@ -1,6 +1,4 @@
 import { Tabs } from "expo-router";
-import { useEffect } from "react";
-import { useRouter } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { Home, ShoppingBag, Store, Wallet } from "lucide-react-native";
 import {
@@ -9,23 +7,33 @@ import {
   borderRadius as neumorphicBorderRadius,
 } from "../../src/theme/neumorphic";
 import LoadingSpinner from "../../src/components/LoadingSpinner";
+import { View, Text, StyleSheet, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const { isAuthenticated, loading } = useAuth();
-  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated, loading, router]);
+  // Calculate bottom padding - ensure tabs don't fall under navigation buttons
+  const bottomPadding = Math.max(
+    insets.bottom,
+    Platform.OS === "android" ? 10 : 0
+  );
 
+  // Show loading while auth state is being determined
   if (loading) {
     return <LoadingSpinner />;
   }
 
+  // If not authenticated, show nothing - the root layout will handle navigation
+  // This prevents infinite redirect loops
   if (!isAuthenticated) {
-    return null; // Will redirect in useEffect
+    return (
+      <View style={styles.container}>
+        <LoadingSpinner />
+        <Text style={styles.text}>Redirecting...</Text>
+      </View>
+    );
   }
 
   return (
@@ -38,8 +46,8 @@ export default function TabLayout() {
           backgroundColor: neumorphicColors.base.card,
           borderTopWidth: 0,
           paddingTop: spacing.sm,
-          paddingBottom: spacing.md,
-          height: 70,
+          paddingBottom: bottomPadding + spacing.sm,
+          height: 60 + bottomPadding,
           // Neumorphic shadow
           shadowColor: neumorphicColors.base.shadowDark,
           shadowOffset: { width: 0, height: -4 },
@@ -132,3 +140,17 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: neumorphicColors.base.background,
+  },
+  text: {
+    marginTop: 16,
+    color: neumorphicColors.text.secondary,
+    fontSize: 14,
+  },
+});

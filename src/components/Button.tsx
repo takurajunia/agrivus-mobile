@@ -176,7 +176,9 @@ const Button: React.FC<ButtonProps> = ({
       case "ghost":
         return {
           ...baseTextStyle,
-          color: disabled ? theme.colors.neutral[400] : theme.colors.primary[600],
+          color: disabled
+            ? theme.colors.neutral[400]
+            : theme.colors.primary[600],
         };
       default:
         return baseTextStyle;
@@ -194,9 +196,10 @@ const Button: React.FC<ButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" || variant === "secondary"
-            ? theme.colors.text.inverse
-            : theme.colors.primary[600]
+          color={
+            variant === "primary" || variant === "secondary"
+              ? theme.colors.text.inverse
+              : theme.colors.primary[600]
           }
           size="small"
         />

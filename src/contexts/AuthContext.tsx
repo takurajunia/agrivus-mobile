@@ -12,12 +12,7 @@ import type {
   RegisterData,
   AuthResponse,
 } from "../types";
-import {
-  login,
-  register,
-  fetchUser,
-  logout as apiLogout,
-} from "../services/authService";
+import { login, register, fetchUser } from "../services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -63,19 +58,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const handleLogin = async (credentials: LoginCredentials) => {
     try {
+      console.log("Starting login...");
       const response = await login(credentials);
+      console.log("Login response:", JSON.stringify(response, null, 2));
 
       if (response.success) {
         const { user: userData, token: userToken } = response.data;
+        console.log("Login successful, setting state...");
+        console.log("User data:", userData);
+        console.log("Token received:", userToken ? "yes" : "no");
 
         setUser(userData);
         setToken(userToken);
 
         await AsyncStorage.setItem("token", userToken);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
+        console.log("Auth data saved to AsyncStorage");
+      } else {
+        console.log("Login response success was false");
+        throw new Error(response.message || "Login failed");
       }
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Login failed");
+      console.log("Login error:", error);
+      throw new Error(
+        error.response?.data?.message || error.message || "Login failed"
+      );
     }
   };
 
@@ -105,16 +112,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const handleLogout = async () => {
-    try {
-      await apiLogout();
-    } catch (error) {
-      // Ignore logout API errors
-    }
-
+    // Clear local state first to prevent navigation issues
     setUser(null);
     setToken(null);
+
+    // Clear stored auth data
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("user");
+
+    // Note: Backend doesn't have a logout endpoint, so we just clear locally
   };
 
   const value = {

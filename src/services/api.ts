@@ -1,12 +1,9 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// For development, you can use your local IP address
-// Run `ipconfig` (Windows) or `ifconfig` (Mac/Linux) to find your IP
-// For production, use your deployed backend URL
-const API_BASE_URL = __DEV__
-  ? "http://192.168.70.41:5000" // Replace with your computer's IP address
-  : "https://your-production-api.com"; // Replace with production URL
+// Use the deployed Railway backend for both dev and production
+// This ensures consistent behavior and no need to run local backend
+const API_BASE_URL = "https://agrivus-backend-production.up.railway.app";
 
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
@@ -23,6 +20,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      hasToken: !!token,
+    });
     return config;
   },
   (error) => {
@@ -32,7 +32,14 @@ api.interceptors.request.use(
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(
+      `API Response: ${response.config.method?.toUpperCase()} ${
+        response.config.url
+      } - ${response.status}`
+    );
+    return response;
+  },
   async (error) => {
     // Log error details for debugging
     if (__DEV__) {
@@ -47,6 +54,7 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       // Token expired or invalid
+      console.log("401 received - clearing auth data");
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
     }

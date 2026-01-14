@@ -21,23 +21,26 @@ const StatCard: React.FC<StatCardProps> = ({
   style,
 }) => (
   <View style={[styles.card, style]}>
-    {icon && (
-      <View style={styles.iconContainer}>
-        {icon}
-      </View>
-    )}
+    {icon && <View style={styles.iconContainer}>{icon}</View>}
     <Text style={styles.value}>{value}</Text>
     <Text style={styles.label}>{label}</Text>
     {trend && (
-      <View style={[
-        styles.trendContainer,
-        trend.isPositive ? styles.trendPositive : styles.trendNegative
-      ]}>
-        <Text style={[
-          styles.trendText,
-          trend.isPositive ? styles.trendTextPositive : styles.trendTextNegative
-        ]}>
-          {trend.isPositive ? "+" : ""}{trend.value}%
+      <View
+        style={[
+          styles.trendContainer,
+          trend.isPositive ? styles.trendPositive : styles.trendNegative,
+        ]}
+      >
+        <Text
+          style={[
+            styles.trendText,
+            trend.isPositive
+              ? styles.trendTextPositive
+              : styles.trendTextNegative,
+          ]}
+        >
+          {trend.isPositive ? "+" : ""}
+          {trend.value}%
         </Text>
       </View>
     )}

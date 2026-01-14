@@ -6,14 +6,8 @@
  */
 
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  ViewStyle,
-  StatusBar,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, ViewStyle, StatusBar, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Leaf } from "lucide-react-native";
 import {

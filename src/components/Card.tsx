@@ -1,5 +1,11 @@
 import React, { ReactNode, useState } from "react";
-import { View, StyleSheet, StyleProp, ViewStyle, Pressable } from "react-native";
+import {
+  View,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  Pressable,
+} from "react-native";
 import { theme } from "../theme/tokens";
 
 type CardVariant = "standard" | "elevated" | "stat" | "flat";
@@ -80,11 +86,7 @@ const Card: React.FC<CardProps> = ({
     );
   }
 
-  return (
-    <View style={[getCardStyle(), style]}>
-      {children}
-    </View>
-  );
+  return <View style={[getCardStyle(), style]}>{children}</View>;
 };
 
 const styles = StyleSheet.create({

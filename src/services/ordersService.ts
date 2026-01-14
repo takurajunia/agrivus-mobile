@@ -84,7 +84,36 @@ const ordersService = {
     if (filters?.status) params.append("status", filters.status);
 
     const response = await api.get(`/orders?${params.toString()}`);
-    return response.data;
+
+    // Transform backend response format { order: {...}, buyer: {...} } to flat OrderWithDetails
+    const transformedOrders = (response.data.data?.orders || []).map(
+      (item: any) => {
+        // Handle both nested format { order: {...}, buyer: {...} } and flat format
+        if (item.order) {
+          return {
+            ...item.order,
+            buyer: item.buyer,
+            farmer: item.farmer,
+            listing: item.listing,
+            transportAssignment: item.transportAssignment,
+          };
+        }
+        return item;
+      }
+    );
+
+    return {
+      success: response.data.success,
+      data: {
+        orders: transformedOrders,
+        pagination: response.data.data?.pagination || {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+        },
+      },
+    };
   },
 
   // Get single order by ID with full details
@@ -92,7 +121,29 @@ const ordersService = {
     id: string
   ): Promise<{ success: boolean; data: OrderWithDetails }> {
     const response = await api.get(`/orders/${id}`);
-    return response.data;
+
+    // Transform backend response format { order: {...}, buyer: {...} } to flat OrderWithDetails
+    const item = response.data.data;
+    let transformedOrder: OrderWithDetails;
+
+    if (item?.order) {
+      // Nested format from backend
+      transformedOrder = {
+        ...item.order,
+        buyer: item.buyer,
+        farmer: item.farmer,
+        listing: item.listing,
+        transportAssignment: item.transportAssignment,
+      };
+    } else {
+      // Already flat format
+      transformedOrder = item;
+    }
+
+    return {
+      success: response.data.success,
+      data: transformedOrder,
+    };
   },
 
   // AI-powered transporter matching (farmers only)

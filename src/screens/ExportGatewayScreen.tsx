@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   RefreshControl,
+  Dimensions,
+  Animated,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -27,6 +30,97 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SERVICE_CARD_SIZE = (SCREEN_WIDTH - 64) / 4;
+
+// Export Service Card Component with proper proportions and animations
+interface ServiceCardProps {
+  icon: React.ComponentType<any>;
+  title: string;
+  color: string;
+  bgColor: string;
+  onPress: () => void;
+  index: number;
+}
+
+const ServiceCard: React.FC<ServiceCardProps> = ({
+  icon: Icon,
+  title,
+  color,
+  bgColor,
+  onPress,
+  index,
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: 300 + index * 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateYAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        delay: 300 + index * 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.92,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        styles.serviceCardWrapper,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: translateYAnim }, { scale: scaleAnim }],
+        },
+      ]}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+        style={styles.serviceCardTouchable}
+      >
+        <View
+          style={[styles.serviceIconContainer, { backgroundColor: bgColor }]}
+        >
+          <Icon size={24} color={color} strokeWidth={2} />
+        </View>
+        <Text style={styles.serviceCardLabel} numberOfLines={2}>
+          {title}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 export default function ExportGatewayScreen() {
   const router = useRouter();
@@ -68,30 +162,30 @@ export default function ExportGatewayScreen() {
   const features = [
     {
       icon: ClipboardList,
-      title: "Export Assessment",
-      description: "Evaluate your export readiness",
+      title: "Assessment",
       color: neumorphicColors.primary[600],
+      bgColor: neumorphicColors.primary[50],
       route: "/export/assessment",
     },
     {
       icon: TrendingUp,
-      title: "Market Intelligence",
-      description: "Global market prices & trends",
+      title: "Markets",
       color: neumorphicColors.secondary[600],
+      bgColor: neumorphicColors.secondary[50],
       route: "/export/market-intelligence",
     },
     {
       icon: FileText,
-      title: "Document Templates",
-      description: "Required export documentation",
+      title: "Documents",
       color: neumorphicColors.semantic.info,
+      bgColor: "#E3F2FD",
       route: "/export/documents",
     },
     {
       icon: Truck,
-      title: "Logistics Partners",
-      description: "Shipping & freight services",
+      title: "Logistics",
       color: neumorphicColors.semantic.warning,
+      bgColor: "#FFF3E0",
       route: "/export/logistics",
     },
   ];
@@ -164,30 +258,20 @@ export default function ExportGatewayScreen() {
           </View>
         </NeumorphicCard>
 
-        {/* Feature Grid */}
-        <View style={styles.section}>
+        {/* Export Services - Redesigned */}
+        <View style={styles.servicesSection}>
           <Text style={styles.sectionTitle}>Export Services</Text>
-          <View style={styles.featureGrid}>
+          <View style={styles.servicesContainer}>
             {features.map((feature, index) => (
-              <NeumorphicCard
+              <ServiceCard
                 key={index}
-                style={styles.featureCard}
-                animationDelay={index * 100}
+                icon={feature.icon}
+                title={feature.title}
+                color={feature.color}
+                bgColor={feature.bgColor}
                 onPress={() => router.push(feature.route)}
-              >
-                <View
-                  style={[
-                    styles.featureIcon,
-                    { backgroundColor: feature.color + "15" },
-                  ]}
-                >
-                  <feature.icon size={24} color={feature.color} />
-                </View>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDescription}>
-                  {feature.description}
-                </Text>
-              </NeumorphicCard>
+                index={index}
+              />
             ))}
           </View>
         </View>
@@ -401,33 +485,45 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h5,
-  },
-  featureGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.md,
-  },
-  featureCard: {
-    width: "47%",
-    padding: spacing.lg,
-    alignItems: "center",
-  },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.full,
-    justifyContent: "center",
-    alignItems: "center",
     marginBottom: spacing.md,
   },
-  featureTitle: {
-    ...typography.h6,
-    textAlign: "center",
+  // Export Services - New Compact Design
+  servicesSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
-  featureDescription: {
+  servicesContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  serviceCardWrapper: {
+    alignItems: "center",
+    width: SERVICE_CARD_SIZE,
+  },
+  serviceCardTouchable: {
+    alignItems: "center",
+    width: "100%",
+  },
+  serviceIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+    shadowColor: neumorphicColors.base.shadowDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  serviceCardLabel: {
     ...typography.caption,
+    fontWeight: "600",
+    color: neumorphicColors.text.secondary,
     textAlign: "center",
-    marginTop: spacing.xs,
+    marginTop: 2,
   },
   assessmentCard: {
     padding: spacing.lg,

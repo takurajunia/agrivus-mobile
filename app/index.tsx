@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -25,11 +25,8 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login, isAuthenticated, loading } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated && !loading) {
-      router.replace("/(tabs)");
-    }
-  }, [isAuthenticated, loading, router]);
+  // Navigation is now handled by the root layout's AuthNavigator
+  // No need to redirect here - it causes conflicts
 
   const handleLogin = async () => {
     if (!credentials.email || !credentials.password) {
@@ -40,7 +37,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await login(credentials);
-      router.replace("/(tabs)");
+      // Navigation will be handled by AuthNavigator in root layout
     } catch (error: any) {
       Alert.alert("Login Failed", error.message);
     } finally {

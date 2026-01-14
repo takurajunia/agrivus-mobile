@@ -21,11 +21,13 @@ import {
 import { listingsService } from "../services/listingsService";
 import type { ListingWithFarmer } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { NeumorphicScreen } from "../components/neumorphic/NeumorphicScreen";
-import { NeumorphicCard } from "../components/neumorphic/NeumorphicCard";
-import { NeumorphicButton } from "../components/neumorphic/NeumorphicButton";
-import { NeumorphicIconButton } from "../components/neumorphic/NeumorphicIconButton";
-import { NeumorphicBadge } from "../components/neumorphic/NeumorphicBadge";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicButton,
+  NeumorphicIconButton,
+  NeumorphicBadge,
+} from "../components/neumorphic";
 
 export default function ListingDetailScreen() {
   const router = useRouter();

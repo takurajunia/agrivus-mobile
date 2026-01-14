@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
   navPillsContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     marginTop: spacing.xs,
   },

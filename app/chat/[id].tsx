@@ -24,11 +24,13 @@ import {
   borderRadius,
   getNeumorphicShadow,
 } from "../../src/theme/neumorphic";
-import { NeumorphicScreen } from "../../src/components/neumorphic/NeumorphicScreen";
-import { NeumorphicCard } from "../../src/components/neumorphic/NeumorphicCard";
-import { NeumorphicIconButton } from "../../src/components/neumorphic/NeumorphicIconButton";
-import { NeumorphicInput } from "../../src/components/neumorphic/NeumorphicInput";
-import { NeumorphicAvatar } from "../../src/components/neumorphic/NeumorphicAvatar";
+import {
+  NeumorphicScreen,
+  NeumorphicCard,
+  NeumorphicIconButton,
+  NeumorphicInput,
+  NeumorphicAvatar,
+} from "../../src/components/neumorphic";
 import chatService, {
   MessageWithSender,
   ConversationWithUser,
@@ -54,7 +56,11 @@ export default function ChatConversationScreen() {
     try {
       const response = await chatService.getMessages(id);
       if (response.success && response.data) {
-        setMessages(response.data.messages.reverse()); // Oldest first
+        // Backend returns data as array directly, already reversed (oldest first)
+        const messagesData = Array.isArray(response.data)
+          ? response.data
+          : response.data.messages || [];
+        setMessages(messagesData);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -65,10 +71,7 @@ export default function ChatConversationScreen() {
 
   useEffect(() => {
     fetchMessages();
-    // Mark conversation as read
-    if (id) {
-      chatService.markAsRead(id).catch(console.error);
-    }
+    // Note: markAsRead endpoint not implemented on backend yet
   }, [fetchMessages, id]);
 
   const handleSendMessage = async () => {
@@ -158,7 +161,11 @@ export default function ChatConversationScreen() {
     );
   }
 
-  const otherUserName = messages[0]?.sender?.fullName || "Chat";
+  // Find the other user's name (not the current user)
+  const otherUserName =
+    messages.find((msg) => msg.sender?.id !== user?.id)?.sender?.fullName ||
+    messages[0]?.sender?.fullName ||
+    "Chat";
 
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>
@@ -317,13 +324,13 @@ export default function ChatConversationScreen() {
           animated={false}
         >
           <NeumorphicInput
-            style={styles.textInput}
+            containerStyle={styles.textInput}
             placeholder="Type a message..."
             value={inputText}
             onChangeText={setInputText}
             multiline
             maxLength={1000}
-            variant="default"
+            variant="textarea"
           />
           <NeumorphicIconButton
             icon={

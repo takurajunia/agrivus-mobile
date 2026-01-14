@@ -336,44 +336,41 @@ export const leafPatterns = {
   auth: {
     opacity: 0.3,
     positions: [
-      { top: '5%', left: '5%', rotation: -30, size: 80 },
-      { top: '8%', right: '10%', rotation: 25, size: 60 },
-      { bottom: '15%', left: '8%', rotation: 45, size: 70 },
-      { bottom: '10%', right: '5%', rotation: -15, size: 90 },
+      { top: "5%", left: "5%", rotation: -30, size: 80 },
+      { top: "8%", right: "10%", rotation: 25, size: 60 },
+      { bottom: "15%", left: "8%", rotation: 45, size: 70 },
+      { bottom: "10%", right: "5%", rotation: -15, size: 90 },
     ],
   },
   dashboard: {
     opacity: 0.25,
     positions: [
-      { top: '3%', right: '5%', rotation: 20, size: 70 },
-      { top: '40%', left: '2%', rotation: -25, size: 50 },
-      { bottom: '20%', left: '10%', rotation: 35, size: 60 },
+      { top: "3%", right: "5%", rotation: 20, size: 70 },
+      { top: "40%", left: "2%", rotation: -25, size: 50 },
+      { bottom: "20%", left: "10%", rotation: 35, size: 60 },
     ],
   },
   list: {
     opacity: 0.15,
     positions: [
-      { top: '5%', right: '5%', rotation: 15, size: 50 },
-      { bottom: '10%', left: '5%', rotation: -20, size: 45 },
+      { top: "5%", right: "5%", rotation: 15, size: 50 },
+      { bottom: "10%", left: "5%", rotation: -20, size: 45 },
     ],
   },
   detail: {
     opacity: 0.1,
-    positions: [
-      { top: '3%', right: '3%', rotation: 10, size: 45 },
-    ],
+    positions: [{ top: "3%", right: "3%", rotation: 10, size: 45 }],
   },
   form: {
     opacity: 0.1,
-    positions: [
-      { bottom: '5%', right: '5%', rotation: -10, size: 50 },
-    ],
+    positions: [{ bottom: "5%", right: "5%", rotation: -10, size: 50 }],
   },
 };
 
 // Neumorphic Component Styles Helper
 export const getNeumorphicStyle = (level: 1 | 2 | 3 | 4 | 5 = 2): ViewStyle => {
-  const shadowLevel = neumorphicShadows[`level${level}` as keyof typeof neumorphicShadows];
+  const shadowLevel =
+    neumorphicShadows[`level${level}` as keyof typeof neumorphicShadows];
   return {
     backgroundColor: colors.neumorphic.card,
     ...shadowLevel,
