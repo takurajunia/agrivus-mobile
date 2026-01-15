@@ -122,18 +122,26 @@ const ordersService = {
   ): Promise<{ success: boolean; data: OrderWithDetails }> {
     const response = await api.get(`/orders/${id}`);
 
-    // Transform backend response format { order: {...}, buyer: {...} } to flat OrderWithDetails
+    // Transform backend response format { order: {...}, buyer: {...}, transport: {...}, transporter: {...} } to flat OrderWithDetails
     const item = response.data.data;
     let transformedOrder: OrderWithDetails;
 
     if (item?.order) {
       // Nested format from backend
+      // Backend returns transport/transporter separately, map to transportAssignment
+      const transportAssignment = item.transport
+        ? {
+            ...item.transport,
+            transporter: item.transporter,
+          }
+        : item.transportAssignment;
+
       transformedOrder = {
         ...item.order,
         buyer: item.buyer,
         farmer: item.farmer,
         listing: item.listing,
-        transportAssignment: item.transportAssignment,
+        transportAssignment,
       };
     } else {
       // Already flat format

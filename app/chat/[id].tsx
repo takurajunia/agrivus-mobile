@@ -47,14 +47,61 @@ export default function ChatConversationScreen() {
   const [conversation, setConversation] = useState<ConversationWithUser | null>(
     null
   );
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [otherUserData, setOtherUserData] = useState<{
+    id: string;
+    fullName: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [inputText, setInputText] = useState("");
 
-  const fetchMessages = useCallback(async () => {
+  // First, try to get or create conversation (in case id is a user ID)
+  const initializeConversation = useCallback(async () => {
     if (!id) return;
+
     try {
-      const response = await chatService.getMessages(id);
+      // Try to get or create conversation (id could be a user ID)
+      const response = await chatService.getOrCreateConversation(id);
+      if (response.success && response.data) {
+        // response.data contains the conversation (or conversation property)
+        const convData = response.data;
+        const convId = convData.conversation?.id || (convData as any).id;
+
+        if (convId) {
+          setConversationId(convId);
+          // Add unreadCount default since getOrCreateConversation doesn't return it
+          setConversation({
+            ...convData,
+            unreadCount: 0,
+          });
+          // Store other user data from the response
+          if (convData.otherUser) {
+            setOtherUserData(convData.otherUser);
+          }
+          return convId;
+        }
+      }
+    } catch (error: any) {
+      // If getOrCreateConversation fails, the id might already be a conversation ID
+      // Just use it directly
+      console.log(
+        "getOrCreateConversation failed, trying as conversation ID:",
+        error?.message
+      );
+      setConversationId(id);
+      return id;
+    }
+
+    // Fallback: assume id is already a conversation ID
+    setConversationId(id);
+    return id;
+  }, [id]);
+
+  const fetchMessages = useCallback(async (convId: string) => {
+    if (!convId) return;
+    try {
+      const response = await chatService.getMessages(convId);
       if (response.success && response.data) {
         // Backend returns data as array directly, already reversed (oldest first)
         const messagesData = Array.isArray(response.data)
@@ -67,22 +114,29 @@ export default function ChatConversationScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, []);
 
   useEffect(() => {
-    fetchMessages();
-    // Note: markAsRead endpoint not implemented on backend yet
-  }, [fetchMessages, id]);
+    const init = async () => {
+      const convId = await initializeConversation();
+      if (convId) {
+        await fetchMessages(convId);
+      } else {
+        setLoading(false);
+      }
+    };
+    init();
+  }, [initializeConversation, fetchMessages]);
 
   const handleSendMessage = async () => {
-    if (!inputText.trim() || !id || sending) return;
+    if (!inputText.trim() || !conversationId || sending) return;
 
     const messageText = inputText.trim();
     setInputText("");
     setSending(true);
 
     try {
-      const response = await chatService.sendMessage(id, {
+      const response = await chatService.sendMessage(conversationId, {
         content: messageText,
       });
       if (response.success && response.data) {
@@ -162,7 +216,10 @@ export default function ChatConversationScreen() {
   }
 
   // Find the other user's name (not the current user)
+  // Priority: otherUserData (from getOrCreateConversation) > messages > fallback
   const otherUserName =
+    otherUserData?.fullName ||
+    conversation?.otherUser?.fullName ||
     messages.find((msg) => msg.sender?.id !== user?.id)?.sender?.fullName ||
     messages[0]?.sender?.fullName ||
     "Chat";

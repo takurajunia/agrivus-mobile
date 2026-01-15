@@ -58,7 +58,18 @@ const chatService = {
   // Get or create conversation with another user
   async getOrCreateConversation(
     otherUserId: string
-  ): Promise<{ success: boolean; data: ConversationWithUser }> {
+  ): Promise<{
+    success: boolean;
+    data: {
+      conversation: Conversation;
+      otherUser: {
+        id: string;
+        fullName: string;
+        email: string;
+        phone?: string;
+      };
+    };
+  }> {
     const response = await api.post("/chat/conversations", { otherUserId });
     return response.data;
   },

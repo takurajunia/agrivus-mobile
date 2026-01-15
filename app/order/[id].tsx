@@ -61,6 +61,13 @@ export default function OrderDetailScreen() {
     try {
       const response = await ordersService.getOrderById(id);
       if (response.success && response.data) {
+        console.log("Order data:", {
+          status: response.data.status,
+          transportAssignment: response.data.transportAssignment,
+          transporterId: response.data.transportAssignment?.transporterId,
+          userId: user?.id,
+          userRole: user?.role,
+        });
         setOrder(response.data);
       }
     } catch (error) {
@@ -69,7 +76,7 @@ export default function OrderDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     fetchOrder();
@@ -175,6 +182,70 @@ export default function OrderDetailScreen() {
         },
       },
     ]);
+  };
+
+  // Transporter marks order as collected (in_transit)
+  const handleMarkCollected = async () => {
+    if (!order) return;
+
+    Alert.alert(
+      "Mark as Collected",
+      "Confirm that you have collected the goods from the farmer and are now in transit?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Confirm Collection",
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await ordersService.updateOrderStatus(order.id, "in_transit");
+              Alert.alert(
+                "Success",
+                "Order marked as collected. You are now in transit."
+              );
+              fetchOrder();
+            } catch (error) {
+              console.error("Error marking collected:", error);
+              Alert.alert("Error", "Failed to update order status");
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Transporter marks order as delivered
+  const handleMarkDelivered = async () => {
+    if (!order) return;
+
+    Alert.alert(
+      "Mark as Delivered",
+      "Confirm that you have delivered the goods to the buyer?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Confirm Delivery",
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await ordersService.updateOrderStatus(order.id, "delivered");
+              Alert.alert(
+                "Success",
+                "Order marked as delivered. Waiting for buyer confirmation."
+              );
+              fetchOrder();
+            } catch (error) {
+              console.error("Error marking delivered:", error);
+              Alert.alert("Error", "Failed to update order status");
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleCall = (phone: string) => {
@@ -285,6 +356,9 @@ export default function OrderDetailScreen() {
   const otherParty = user?.role === "buyer" ? order.farmer : order.buyer;
   const isBuyer = user?.role === "buyer";
   const isFarmer = user?.role === "farmer";
+  const isTransporter = user?.role === "transporter";
+  const isAssignedTransporter =
+    isTransporter && order.transportAssignment?.transporterId === user?.id;
 
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>
@@ -464,6 +538,35 @@ export default function OrderDetailScreen() {
                 style={styles.actionBtn}
               />
             )}
+
+          {/* Transporter can mark order as collected when assigned */}
+          {isAssignedTransporter &&
+            (order.status === "assigned" || order.status === "paid") && (
+              <NeumorphicButton
+                title="Mark as Collected"
+                onPress={handleMarkCollected}
+                variant="primary"
+                loading={actionLoading}
+                fullWidth
+                style={styles.actionBtn}
+                icon={<Truck size={20} color={neumorphicColors.text.inverse} />}
+              />
+            )}
+
+          {/* Transporter can mark order as delivered when in transit */}
+          {isAssignedTransporter && order.status === "in_transit" && (
+            <NeumorphicButton
+              title="Mark as Delivered"
+              onPress={handleMarkDelivered}
+              variant="primary"
+              loading={actionLoading}
+              fullWidth
+              style={styles.actionBtn}
+              icon={
+                <CheckCircle size={20} color={neumorphicColors.text.inverse} />
+              }
+            />
+          )}
 
           {/* Buyer can confirm delivery */}
           {isBuyer && order.status === "delivered" && (

@@ -55,6 +55,7 @@ import {
   neumorphicColors,
   typography,
   spacing,
+  borderRadius,
 } from "../../src/theme/neumorphic";
 
 // Quick Action Card Component with proper proportions and animations
@@ -656,25 +657,22 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Alert Banner - Role specific */}
-        <NeumorphicCard
-          variant="glass"
-          style={styles.alertBanner}
-          animated={true}
-          animationDelay={100}
-          onPress={() => router.push(isBuyer ? "/cart" : "/my-listings")}
+        {/* Alert Banner - Green prominent banner */}
+        <TouchableOpacity
+          style={styles.greenAlertBanner}
+          onPress={() =>
+            router.push(isBuyer ? "/(tabs)/marketplace" : "/create-listing")
+          }
+          activeOpacity={0.85}
         >
-          <View style={styles.alertContent}>
-            <View style={styles.alertIconContainer}>
-              <alertContent.icon
-                size={20}
-                color={neumorphicColors.secondary[600]}
-              />
-            </View>
-            <Text style={styles.alertText}>{alertContent.text}</Text>
-            <ChevronRight size={18} color={neumorphicColors.text.tertiary} />
+          <View style={styles.greenAlertIconContainer}>
+            <alertContent.icon
+              size={22}
+              color={neumorphicColors.text.inverse}
+            />
           </View>
-        </NeumorphicCard>
+          <Text style={styles.greenAlertText}>{alertContent.text}</Text>
+        </TouchableOpacity>
 
         {/* Stats Grid */}
         <View style={styles.statsContainer}>
@@ -692,11 +690,13 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Quick Actions - Redesigned */}
-        <View style={styles.quickActionsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-          </View>
+        {/* Quick Actions - Inside Card */}
+        <NeumorphicCard
+          variant="standard"
+          style={styles.quickActionsCard}
+          animationDelay={500}
+        >
+          <Text style={styles.quickActionsTitle}>Quick Actions</Text>
           <View style={styles.quickActionsContainer}>
             {quickActions.map((action, index) => (
               <QuickActionCard
@@ -710,67 +710,64 @@ export default function HomeScreen() {
               />
             ))}
           </View>
-        </View>
+        </NeumorphicCard>
 
         {/* Recent Activity */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/orders")}>
+        <NeumorphicCard
+          variant="standard"
+          style={styles.activityCard}
+          animationDelay={700}
+        >
+          <View style={styles.activityHeader}>
+            <Text style={styles.activitySectionTitle}>Recent Activity</Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/notifications")}
+            >
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
           {recentActivity.length > 0 ? (
-            recentActivity.map((activity, index) => (
-              <NeumorphicCard
+            recentActivity.slice(0, 3).map((activity, index) => (
+              <TouchableOpacity
                 key={activity.id}
-                variant="bordered"
-                style={styles.activityItem}
-                animationDelay={1000 + index * 100}
+                style={[
+                  styles.activityItem,
+                  index < recentActivity.length - 1 &&
+                    styles.activityItemBorder,
+                ]}
                 onPress={() => handleActivityPress(activity)}
+                activeOpacity={0.7}
               >
-                <View style={styles.activityRow}>
-                  <View style={styles.activityIconContainer}>
-                    {getActivityIcon(activity.type)}
-                  </View>
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>{activity.title}</Text>
-                    <Text style={styles.activitySubtitle}>
-                      {activity.subtitle}
-                    </Text>
-                  </View>
-                  <View style={styles.activityRight}>
-                    <Text style={styles.activityTime}>{activity.time}</Text>
-                    <ChevronRight
-                      size={16}
-                      color={neumorphicColors.text.tertiary}
-                    />
-                  </View>
-                </View>
-              </NeumorphicCard>
-            ))
-          ) : (
-            <NeumorphicCard
-              variant="bordered"
-              style={styles.activityItem}
-              animationDelay={1000}
-            >
-              <View style={styles.activityRow}>
                 <View style={styles.activityIconContainer}>
-                  <Clock size={16} color={neumorphicColors.text.tertiary} />
+                  {getActivityIcon(activity.type)}
                 </View>
                 <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>No recent activity</Text>
-                  <Text style={styles.activitySubtitle}>
-                    {isBuyer
-                      ? "Place an order to see activity here"
-                      : "Create a listing to get started"}
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activitySubtitle} numberOfLines={1}>
+                    {activity.subtitle}
                   </Text>
                 </View>
+                <View style={styles.activityRight}>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.activityItem}>
+              <View style={styles.activityIconContainer}>
+                <Clock size={18} color={neumorphicColors.text.tertiary} />
               </View>
-            </NeumorphicCard>
+              <View style={styles.activityContent}>
+                <Text style={styles.activityTitle}>No recent activity</Text>
+                <Text style={styles.activitySubtitle}>
+                  {isBuyer
+                    ? "Place an order to see activity here"
+                    : "Create a listing to get started"}
+                </Text>
+              </View>
+            </View>
           )}
-        </View>
+        </NeumorphicCard>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -784,63 +781,62 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
   },
-  alertBanner: {
-    marginHorizontal: spacing.xl,
+  // Green Alert Banner
+  greenAlertBanner: {
+    marginHorizontal: spacing.lg,
     marginBottom: spacing.xl,
-  },
-  alertContent: {
+    backgroundColor: neumorphicColors.primary[600],
+    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     flexDirection: "row",
     alignItems: "center",
+    shadowColor: neumorphicColors.primary[700],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  alertIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: neumorphicColors.secondary[50],
+  greenAlertIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: spacing.md,
   },
-  alertText: {
+  greenAlertText: {
     flex: 1,
-    ...typography.bodySmall,
+    ...typography.body,
     fontWeight: "600",
-    color: neumorphicColors.secondary[700],
+    color: neumorphicColors.text.inverse,
   },
+  // Stats Grid
   statsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.lg,
   },
   statCard: {
     width: "47%",
     margin: "1.5%",
   },
-  section: {
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  // Quick Actions Card
+  quickActionsCard: {
+    marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
   },
-  sectionTitle: {
+  quickActionsTitle: {
     ...typography.h4,
     color: neumorphicColors.text.primary,
-  },
-  seeAll: {
-    ...typography.bodySmall,
-    color: neumorphicColors.primary[600],
-    fontWeight: "600",
-  },
-  // Quick Actions - New Compact Design
-  quickActionsSection: {
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
   },
   quickActionsContainer: {
     flexDirection: "row",
@@ -862,7 +858,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.sm,
-    // Subtle shadow for depth
     shadowColor: neumorphicColors.base.shadowDark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -876,17 +871,43 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 2,
   },
-  activityItem: {
-    marginBottom: spacing.sm,
+  // Activity Card
+  activityCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
   },
-  activityRow: {
+  activityHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  activitySectionTitle: {
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+  },
+  seeAll: {
+    ...typography.bodySmall,
+    color: neumorphicColors.primary[600],
+    fontWeight: "600",
+  },
+  activityItem: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  activityItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: neumorphicColors.base.border,
   },
   activityIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: neumorphicColors.primary[50],
     justifyContent: "center",
     alignItems: "center",
@@ -915,6 +936,6 @@ const styles = StyleSheet.create({
     color: neumorphicColors.text.tertiary,
   },
   bottomPadding: {
-    height: spacing["2xl"],
+    height: spacing.xl,
   },
 });
