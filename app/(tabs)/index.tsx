@@ -335,18 +335,6 @@ export default function HomeScreen() {
           <View style={{ height: 100 }} />
         </ScrollView>
       </SafeAreaView>
-
-      {/* --- Bottom Nav Placeholder --- */}
-      <View style={styles.bottomNavContainer}>
-        <View style={styles.bottomNav}>
-          <View style={styles.navItemActive}>
-            <Home size={24} color="#FFF" />
-          </View>
-          <Store size={24} color="#95A5A6" />
-          <Wallet size={24} color="#95A5A6" />
-          <Receipt size={24} color="#95A5A6" />
-        </View>
-      </View>
     </View>
   );
 }

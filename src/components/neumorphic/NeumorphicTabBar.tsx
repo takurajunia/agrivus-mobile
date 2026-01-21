@@ -1,124 +1,159 @@
-/**
- * NeumorphicTabBar Component
- *
- * Custom tab bar with neumorphic styling for bottom navigation.
- */
-
 import React from "react";
 import {
   View,
-  TouchableOpacity,
   Text,
+  TouchableOpacity,
   StyleSheet,
-  ViewStyle,
+  Platform,
+  Dimensions,
 } from "react-native";
-import {
-  neumorphicColors,
-  getNeumorphicShadow,
-  spacing,
-  borderRadius,
-} from "../../theme/neumorphic";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { Home, Store, Wallet, Receipt } from "lucide-react-native";
 
-interface TabItem {
-  key: string;
-  label: string;
-  icon: React.ReactNode;
-  activeIcon?: React.ReactNode;
-}
+const { width } = Dimensions.get("window");
 
-interface NeumorphicTabBarProps {
-  tabs: TabItem[];
-  activeTab: string;
-  onTabPress: (key: string) => void;
-  style?: ViewStyle;
-}
+// Define exactly which routes should be visible
+const VISIBLE_ROUTES = ["index", "marketplace", "wallet", "orders"];
 
-const NeumorphicTabBar: React.FC<NeumorphicTabBarProps> = ({
-  tabs,
-  activeTab,
-  onTabPress,
-  style,
-}) => {
+export const NeumorphicTabBar = ({
+  state,
+  descriptors,
+  navigation,
+}: BottomTabBarProps) => {
   return (
-    <View style={[styles.container, getNeumorphicShadow(3), style]}>
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.key;
+    <View style={styles.container}>
+      <View style={styles.floatingBar}>
+        {state.routes.map((route, index) => {
+          // 1. FILTER: If the route is not in our visible list, do not render it.
+          if (!VISIBLE_ROUTES.includes(route.name)) {
+            return null;
+          }
 
-        return (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, isActive && styles.activeTab]}
-            onPress={() => onTabPress(tab.key)}
-            activeOpacity={0.7}
-          >
-            <View
-              style={[
-                styles.iconContainer,
-                isActive && styles.activeIconContainer,
-              ]}
+          const { options } = descriptors[route.key];
+          const label =
+            options.tabBarLabel !== undefined
+              ? options.tabBarLabel
+              : options.title !== undefined
+                ? options.title
+                : route.name;
+
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          // Icon Mapping
+          let IconComponent = Home;
+          if (route.name === "index") IconComponent = Home;
+          if (route.name === "marketplace") IconComponent = Store;
+          if (route.name === "wallet") IconComponent = Wallet;
+          if (route.name === "orders") IconComponent = Receipt;
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              onPress={onPress}
+              style={styles.tabItem}
+              activeOpacity={0.7}
             >
-              {isActive && tab.activeIcon ? tab.activeIcon : tab.icon}
-            </View>
-            <Text style={[styles.label, isActive && styles.activeLabel]}>
-              {tab.label}
-            </Text>
-
-            {isActive && <View style={styles.indicator} />}
-          </TouchableOpacity>
-        );
-      })}
+              <View
+                style={[
+                  styles.iconContainer,
+                  isFocused && styles.activeIconContainer,
+                ]}
+              >
+                <IconComponent
+                  size={24}
+                  color={isFocused ? "#FFFFFF" : "#95A5A6"}
+                  strokeWidth={isFocused ? 2.5 : 2}
+                />
+              </View>
+              {/* Text Label */}
+              <Text style={[styles.label, isFocused && styles.activeLabel]}>
+                {label as string}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    backgroundColor: neumorphicColors.base.card,
-    borderRadius: borderRadius.xl,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.sm,
-    position: "relative",
-  },
-  activeTab: {
-    // Active state styles handled by children
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: spacing.xs,
-  },
-  activeIconContainer: {
-    backgroundColor: neumorphicColors.primary[50],
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: neumorphicColors.text.tertiary,
-  },
-  activeLabel: {
-    color: neumorphicColors.primary[600],
-    fontWeight: "600",
-  },
-  indicator: {
     position: "absolute",
     bottom: 0,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: neumorphicColors.primary[600],
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingBottom: Platform.OS === "ios" ? 30 : 20,
+    backgroundColor: "transparent",
+    pointerEvents: "box-none",
+  },
+  floatingBar: {
+    flexDirection: "row",
+    backgroundColor: "#F0F0F3",
+    width: width - 48,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 35,
+    justifyContent: "space-between",
+    alignItems: "center",
+    // The "Levitating" Shadow
+    shadowColor: "#BCC5D1",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+    // Top Highlight Border
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255,255,255,0.8)",
+    borderRightWidth: 1,
+    borderBottomWidth: 0,
+  },
+  tabItem: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  iconContainer: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+    marginBottom: 4,
+  },
+  activeIconContainer: {
+    backgroundColor: "#4CD964",
+    // Active Glow
+    shadowColor: "#4CD964",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#95A5A6",
+  },
+  activeLabel: {
+    color: "#2D3436",
+    fontWeight: "700",
   },
 });
-
-export default NeumorphicTabBar;
