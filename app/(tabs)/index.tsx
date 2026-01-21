@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,936 +6,673 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  SafeAreaView,
+  Platform,
   Dimensions,
-  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuth } from "../../src/contexts/AuthContext";
+import { LinearGradient } from "expo-linear-gradient";
 import {
-  TrendingUp,
   Package,
   DollarSign,
   Gavel,
   ShoppingCart,
-  BarChart3,
-  AlertCircle,
-  ChevronRight,
   Store,
-  Globe,
-  ArrowRight,
-  ClipboardList,
-  Search,
-  Heart,
-  Clock,
-  Truck,
-  CheckCircle,
-  XCircle,
+  Upload,
+  FileText,
+  Bell,
+  MessageSquare,
+  Tag,
+  Home,
+  Wallet,
+  Receipt,
 } from "lucide-react-native";
 
-// Services
-import ordersService from "../../src/services/ordersService";
-import { auctionsService } from "../../src/services/auctionsService";
-import notificationsService from "../../src/services/notificationsService";
-import { listingsService } from "../../src/services/listingsService";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const QUICK_ACTION_CARD_SIZE = (SCREEN_WIDTH - 64) / 4; // 4 columns with padding
-
-// Components
-import TopNavBar from "../../src/components/TopNavBar";
-
-// Neumorphic Components
+// Import our textured leaf background
 import {
-  NeumorphicScreen,
-  NeumorphicCard,
-  NeumorphicStatCard,
-} from "../../src/components/neumorphic";
+  LeafBackground,
+  BACKGROUND_COLOR,
+} from "../../src/components/LeafBackground";
 
-import {
-  neumorphicColors,
-  typography,
-  spacing,
-  borderRadius,
-} from "../../src/theme/neumorphic";
+const { width } = Dimensions.get("window");
 
-// Quick Action Card Component with proper proportions and animations
-interface QuickActionCardProps {
-  label: string;
-  icon: React.ComponentType<any>;
-  color: string;
-  bgColor: string;
-  onPress: () => void;
-  index: number;
-}
+// --- THEME ---
+const COLORS = {
+  textDark: "#2D3436",
+  textGray: "#95A5A6",
+  shadowLight: "#FFFFFF",
+  shadowDark: "#BCC5D1",
+  greenGradient: ["#4CD964", "#2E7D32"] as const,
+  // Specific colors for the "Dent" background
+  insetDark: "#E1E4EA", // Slightly darker than main BG to look "inside"
+  insetLight: "#FFFFFF",
+};
 
-const QuickActionCard: React.FC<QuickActionCardProps> = ({
-  label,
-  icon: Icon,
-  color,
-  bgColor,
-  onPress,
-  index,
-}) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(30)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: 500 + index * 80,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateYAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 8,
-        delay: 500 + index * 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.92,
-      useNativeDriver: true,
-      speed: 50,
-      bounciness: 4,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 50,
-      bounciness: 4,
-    }).start();
-  };
+// --- COMPONENT: Neumorphic Floating "Pillow" (Header Buttons) ---
+const FloatPillow = ({ children, style, borderRadius = 18, onPress }: any) => {
+  const Container = onPress ? TouchableOpacity : View;
 
   return (
-    <Animated.View
-      style={[
-        styles.quickActionWrapper,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: translateYAnim }, { scale: scaleAnim }],
-        },
-      ]}
+    <Container
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={[styles.pillowOuter, { borderRadius }, style]}
     >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
-        style={styles.quickActionTouchable}
-      >
-        <View
-          style={[
-            styles.quickActionIconContainer,
-            { backgroundColor: bgColor },
-          ]}
-        >
-          <Icon size={24} color={color} strokeWidth={2} />
-        </View>
-        <Text style={styles.quickActionLabel} numberOfLines={1}>
-          {label}
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
+      <View style={[styles.pillowInner, { borderRadius }]}>{children}</View>
+    </Container>
   );
 };
 
+// --- COMPONENT: Neumorphic "Dent" (Grid Icons) ---
+const InsetDent = ({ icon: Icon, color, isOrange }: any) => (
+  <View style={styles.dentContainer}>
+    {/* The Hole Background */}
+    <View style={styles.dentBackground}>
+      {/* Colored Glow "emitting" from the hole */}
+      <View
+        style={[
+          styles.dentGlow,
+          {
+            backgroundColor: color,
+            shadowColor: color,
+            opacity: isOrange ? 0.15 : 0.12,
+          },
+        ]}
+      />
+
+      {/* The Icon sitting deep in the hole */}
+      <Icon size={26} color={color} strokeWidth={2.5} />
+    </View>
+
+    {/* Inner Shadow Simulation (Borders) */}
+    {/* Top/Left is Dark (Shadow cast by top edge) */}
+    <View style={styles.dentShadowTop} />
+    {/* Bottom/Right is Light (Light hitting bottom edge) */}
+    <View style={styles.dentHighlightBottom} />
+  </View>
+);
+
+const WaveLines = () => (
+  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View
+      style={[
+        styles.wave,
+        { top: 20, left: -20, width: 300, height: 300, borderRadius: 150 },
+      ]}
+    />
+    <View
+      style={[
+        styles.wave,
+        {
+          top: 40,
+          left: -10,
+          width: 300,
+          height: 300,
+          borderRadius: 150,
+          opacity: 0.1,
+        },
+      ]}
+    />
+  </View>
+);
+
 export default function HomeScreen() {
   const router = useRouter();
-  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // Real data state
-  const [dashboardData, setDashboardData] = useState({
-    totalOrders: 0,
-    totalSpent: 0,
-    totalRevenue: 0,
-    activeBids: 0,
-    activeListings: 0,
-    liveAuctions: 0,
-    pendingOrders: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-
-  const isBuyer = user?.role === "buyer";
-  const isFarmer = user?.role === "farmer";
-
-  // Fetch dashboard data
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      // Fetch orders
-      const ordersResponse = await ordersService.getOrders({
-        page: 1,
-        limit: 100,
-      });
-      const orders = ordersResponse.data?.orders || [];
-
-      // Calculate stats from orders
-      const totalOrders =
-        ordersResponse.data?.pagination?.total || orders.length;
-      const totalSpent = orders.reduce((sum, order) => {
-        return sum + parseFloat(order.totalAmount || "0");
-      }, 0);
-      const pendingOrders = orders.filter(
-        (o) => o.status === "pending" || o.status === "payment_pending"
-      ).length;
-
-      // Fetch bids for buyers
-      let activeBids = 0;
-      if (isBuyer) {
-        try {
-          const bidsResponse = await auctionsService.getMyBids();
-          const bids = bidsResponse.data?.bids || bidsResponse.data || [];
-          activeBids = Array.isArray(bids)
-            ? bids.filter(
-                (b: any) =>
-                  b.auction?.status === "active" || b.auction?.status === "live"
-              ).length
-            : 0;
-        } catch (e) {
-          console.log("Failed to fetch bids:", e);
-        }
-      }
-
-      // Fetch listings for farmers
-      let activeListings = 0;
-      let liveAuctions = 0;
-      if (isFarmer) {
-        try {
-          const listingsResponse = await listingsService.getMyListings();
-          const listings = listingsResponse.data || [];
-          activeListings = Array.isArray(listings)
-            ? listings.filter((l: any) => l.status === "active").length
-            : 0;
-          liveAuctions = Array.isArray(listings)
-            ? listings.filter((l: any) => l.isAuction && l.status === "active")
-                .length
-            : 0;
-        } catch (e) {
-          console.log("Failed to fetch listings:", e);
-        }
-      }
-
-      // Calculate revenue for farmers (from completed orders)
-      const totalRevenue = isFarmer
-        ? orders.reduce((sum, order) => {
-            if (order.status === "delivered" || order.status === "confirmed") {
-              return sum + parseFloat(order.totalAmount || "0");
-            }
-            return sum;
-          }, 0)
-        : 0;
-
-      setDashboardData({
-        totalOrders,
-        totalSpent,
-        totalRevenue,
-        activeBids,
-        activeListings,
-        liveAuctions,
-        pendingOrders,
-      });
-
-      // Fetch recent notifications for activity
-      try {
-        const notificationsResponse =
-          await notificationsService.getNotifications(false, 5, 0);
-        const notifications = notificationsResponse.data?.notifications || [];
-
-        const formattedActivity = notifications.map((notif: any) => ({
-          id: notif.id,
-          title: notif.title,
-          subtitle: notif.message,
-          time: formatTimeAgo(notif.createdAt),
-          type: mapNotificationType(notif.type),
-          notificationType: notif.type,
-          data: notif.data,
-        }));
-
-        setRecentActivity(formattedActivity);
-      } catch (e) {
-        console.log("Failed to fetch notifications:", e);
-        // Fallback to orders as activity
-        const orderActivity = orders.slice(0, 4).map((order: any) => ({
-          id: order.id,
-          title: getOrderActivityTitle(order.status),
-          subtitle: `Order #${order.id.slice(0, 8)} - $${parseFloat(
-            order.totalAmount || "0"
-          ).toFixed(2)}`,
-          time: formatTimeAgo(order.createdAt),
-          type: getOrderActivityType(order.status),
-          notificationType: "order",
-          data: { orderId: order.id },
-        }));
-        setRecentActivity(orderActivity);
-      }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [isBuyer, isFarmer]);
-
-  // Helper functions
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
-  };
-
-  const mapNotificationType = (type: string) => {
-    const typeMap: Record<string, string> = {
-      order_created: "order",
-      order_status: "order",
-      order_delivered: "delivery",
-      bid_placed: "auction",
-      bid_outbid: "auction",
-      auction_won: "auction",
-      payment_received: "payment",
-      payment_sent: "payment",
-      listing_created: "listing",
-    };
-    return typeMap[type] || "order";
-  };
-
-  const getOrderActivityTitle = (status: string) => {
-    const titles: Record<string, string> = {
-      pending: "Order placed",
-      payment_pending: "Awaiting payment",
-      paid: "Payment confirmed",
-      assigned: "Transport assigned",
-      in_transit: "Order in transit",
-      delivered: "Order delivered",
-      confirmed: "Delivery confirmed",
-      cancelled: "Order cancelled",
-    };
-    return titles[status] || "Order updated";
-  };
-
-  const getOrderActivityType = (status: string) => {
-    const types: Record<string, string> = {
-      pending: "order",
-      payment_pending: "payment",
-      paid: "payment",
-      assigned: "shipping",
-      in_transit: "shipping",
-      delivered: "delivery",
-      confirmed: "delivery",
-      cancelled: "order",
-    };
-    return types[status] || "order";
-  };
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
-  // Farmer Stats - using real data
-  const farmerStats = [
-    {
-      title: "Active Orders",
-      value: String(dashboardData.pendingOrders),
-      icon: (
-        <ShoppingCart
-          size={24}
-          color={neumorphicColors.primary[600]}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.primary[600],
-      trend: { value: 0, direction: "neutral" as const },
-    },
-    {
-      title: "Revenue",
-      value: `$${dashboardData.totalRevenue.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      icon: (
-        <DollarSign
-          size={24}
-          color={neumorphicColors.semantic.success}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.semantic.success,
-      trend: { value: 0, direction: "neutral" as const },
-    },
-    {
-      title: "Live Auctions",
-      value: String(dashboardData.liveAuctions),
-      icon: (
-        <Gavel
-          size={24}
-          color={neumorphicColors.secondary[600]}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.secondary[600],
-      trend: { value: 0, direction: "neutral" as const },
-    },
-    {
-      title: "Products",
-      value: String(dashboardData.activeListings),
-      icon: (
-        <Package
-          size={24}
-          color={neumorphicColors.primary[700]}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.primary[700],
-      trend: { value: 0, direction: "neutral" as const },
-    },
-  ];
-
-  // Buyer Stats - using real data
-  const buyerStats = [
-    {
-      title: "Total Orders",
-      value: String(dashboardData.totalOrders),
-      icon: (
-        <ShoppingCart
-          size={24}
-          color={neumorphicColors.primary[600]}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.primary[600],
-      trend: { value: 0, direction: "neutral" as const },
-    },
-    {
-      title: "Total Spent",
-      value: `$${dashboardData.totalSpent.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      icon: (
-        <DollarSign
-          size={24}
-          color={neumorphicColors.semantic.success}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.semantic.success,
-      trend: { value: 0, direction: "neutral" as const },
-    },
-    {
-      title: "Active Bids",
-      value: String(dashboardData.activeBids),
-      icon: (
-        <Gavel
-          size={24}
-          color={neumorphicColors.secondary[600]}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.secondary[600],
-      trend: { value: 0, direction: "neutral" as const },
-    },
-    {
-      title: "Pending",
-      value: String(dashboardData.pendingOrders),
-      icon: (
-        <Clock
-          size={24}
-          color={neumorphicColors.semantic.warning}
-          strokeWidth={2}
-        />
-      ),
-      iconColor: neumorphicColors.semantic.warning,
-      trend: { value: 0, direction: "neutral" as const },
-    },
-  ];
-
-  const stats = isBuyer ? buyerStats : farmerStats;
-
-  // Farmer Quick Actions
-  const farmerQuickActions = [
-    {
-      label: "New Listing",
-      icon: Package,
-      color: neumorphicColors.primary[600],
-      bgColor: neumorphicColors.primary[50],
-      route: "/create-listing",
-    },
-    {
-      label: "My Listings",
-      icon: ClipboardList,
-      color: neumorphicColors.secondary[600],
-      bgColor: neumorphicColors.secondary[50],
-      route: "/my-listings",
-    },
-    {
-      label: "AgriMall",
-      icon: Store,
-      color: neumorphicColors.primary[500],
-      bgColor: neumorphicColors.primary[50],
-      route: "/agrimall",
-    },
-    {
-      label: "Export",
-      icon: Globe,
-      color: neumorphicColors.semantic.info,
-      bgColor: "#E3F2FD",
-      route: "/export-gateway",
-    },
-  ];
-
-  // Buyer Quick Actions
-  const buyerQuickActions = [
-    {
-      label: "Marketplace",
-      icon: Store,
-      color: neumorphicColors.primary[600],
-      bgColor: neumorphicColors.primary[50],
-      route: "/(tabs)/marketplace",
-    },
-    {
-      label: "My Orders",
-      icon: ShoppingCart,
-      color: neumorphicColors.secondary[600],
-      bgColor: neumorphicColors.secondary[50],
-      route: "/(tabs)/orders",
-    },
-    {
-      label: "My Bids",
-      icon: Gavel,
-      color: neumorphicColors.semantic.warning,
-      bgColor: "#FFF3E0",
-      route: "/my-bids",
-    },
-    {
-      label: "Cart",
-      icon: Store,
-      color: neumorphicColors.semantic.info,
-      bgColor: "#E3F2FD",
-      route: "/cart",
-    },
-  ];
-
-  const quickActions = isBuyer ? buyerQuickActions : farmerQuickActions;
-
-  // Recent activity is now fetched from API (recentActivity state)
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchDashboardData();
-    setRefreshing(false);
+    setTimeout(() => setRefreshing(false), 1500);
   };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "order":
-        return <ShoppingCart size={16} color={neumorphicColors.primary[600]} />;
-      case "auction":
-        return <Gavel size={16} color={neumorphicColors.secondary[600]} />;
-      case "payment":
-        return (
-          <DollarSign size={16} color={neumorphicColors.semantic.success} />
-        );
-      case "listing":
-        return <Package size={16} color={neumorphicColors.primary[500]} />;
-      case "delivery":
-        return (
-          <CheckCircle size={16} color={neumorphicColors.semantic.success} />
-        );
-      case "shipping":
-        return <Truck size={16} color={neumorphicColors.semantic.info} />;
-      default:
-        return <AlertCircle size={16} color={neumorphicColors.text.tertiary} />;
-    }
-  };
-
-  const handleActivityPress = (activity: any) => {
-    const activityData = activity.data;
-    const notificationType = activity.notificationType;
-
-    switch (notificationType) {
-      case "order":
-      case "order_placed":
-      case "order_received":
-      case "order_update":
-      case "order_delivered":
-        if (activityData?.orderId) {
-          router.push(`/order/${activityData.orderId}`);
-        } else {
-          router.push("/(tabs)/orders");
-        }
-        break;
-      case "bid":
-      case "auction":
-      case "auction_won":
-      case "auction_outbid":
-        if (activityData?.auctionId) {
-          router.push(`/auction/${activityData.auctionId}`);
-        } else {
-          router.push("/(tabs)/auctions");
-        }
-        break;
-      case "message":
-      case "chat":
-        if (activityData?.conversationId) {
-          router.push(`/chat/${activityData.conversationId}`);
-        } else {
-          router.push("/(tabs)/chat");
-        }
-        break;
-      case "payment":
-      case "payment_received":
-      case "wallet":
-        router.push("/(tabs)/wallet");
-        break;
-      case "listing":
-        if (activityData?.listingId) {
-          router.push(`/listing/${activityData.listingId}`);
-        } else {
-          router.push("/(tabs)/marketplace");
-        }
-        break;
-      default:
-        // For other types, go to orders by default
-        router.push("/(tabs)/orders");
-        break;
-    }
-  };
-
-  // Alert banner content based on role and real data
-  const alertContent = isBuyer
-    ? dashboardData.pendingOrders > 0
-      ? {
-          text: `You have ${dashboardData.pendingOrders} pending order${
-            dashboardData.pendingOrders > 1 ? "s" : ""
-          }`,
-          icon: Clock,
-        }
-      : { text: "Browse the marketplace for fresh produce!", icon: Store }
-    : dashboardData.pendingOrders > 0
-    ? {
-        text: `${dashboardData.pendingOrders} order${
-          dashboardData.pendingOrders > 1 ? "s" : ""
-        } need${dashboardData.pendingOrders === 1 ? "s" : ""} attention`,
-        icon: AlertCircle,
-      }
-    : { text: "List your products to start selling!", icon: Package };
 
   return (
-    <NeumorphicScreen variant="dashboard" showLeaves={true}>
-      {/* Top Navigation Bar */}
-      <TopNavBar showGreeting={true} unreadChats={2} />
+    <View style={styles.container}>
+      <LeafBackground />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[neumorphicColors.primary[600]]}
-            tintColor={neumorphicColors.primary[600]}
-          />
-        }
-      >
-        {/* Alert Banner - Green prominent banner */}
-        <TouchableOpacity
-          style={styles.greenAlertBanner}
-          onPress={() =>
-            router.push(isBuyer ? "/(tabs)/marketplace" : "/create-listing")
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#4CD964"
+            />
           }
-          activeOpacity={0.85}
         >
-          <View style={styles.greenAlertIconContainer}>
-            <alertContent.icon
-              size={22}
-              color={neumorphicColors.text.inverse}
-            />
+          {/* ================= TOP NAVBAR ================= */}
+          <View style={styles.headerContainer}>
+            {/* 1. LEFT ISLAND: Profile Pill */}
+            <FloatPillow
+              style={styles.profilePill}
+              borderRadius={30}
+              onPress={() => router.push("/(tabs)/profile")}
+            >
+              <View style={styles.profileContent}>
+                {/* Convex Avatar */}
+                <View style={styles.avatarWrapper}>
+                  <LinearGradient
+                    colors={COLORS.greenGradient}
+                    style={styles.avatarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.avatarText}>SD</Text>
+                  </LinearGradient>
+                  {/* Internal shadow ring to create dome effect */}
+                  <View style={styles.avatarInnerShadow} />
+                </View>
+
+                <View style={styles.greetingStack}>
+                  <Text style={styles.greetingLight}>Good day,</Text>
+                  <Text style={styles.greetingBold}>Sam</Text>
+                </View>
+              </View>
+            </FloatPillow>
+
+            {/* 2. RIGHT ISLANDS: Utility Squares */}
+            <View style={styles.utilityRow}>
+              {/* Notification Bell */}
+              <FloatPillow
+                style={styles.utilityButton}
+                onPress={() => router.push("/(tabs)/notifications")}
+              >
+                <Bell size={24} color="#555" strokeWidth={2} />
+              </FloatPillow>
+
+              {/* Chat Bubble */}
+              <FloatPillow
+                style={styles.utilityButton}
+                onPress={() => router.push("/(tabs)/chat")}
+              >
+                <MessageSquare size={24} color="#555" strokeWidth={2} />
+              </FloatPillow>
+            </View>
           </View>
-          <Text style={styles.greenAlertText}>{alertContent.text}</Text>
-        </TouchableOpacity>
 
-        {/* Stats Grid */}
-        <View style={styles.statsContainer}>
-          {stats.map((stat, index) => (
-            <NeumorphicStatCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              iconColor={stat.iconColor}
-              trend={stat.trend}
-              style={styles.statCard}
-              animationDelay={200 + index * 100}
-            />
-          ))}
-        </View>
-
-        {/* Quick Actions - Inside Card */}
-        <NeumorphicCard
-          variant="standard"
-          style={styles.quickActionsCard}
-          animationDelay={500}
-        >
-          <Text style={styles.quickActionsTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsContainer}>
-            {quickActions.map((action, index) => (
-              <QuickActionCard
-                key={index}
-                label={action.label}
-                icon={action.icon}
-                color={action.color}
-                bgColor={action.bgColor}
-                onPress={() => router.push(action.route as any)}
-                index={index}
-              />
+          {/* --- Secondary Nav (Pills) --- */}
+          <View style={styles.pillsRow}>
+            {["Auctions", "AgriMall", "Export"].map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={styles.pillButton}
+                onPress={() => {
+                  if (item === "Auctions") router.push("/(tabs)/auctions");
+                  if (item === "AgriMall") router.push("/agrimall");
+                  if (item === "Export") router.push("/export-gateway");
+                }}
+              >
+                <Text style={styles.pillText}>{item}</Text>
+              </TouchableOpacity>
             ))}
           </View>
-        </NeumorphicCard>
 
-        {/* Recent Activity */}
-        <NeumorphicCard
-          variant="standard"
-          style={styles.activityCard}
-          animationDelay={700}
-        >
-          <View style={styles.activityHeader}>
-            <Text style={styles.activitySectionTitle}>Recent Activity</Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/notifications")}
-            >
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          {recentActivity.length > 0 ? (
-            recentActivity.slice(0, 3).map((activity, index) => (
-              <TouchableOpacity
-                key={activity.id}
-                style={[
-                  styles.activityItem,
-                  index < recentActivity.length - 1 &&
-                    styles.activityItemBorder,
-                ]}
-                onPress={() => handleActivityPress(activity)}
-                activeOpacity={0.7}
+          {/* --- CTA Banner --- */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={styles.ctaWrapper}
+            onPress={() => router.push("/create-listing")}
+          >
+            <View style={styles.ctaShadowLayer}>
+              <LinearGradient
+                colors={COLORS.greenGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.ctaGradient}
               >
-                <View style={styles.activityIconContainer}>
-                  {getActivityIcon(activity.type)}
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>{activity.title}</Text>
-                  <Text style={styles.activitySubtitle} numberOfLines={1}>
-                    {activity.subtitle}
+                <WaveLines />
+                <View style={styles.ctaContent}>
+                  <Package
+                    size={30}
+                    color="#FFF"
+                    style={{ marginRight: 14 }}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.ctaText}>
+                    List your products to start selling!
                   </Text>
                 </View>
-                <View style={styles.activityRight}>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
+              </LinearGradient>
+            </View>
+          </TouchableOpacity>
+
+          {/* --- Stats Grid --- */}
+          <View style={styles.gridContainer}>
+            <View style={styles.gridRow}>
+              {/* Card 1: Active Orders */}
+              <View style={styles.statCard}>
+                <View style={styles.statHeader}>
+                  <InsetDent icon={ShoppingCart} color="#4CD964" />
                 </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.activityItem}>
-              <View style={styles.activityIconContainer}>
-                <Clock size={18} color={neumorphicColors.text.tertiary} />
+                <Text style={styles.statLabel}>Active Orders</Text>
+                <Text style={styles.statMain}>0</Text>
+                <Text style={styles.statSub}>– 0%</Text>
               </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>No recent activity</Text>
-                <Text style={styles.activitySubtitle}>
-                  {isBuyer
-                    ? "Place an order to see activity here"
-                    : "Create a listing to get started"}
-                </Text>
+
+              {/* Card 2: Revenue */}
+              <View style={styles.statCard}>
+                <View style={styles.statHeader}>
+                  <InsetDent icon={DollarSign} color="#4CD964" />
+                </View>
+                <Text style={styles.statLabel}>Revenue</Text>
+                <Text style={styles.statMain}>$0.00</Text>
+                <Text style={styles.statSub}>– 0%</Text>
               </View>
             </View>
-          )}
-        </NeumorphicCard>
 
-        <View style={styles.bottomPadding} />
-      </ScrollView>
-    </NeumorphicScreen>
+            <View style={styles.gridRow}>
+              {/* Card 3: Live Auctions (Orange) */}
+              <View style={styles.statCard}>
+                <View style={styles.statHeader}>
+                  <InsetDent icon={Gavel} color="#FF9800" isOrange />
+                </View>
+                <Text style={styles.statLabel}>Live Auctions</Text>
+                <Text style={styles.statMain}>0</Text>
+                <Text style={styles.statSub}>– 0%</Text>
+              </View>
+
+              {/* Card 4: Products */}
+              <View style={styles.statCard}>
+                <View style={styles.statHeader}>
+                  <InsetDent icon={Package} color="#4CD964" />
+                </View>
+                <Text style={styles.statLabel}>Products</Text>
+                <Text style={styles.statMain}>2</Text>
+                <Text style={styles.statSub}>– 0%</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* --- Quick Actions --- */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={styles.quickActionsCard}>
+              <View style={styles.qaRow}>
+                <TouchableOpacity
+                  style={styles.qaItem}
+                  onPress={() => router.push("/create-listing")}
+                >
+                  <View style={styles.qaActiveIcon}>
+                    <Tag size={22} color="#FFF" strokeWidth={2.5} />
+                  </View>
+                  <Text style={styles.qaLabel}>New Listing</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.qaItem}
+                  onPress={() => router.push("/my-listings")}
+                >
+                  <View style={styles.qaInactiveIcon}>
+                    <FileText size={22} color="#7F8C8D" />
+                  </View>
+                  <Text style={styles.qaLabel}>My Listings</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.qaItem}
+                  onPress={() => router.push("/agrimall")}
+                >
+                  <View style={styles.qaInactiveIcon}>
+                    <Store size={22} color="#7F8C8D" />
+                  </View>
+                  <Text style={styles.qaLabel}>AgriMall</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.qaItem}
+                  onPress={() => router.push("/export-gateway")}
+                >
+                  <View style={styles.qaInactiveIcon}>
+                    <Upload size={22} color="#7F8C8D" />
+                  </View>
+                  <Text style={styles.qaLabel}>Export</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* --- Bottom Nav Placeholder --- */}
+      <View style={styles.bottomNavContainer}>
+        <View style={styles.bottomNav}>
+          <View style={styles.navItemActive}>
+            <Home size={24} color="#FFF" />
+          </View>
+          <Store size={24} color="#95A5A6" />
+          <Wallet size={24} color="#95A5A6" />
+          <Receipt size={24} color="#95A5A6" />
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: { flex: 1 },
+  safeArea: { flex: 1, paddingTop: Platform.OS === "android" ? 40 : 0 },
+  scrollContent: { paddingBottom: 100 },
+
+  // --- Header "Pillows" ---
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 15,
+    marginBottom: 10,
+  },
+
+  // Profile Pill
+  profilePill: {
     flex: 1,
+    marginRight: 20,
+    height: 68,
   },
-  scrollContent: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  // Green Alert Banner
-  greenAlertBanner: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-    backgroundColor: neumorphicColors.primary[600],
-    borderRadius: borderRadius.xl,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+  profileContent: {
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: neumorphicColors.primary[700],
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  avatarWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 14,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  avatarGradient: {
+    flex: 1,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarInnerShadow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  avatarText: { color: "#FFF", fontSize: 18, fontWeight: "700" },
+  greetingStack: { justifyContent: "center" },
+  greetingLight: {
+    fontSize: 13,
+    color: COLORS.textGray,
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  greetingBold: { fontSize: 20, color: COLORS.textDark, fontWeight: "800" },
+
+  // Utility Buttons
+  utilityRow: { flexDirection: "row", gap: 14 },
+  utilityButton: {
+    width: 54,
+    height: 54,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // --- Shared Pillow Style ---
+  pillowOuter: {
+    backgroundColor: BACKGROUND_COLOR,
+    // Drop Shadow (Bottom Right)
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  pillowInner: {
+    flex: 1,
+    backgroundColor: BACKGROUND_COLOR,
+    // Highlight (Top Left)
+    borderTopWidth: 1.5,
+    borderLeftWidth: 1.5,
+    borderColor: "rgba(255,255,255, 0.9)",
+    borderBottomWidth: 0,
+    borderRightWidth: 0,
+    overflow: "hidden",
+  },
+
+  // --- "Dent" Styles (Grid Icons) ---
+  dentContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dentBackground: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.insetDark, // Darker "Hole" color
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    position: "absolute",
+  },
+  dentGlow: {
+    position: "absolute",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 15,
+    shadowOpacity: 1,
+    elevation: 0, // Glow handles opacity
+  },
+  dentShadowTop: {
+    // Simulates shadow cast by the top-left edge of the hole onto the floor
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 26,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderColor: "rgba(0,0,0, 0.08)", // Soft dark shadow
+  },
+  dentHighlightBottom: {
+    // Simulates light hitting the bottom-right edge of the hole
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 26,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderColor: "rgba(255,255,255, 0.7)", // Bright highlight
+  },
+
+  // --- Rest of Styles ---
+  pillsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 28,
+    paddingHorizontal: 24,
+  },
+  pillButton: {
+    flex: 1,
+    paddingVertical: 14,
+    backgroundColor: "#F0F0F3",
+    borderRadius: 25,
+    alignItems: "center",
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 3, height: 3 },
     shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255,255,255,0.8)",
+  },
+  pillText: { fontSize: 14, fontWeight: "600", color: "#2D3436" },
+
+  ctaWrapper: { marginHorizontal: 24, marginBottom: 30 },
+  ctaShadowLayer: {
+    borderRadius: 24,
+    shadowColor: "#4CD964",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 10,
+    backgroundColor: "#F0F0F3",
+  },
+  ctaGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  ctaContent: { flexDirection: "row", alignItems: "center" },
+  ctaText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
+  wave: {
+    position: "absolute",
+    borderWidth: 30,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+
+  gridContainer: { paddingHorizontal: 24, gap: 20, marginBottom: 30 },
+  gridRow: { flexDirection: "row", gap: 20 },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 24,
+    backgroundColor: "#F0F0F3",
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
+  },
+  statHeader: { marginBottom: 16 },
+  statLabel: {
+    fontSize: 13,
+    color: "#95A5A6",
+    marginBottom: 6,
+    fontWeight: "500",
+  },
+  statMain: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#2D3436",
+    marginBottom: 2,
+  },
+  statSub: { fontSize: 12, color: "#BDC3C7" },
+
+  section: { paddingHorizontal: 24, marginBottom: 24 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#2D3436",
+    marginBottom: 16,
+  },
+  quickActionsCard: {
+    padding: 24,
+    borderRadius: 24,
+    backgroundColor: "#F0F0F3",
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
+  },
+  qaRow: { flexDirection: "row", justifyContent: "space-between" },
+  qaItem: { alignItems: "center", width: 70 },
+  qaActiveIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 20,
+    backgroundColor: "#4CD964",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    shadowColor: "#4CD964",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 6,
   },
-  greenAlertIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: spacing.md,
-  },
-  greenAlertText: {
-    flex: 1,
-    ...typography.body,
-    fontWeight: "600",
-    color: neumorphicColors.text.inverse,
-  },
-  // Stats Grid
-  statsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  statCard: {
-    width: "47%",
-    margin: "1.5%",
-  },
-  // Quick Actions Card
-  quickActionsCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.md,
-  },
-  quickActionsTitle: {
-    ...typography.h4,
-    color: neumorphicColors.text.primary,
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.sm,
-  },
-  quickActionsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  quickActionWrapper: {
-    alignItems: "center",
-    width: QUICK_ACTION_CARD_SIZE,
-  },
-  quickActionTouchable: {
-    alignItems: "center",
-    width: "100%",
-  },
-  quickActionIconContainer: {
+  qaInactiveIcon: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: 20,
+    backgroundColor: "#F0F0F3",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: spacing.sm,
-    shadowColor: neumorphicColors.base.shadowDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    marginBottom: 10,
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: "#FFF",
   },
-  quickActionLabel: {
-    ...typography.caption,
+  qaLabel: {
+    fontSize: 11,
     fontWeight: "600",
-    color: neumorphicColors.text.secondary,
+    color: "#2D3436",
     textAlign: "center",
-    marginTop: 2,
   },
-  // Activity Card
-  activityCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+
+  bottomNavContainer: {
+    position: "absolute",
+    bottom: 30,
+    left: 24,
+    right: 24,
+    alignItems: "center",
   },
-  activityHeader: {
+  bottomNav: {
     flexDirection: "row",
+    backgroundColor: "#F0F0F3",
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    borderRadius: 35,
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing.sm,
-    paddingBottom: spacing.md,
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+    borderTopWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
   },
-  activitySectionTitle: {
-    ...typography.h4,
-    color: neumorphicColors.text.primary,
-  },
-  seeAll: {
-    ...typography.bodySmall,
-    color: neumorphicColors.primary[600],
-    fontWeight: "600",
-  },
-  activityItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-  },
-  activityItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: neumorphicColors.base.border,
-  },
-  activityIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: neumorphicColors.primary[50],
+  navItemActive: {
+    width: 48,
+    height: 48,
+    borderRadius: 18,
+    backgroundColor: "#4CD964",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: spacing.md,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    ...typography.body,
-    fontWeight: "600",
-    color: neumorphicColors.text.primary,
-  },
-  activitySubtitle: {
-    ...typography.caption,
-    color: neumorphicColors.text.tertiary,
-    marginTop: 2,
-  },
-  activityRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  activityTime: {
-    ...typography.caption,
-    color: neumorphicColors.text.tertiary,
-  },
-  bottomPadding: {
-    height: spacing.xl,
+    shadowColor: "#4CD964",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });
