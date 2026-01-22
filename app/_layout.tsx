@@ -66,7 +66,9 @@ function AuthNavigator() {
       currentSegment === "chat" ||
       currentSegment === "admin" ||
       currentSegment === "create-order" ||
-      currentSegment === "export";
+      currentSegment === "export" ||
+      currentSegment === "payment" ||
+      currentSegment === "payment-history";
 
     const onLoginPage = currentSegment === "index" || currentSegment === "";
 
@@ -80,7 +82,7 @@ function AuthNavigator() {
     // Handle logout: not authenticated but on protected route
     if (!isAuthenticated && inProtectedRoute) {
       console.log(
-        "Redirecting to login - not authenticated on protected route"
+        "Redirecting to login - not authenticated on protected route",
       );
       isNavigatingRef.current = true;
 
@@ -146,6 +148,11 @@ function AuthNavigator() {
         <Stack.Screen name="cart" options={{ headerShown: false }} />
         <Stack.Screen name="checkout" options={{ headerShown: false }} />
         <Stack.Screen name="export-gateway" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="payment/[paymentId]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="payment-history" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

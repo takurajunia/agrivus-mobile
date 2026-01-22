@@ -441,6 +441,53 @@ export interface TransactionHistory {
   };
 }
 
+// Payment Types
+export type PaymentMethodType =
+  | "ecocash"
+  | "onemoney"
+  | "telecash"
+  | "zipit"
+  | "usd_bank"
+  | "card";
+
+export type PaymentStatusType =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export interface PaymentStatus {
+  paymentId: string;
+  reference: string;
+  status: PaymentStatusType;
+  paid: boolean;
+  amount: number;
+  paidAmount?: number;
+  completedAt?: string;
+  paymentMethod?: string;
+}
+
+export interface PaymentHistoryItem {
+  id: string;
+  type: string;
+  amount: string;
+  currency: string;
+  paymentMethod: string;
+  status: string;
+  reference: string;
+  instructions?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface PaymentHistoryPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 // Notification Types
 export interface Notification {
   id: string;

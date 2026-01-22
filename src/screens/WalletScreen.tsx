@@ -9,7 +9,9 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  Linking,
 } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   Wallet,
   ArrowDownCircle,
@@ -19,6 +21,7 @@ import {
   DollarSign,
   CreditCard,
   Smartphone,
+  History,
 } from "lucide-react-native";
 import {
   neumorphicColors,
@@ -27,7 +30,8 @@ import {
   borderRadius,
 } from "../theme/neumorphic";
 import { walletService } from "../services/walletService";
-import type { WalletBalance, Transaction } from "../types";
+import { paymentService } from "../services/paymentService";
+import type { WalletBalance, Transaction, PaymentMethodType } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
   NeumorphicScreen,
@@ -37,13 +41,48 @@ import {
 } from "../components/neumorphic";
 
 const PAYMENT_METHODS = [
-  { id: "ecocash", name: "EcoCash", icon: Smartphone },
-  { id: "onemoney", name: "OneMoney", icon: Smartphone },
-  { id: "innbucks", name: "InnBucks", icon: Smartphone },
-  { id: "bank", name: "Bank Transfer", icon: CreditCard },
+  {
+    id: "ecocash",
+    name: "EcoCash",
+    icon: Smartphone,
+    description: "📱 You will be redirected to EcoCash to complete payment",
+  },
+  {
+    id: "onemoney",
+    name: "OneMoney",
+    icon: Smartphone,
+    description: "📱 You will be redirected to OneMoney to complete payment",
+  },
+  {
+    id: "telecash",
+    name: "Telecash",
+    icon: Smartphone,
+    description: "📱 You will be redirected to Telecash to complete payment",
+  },
+  {
+    id: "zipit",
+    name: "ZIPIT",
+    icon: CreditCard,
+    description: "🏦 You will receive bank transfer instructions",
+  },
+  {
+    id: "usd_bank",
+    name: "USD Bank Transfer",
+    icon: CreditCard,
+    description: "🏦 You will receive bank account details for USD transfer",
+  },
+  {
+    id: "card",
+    name: "Debit/Credit Card",
+    icon: CreditCard,
+    description: "💳 You will be redirected to secure card payment page",
+  },
 ];
 
 export default function WalletScreen() {
+  const router = useRouter();
+  const searchParams = useLocalSearchParams<{ payment?: string }>();
+
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,13 +91,26 @@ export default function WalletScreen() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("ecocash");
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethodType>("ecocash");
   const [accountDetails, setAccountDetails] = useState("");
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     loadWalletData();
-  }, []);
+
+    // Check for payment success/failure from URL params
+    const paymentStatus = searchParams.payment;
+    if (paymentStatus === "success") {
+      Alert.alert("Success", "✅ Payment completed successfully!");
+      // Reload wallet to show updated balance
+      setTimeout(() => loadWalletData(), 1000);
+    } else if (paymentStatus === "failed") {
+      Alert.alert("Failed", "❌ Payment failed. Please try again.");
+    } else if (paymentStatus === "cancelled") {
+      Alert.alert("Cancelled", "⚠️ Payment was cancelled.");
+    }
+  }, [searchParams.payment]);
 
   const loadWalletData = async () => {
     try {
@@ -83,23 +135,77 @@ export default function WalletScreen() {
   };
 
   const handleDeposit = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+    const amount = parseFloat(depositAmount);
+
+    // Validation
+    if (!amount || amount <= 0) {
       Alert.alert("Error", "Please enter a valid amount");
+      return;
+    }
+
+    if (amount < 1) {
+      Alert.alert("Error", "Minimum deposit amount is $1");
+      return;
+    }
+
+    if (amount > 10000) {
+      Alert.alert("Error", "Maximum deposit amount is $10,000 per transaction");
       return;
     }
 
     try {
       setProcessing(true);
-      await walletService.deposit(parseFloat(depositAmount), paymentMethod);
-      setShowDepositModal(false);
-      setDepositAmount("");
-      loadWalletData();
-      Alert.alert("Success", "Funds deposited successfully!");
+
+      // Initiate payment via gateway
+      const response = await paymentService.initiateDeposit({
+        amount,
+        paymentMethod: paymentMethod as PaymentMethodType,
+      });
+
+      if (response.success) {
+        const { paymentUrl, isMockPayment, paymentId, instructions } =
+          response.data;
+
+        // Close modal
+        setShowDepositModal(false);
+        setDepositAmount("");
+
+        if (isMockPayment && paymentId) {
+          // Navigate to mock payment screen
+          router.push({
+            pathname: "/payment/[paymentId]",
+            params: { paymentId },
+          });
+        } else if (paymentUrl) {
+          // Open external payment gateway (Paynow)
+          const canOpen = await Linking.canOpenURL(paymentUrl);
+          if (canOpen) {
+            await Linking.openURL(paymentUrl);
+          } else {
+            Alert.alert("Error", "Cannot open payment page. Please try again.");
+          }
+        } else if (instructions) {
+          // Manual payment (ZIPIT/Bank Transfer)
+          showManualPaymentInstructions(response.data);
+        }
+      }
     } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "Deposit failed");
+      console.error("Deposit initiation failed:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to initiate payment",
+      );
     } finally {
       setProcessing(false);
     }
+  };
+
+  const showManualPaymentInstructions = (paymentData: any) => {
+    Alert.alert(
+      "Payment Instructions",
+      `${paymentData.instructions}\n\nReference: ${paymentData.reference}\n\nPlease complete the payment and it will be credited within 24 hours.`,
+      [{ text: "OK" }],
+    );
   };
 
   const handleWithdraw = async () => {
@@ -118,7 +224,7 @@ export default function WalletScreen() {
       await walletService.withdraw(
         parseFloat(withdrawAmount),
         paymentMethod,
-        accountDetails
+        accountDetails,
       );
       setShowWithdrawModal(false);
       setWithdrawAmount("");
@@ -128,7 +234,7 @@ export default function WalletScreen() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Withdrawal failed"
+        error.response?.data?.message || "Withdrawal failed",
       );
     } finally {
       setProcessing(false);
@@ -241,6 +347,31 @@ export default function WalletScreen() {
           />
         </View>
 
+        {/* Payment History Button */}
+        <View style={styles.paymentHistoryContainer}>
+          <NeumorphicButton
+            title="📜 Payment History"
+            variant="tertiary"
+            icon={<History size={20} color={neumorphicColors.text.secondary} />}
+            onPress={() => router.push("/payment-history")}
+            style={styles.paymentHistoryButton}
+          />
+        </View>
+
+        {/* Locked Wallet Warning */}
+        {balance?.isLocked && (
+          <View style={styles.lockedWarning}>
+            <Lock size={24} color={neumorphicColors.semantic.error} />
+            <View style={styles.lockedTextContainer}>
+              <Text style={styles.lockedTitle}>🔒 Wallet Locked</Text>
+              <Text style={styles.lockedText}>
+                Your wallet has been locked. Please contact support for
+                assistance.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Transaction History */}
         <View style={styles.transactionsSection}>
           <Text style={styles.sectionTitle}>Transaction History</Text>
@@ -317,70 +448,110 @@ export default function WalletScreen() {
         onRequestClose={() => setShowDepositModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Deposit Funds</Text>
+          <ScrollView style={styles.modalScrollView}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Deposit Funds</Text>
 
-            <Text style={styles.inputLabel}>Amount</Text>
-            <View style={styles.amountInputContainer}>
-              <Text style={styles.currencyPrefix}>$</Text>
-              <TextInput
-                style={styles.amountInput}
-                placeholder="0.00"
-                placeholderTextColor={neumorphicColors.text.tertiary}
-                keyboardType="decimal-pad"
-                value={depositAmount}
-                onChangeText={setDepositAmount}
-              />
-            </View>
+              <Text style={styles.inputLabel}>Amount (USD) *</Text>
+              <View style={styles.amountInputContainer}>
+                <Text style={styles.currencyPrefix}>$</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  placeholder="0.00"
+                  placeholderTextColor={neumorphicColors.text.tertiary}
+                  keyboardType="decimal-pad"
+                  value={depositAmount}
+                  onChangeText={setDepositAmount}
+                  editable={!processing}
+                />
+              </View>
+              <Text style={styles.amountHint}>
+                Minimum: $1 | Maximum: $10,000 per transaction
+              </Text>
 
-            <Text style={styles.inputLabel}>Payment Method</Text>
-            <View style={styles.paymentMethods}>
-              {PAYMENT_METHODS.map((method) => (
-                <TouchableOpacity
-                  key={method.id}
-                  style={[
-                    styles.paymentMethod,
-                    paymentMethod === method.id && styles.paymentMethodActive,
-                  ]}
-                  onPress={() => setPaymentMethod(method.id)}
-                >
-                  <method.icon
-                    size={20}
-                    color={
-                      paymentMethod === method.id
-                        ? neumorphicColors.primary[600]
-                        : neumorphicColors.text.secondary
-                    }
-                  />
-                  <Text
+              <Text style={styles.inputLabel}>Payment Method *</Text>
+              <View style={styles.paymentMethods}>
+                {PAYMENT_METHODS.map((method) => (
+                  <TouchableOpacity
+                    key={method.id}
                     style={[
-                      styles.paymentMethodText,
-                      paymentMethod === method.id &&
-                        styles.paymentMethodTextActive,
+                      styles.paymentMethod,
+                      paymentMethod === method.id && styles.paymentMethodActive,
                     ]}
+                    onPress={() =>
+                      setPaymentMethod(method.id as PaymentMethodType)
+                    }
+                    disabled={processing}
                   >
-                    {method.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <method.icon
+                      size={20}
+                      color={
+                        paymentMethod === method.id
+                          ? neumorphicColors.primary[600]
+                          : neumorphicColors.text.secondary
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.paymentMethodText,
+                        paymentMethod === method.id &&
+                          styles.paymentMethodTextActive,
+                      ]}
+                    >
+                      {method.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            <View style={styles.modalButtons}>
-              <NeumorphicButton
-                title="Cancel"
-                variant="tertiary"
-                onPress={() => setShowDepositModal(false)}
-                style={styles.modalButton}
-              />
-              <NeumorphicButton
-                title="Deposit"
-                variant="primary"
-                onPress={handleDeposit}
-                loading={processing}
-                style={styles.modalButton}
-              />
+              {/* Payment Method Info */}
+              <View style={styles.paymentMethodInfo}>
+                <Text style={styles.paymentMethodInfoText}>
+                  {
+                    PAYMENT_METHODS.find((m) => m.id === paymentMethod)
+                      ?.description
+                  }
+                </Text>
+              </View>
+
+              {/* Development Mode Warning */}
+              <View style={styles.devWarning}>
+                <Text style={styles.devWarningText}>
+                  ℹ️{" "}
+                  <Text style={styles.devWarningBold}>Development Mode:</Text>{" "}
+                  This is currently using a mock payment gateway. Real payment
+                  processing will be enabled once Paynow integration is
+                  activated.
+                </Text>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <NeumorphicButton
+                  title="Cancel"
+                  variant="tertiary"
+                  onPress={() => setShowDepositModal(false)}
+                  style={styles.modalButton}
+                  disabled={processing}
+                />
+                <NeumorphicButton
+                  title={
+                    processing
+                      ? "Processing..."
+                      : `Deposit $${depositAmount || "0"}`
+                  }
+                  variant="primary"
+                  onPress={handleDeposit}
+                  loading={processing}
+                  style={styles.modalButton}
+                  disabled={
+                    processing ||
+                    !depositAmount ||
+                    parseFloat(depositAmount) < 1
+                  }
+                />
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
 
@@ -678,5 +849,73 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  modalScrollView: {
+    maxHeight: "90%",
+  },
+  amountHint: {
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginTop: spacing.xs,
+  },
+  paymentMethodInfo: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: neumorphicColors.primary[50],
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: neumorphicColors.primary[200],
+  },
+  paymentMethodInfoText: {
+    ...typography.bodySmall,
+    color: neumorphicColors.primary[700],
+  },
+  devWarning: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: neumorphicColors.semantic.warning + "15",
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: neumorphicColors.semantic.warning + "30",
+  },
+  devWarningText: {
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+  },
+  devWarningBold: {
+    fontWeight: "700",
+    color: neumorphicColors.semantic.warning,
+  },
+  paymentHistoryContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  paymentHistoryButton: {
+    width: "100%",
+  },
+  lockedWarning: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    backgroundColor: neumorphicColors.semantic.error + "15",
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: neumorphicColors.semantic.error + "30",
+    gap: spacing.md,
+  },
+  lockedTextContainer: {
+    flex: 1,
+  },
+  lockedTitle: {
+    ...typography.bodyMedium,
+    fontWeight: "700",
+    color: neumorphicColors.semantic.error,
+    marginBottom: spacing.xs,
+  },
+  lockedText: {
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
   },
 });

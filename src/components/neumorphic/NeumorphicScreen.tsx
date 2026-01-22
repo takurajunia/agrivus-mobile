@@ -15,6 +15,7 @@ import {
   leafPatterns,
   LeafConfig,
 } from "../../theme/neumorphic";
+import { LeafBackground } from "../LeafBackground";
 
 type ScreenVariant =
   | "default"
@@ -101,6 +102,7 @@ const NeumorphicScreen: React.FC<NeumorphicScreenProps> = ({
 
   const content = (
     <>
+      <LeafBackground />
       <StatusBar
         barStyle={statusBarStyle}
         backgroundColor="transparent"

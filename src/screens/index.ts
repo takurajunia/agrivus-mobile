@@ -12,3 +12,6 @@ export { default as AuctionDetailScreen } from "./AuctionDetailScreen";
 export { default as CreateAuctionScreen } from "./CreateAuctionScreen";
 export { default as MyBidsScreen } from "./MyBidsScreen";
 export { default as ExportGatewayScreen } from "./ExportGatewayScreen";
+export { default as MockPaymentScreen } from "./MockPaymentScreen";
+export { default as PaymentHistoryScreen } from "./PaymentHistoryScreen";
+export { default as RecommendationsScreen } from "./RecommendationsScreen";

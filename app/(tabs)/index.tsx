@@ -23,6 +23,7 @@ import {
   Bell,
   MessageSquare,
   Tag,
+  Sparkles,
 } from "lucide-react-native";
 
 // Import our textured leaf background
@@ -205,8 +206,8 @@ export default function HomeScreen() {
                 style={styles.pillButton}
                 onPress={() => {
                   if (item === "Auctions") router.push("/(tabs)/auctions");
-                  if (item === "AgriMall") router.push("/agrimall");
-                  if (item === "Export") router.push("/export-gateway");
+                  if (item === "AgriMall") router.push("/(tabs)/agrimall");
+                  if (item === "Export") router.push("/(tabs)/export-gateway");
                 }}
               >
                 <Text style={styles.pillText}>{item}</Text>
@@ -307,32 +308,55 @@ export default function HomeScreen() {
 
                 <TouchableOpacity
                   style={styles.qaItem}
-                  onPress={() => router.push("/my-listings")}
+                  onPress={() => router.push("/(tabs)/my-listings")}
                 >
-                  <View style={styles.qaInactiveIcon}>
-                    <FileText size={22} color="#7F8C8D" />
+                  <View style={styles.qaActiveIcon}>
+                    <FileText size={22} color="#FFF" strokeWidth={2.5} />
                   </View>
                   <Text style={styles.qaLabel}>My Listings</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.qaItem}
-                  onPress={() => router.push("/agrimall")}
+                  onPress={() => router.push("/(tabs)/agrimall")}
                 >
-                  <View style={styles.qaInactiveIcon}>
-                    <Store size={22} color="#7F8C8D" />
+                  <View style={styles.qaActiveIcon}>
+                    <Store size={22} color="#FFF" strokeWidth={2.5} />
                   </View>
                   <Text style={styles.qaLabel}>AgriMall</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.qaItem}
-                  onPress={() => router.push("/export-gateway")}
+                  onPress={() => router.push("/(tabs)/export-gateway")}
                 >
-                  <View style={styles.qaInactiveIcon}>
-                    <Upload size={22} color="#7F8C8D" />
+                  <View style={styles.qaActiveIcon}>
+                    <Upload size={22} color="#FFF" strokeWidth={2.5} />
                   </View>
                   <Text style={styles.qaLabel}>Export</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* --- Special Features --- */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Special Features</Text>
+            <View style={styles.quickActionsCard}>
+              <View style={[styles.qaRow, { justifyContent: "flex-start" }]}>
+                <TouchableOpacity
+                  style={styles.qaItem}
+                  onPress={() => router.push("/recommendations")}
+                >
+                  <View
+                    style={[
+                      styles.qaActiveIcon,
+                      { backgroundColor: "#9C27B0" },
+                    ]}
+                  >
+                    <Sparkles size={22} color="#FFF" strokeWidth={2.5} />
+                  </View>
+                  <Text style={styles.qaLabel}>AI Insights</Text>
                 </TouchableOpacity>
               </View>
             </View>
