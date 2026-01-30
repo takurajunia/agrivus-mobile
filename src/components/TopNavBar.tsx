@@ -41,10 +41,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   const { user } = useAuth();
   const { unreadCount: notificationCount } = useNotifications();
 
-  // Get user initials for avatar placeholder
-  const getInitials = (fullName?: string) => {
-    if (!fullName) return "U";
-    const names = fullName.split(" ");
+  // Get user initials for avatar placeholder (uses user.name or user.fullName)
+  const getInitials = () => {
+    const displayName = user?.name || user?.fullName || "";
+    if (!displayName.trim()) return "U";
+    const names = displayName.trim().split(/\s+/);
     if (names.length >= 2) {
       return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
     }
@@ -84,9 +85,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitials}>
-                {getInitials(user?.fullName)}
-              </Text>
+              <Text style={styles.avatarInitials}>{getInitials()}</Text>
             </View>
           )}
         </TouchableOpacity>
