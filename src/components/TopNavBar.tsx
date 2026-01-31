@@ -41,9 +41,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   const { user } = useAuth();
   const { unreadCount: notificationCount } = useNotifications();
 
-  // Get user initials for avatar placeholder (uses user.name or user.fullName)
+  // Get user initials for avatar placeholder (always use fullName if available)
   const getInitials = () => {
-    const displayName = user?.name || user?.fullName || "";
+    const displayName = user?.fullName || user?.name || "";
     if (!displayName.trim()) return "U";
     const names = displayName.trim().split(/\s+/);
     if (names.length >= 2) {
@@ -94,9 +94,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         <View style={styles.titleContainer}>
           {showGreeting ? (
             <>
-              <Text style={styles.greetingText}>Good day,</Text>
-              <Text style={styles.userName} numberOfLines={1}>
-                {user?.fullName?.split(" ")[0] || "User"}
+              <Text style={styles.greetingText}>
+                good day, {user?.fullName?.split(" ")[0] || "User"}
               </Text>
             </>
           ) : title ? (
