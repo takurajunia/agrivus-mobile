@@ -1,1 +1,0 @@
-module.exports = $$require_external('node:_stream_transform');

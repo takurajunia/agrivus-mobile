@@ -12,19 +12,19 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "axios": "^1.13.2",
-    "expo": "^55.0.0-preview.7",
+    "expo": "55.0.0-preview.7",
     "expo-blur": "~55.0.2",
     "expo-constants": "~55.0.2",
     "expo-font": "~55.0.2",
     "expo-image-picker": "~55.0.2",
     "expo-linear-gradient": "~55.0.2",
     "expo-linking": "~55.0.3",
-    "expo-router": "~55.0.0-beta.3",
+    "expo-router": "55.0.0-beta.4",
     "expo-status-bar": "~55.0.2",
     "lucide-react-native": "^0.563.0",
     "prop-types": "^15.8.1",
     "react": "19.2.0",
-    "react-dom": "^19.2.0",
+    "react-dom": "19.2.0",
     "react-native": "0.83.1",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-reanimated": "~4.2.1",
@@ -38,6 +38,10 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~19.2.2"
+  },
+  "overrides": {
+    "@expo/log-box": "55.0.3",
+    "@expo/dom-webview": "55.0.2"
   },
   "private": true
 }
