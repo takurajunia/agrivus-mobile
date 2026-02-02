@@ -31,6 +31,7 @@ import {
   LeafBackground,
   BACKGROUND_COLOR,
 } from "../../src/components/LeafBackground";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 
@@ -117,6 +118,8 @@ const WaveLines = () => (
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -200,7 +203,11 @@ export default function HomeScreen() {
 
           {/* --- Secondary Nav (Pills) --- */}
           <View style={styles.pillsRow}>
-            {["Auctions", "AgriMall", "Export"].map((item) => (
+            {[
+              "Auctions",
+              "AgriMall",
+              ...(canAccessExport ? ["Export"] : []),
+            ].map((item) => (
               <TouchableOpacity
                 key={item}
                 style={styles.pillButton}

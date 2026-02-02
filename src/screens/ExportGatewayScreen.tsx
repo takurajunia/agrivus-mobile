@@ -8,6 +8,7 @@ import {
   Dimensions,
   Animated,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -30,6 +31,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import { useAuth } from "../contexts/AuthContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SERVICE_CARD_SIZE = (SCREEN_WIDTH - 64) / 4;
@@ -124,10 +126,22 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
 export default function ExportGatewayScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const [assessments, setAssessments] = useState<ExportAssessment[]>([]);
   const [marketData, setMarketData] = useState<MarketIntelligence[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (user && !canAccessExport) {
+      Alert.alert(
+        "Access denied",
+        "Export Gateway is available to farmers and admins only.",
+      );
+      router.replace("/(tabs)/index");
+    }
+  }, [user, canAccessExport, router]);
 
   useEffect(() => {
     loadData();
@@ -331,10 +345,10 @@ export default function ExportGatewayScreen() {
                         styles.scoreProgress,
                         {
                           width: `${parseFloat(
-                            assessment.overallScore || "0"
+                            assessment.overallScore || "0",
                           )}%`,
                           backgroundColor: getReadinessColor(
-                            assessment.readinessLevel
+                            assessment.readinessLevel,
                           ),
                         },
                       ]}
@@ -388,8 +402,8 @@ export default function ExportGatewayScreen() {
                           market.priceTrend === "up"
                             ? neumorphicColors.semantic.success + "15"
                             : market.priceTrend === "down"
-                            ? neumorphicColors.semantic.error + "15"
-                            : neumorphicColors.base.input,
+                              ? neumorphicColors.semantic.error + "15"
+                              : neumorphicColors.base.input,
                       },
                     ]}
                   >
@@ -401,16 +415,16 @@ export default function ExportGatewayScreen() {
                             market.priceTrend === "up"
                               ? neumorphicColors.semantic.success
                               : market.priceTrend === "down"
-                              ? neumorphicColors.semantic.error
-                              : neumorphicColors.text.secondary,
+                                ? neumorphicColors.semantic.error
+                                : neumorphicColors.text.secondary,
                         },
                       ]}
                     >
                       {market.priceTrend === "up"
                         ? "↑ Rising"
                         : market.priceTrend === "down"
-                        ? "↓ Falling"
-                        : "→ Stable"}
+                          ? "↓ Falling"
+                          : "→ Stable"}
                     </Text>
                   </View>
                 </NeumorphicCard>

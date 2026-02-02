@@ -2,9 +2,6 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ["babel-preset-expo"],
-    plugins: [
-      // 'react-native-reanimated/plugin', // DELETE THIS LINE
-      "react-native-worklets/plugin", // ADD THIS LINE
-    ],
+    plugins: ["react-native-reanimated/plugin"],
   };
 };

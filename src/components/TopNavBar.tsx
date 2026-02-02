@@ -39,6 +39,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useAuth();
+  const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const { unreadCount: notificationCount } = useNotifications();
 
   // Get user initials for avatar placeholder (always use fullName if available)
@@ -165,13 +166,15 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           <Text style={styles.navPillText}>AgriMall</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.navPill}
-          onPress={() => router.push("/export-gateway")}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.navPillText}>Export</Text>
-        </TouchableOpacity>
+        {canAccessExport && (
+          <TouchableOpacity
+            style={styles.navPill}
+            onPress={() => router.push("/export-gateway")}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.navPillText}>Export</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

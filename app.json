@@ -3,6 +3,7 @@
     "name": "Agrivus Mobile",
     "slug": "agrivus-mobile",
     "version": "1.0.0",
+    "jsEngine": "hermes",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#2E7D32"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agrivus.mobile",
@@ -32,10 +31,7 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font"
-    ],
+    "plugins": ["expo-router", "expo-font"],
     "scheme": "agrivus",
     "extra": {
       "router": {},
