@@ -15,7 +15,9 @@ export interface CreateOrderData {
 }
 
 export interface AssignTransporterData {
-  transporterId: string;
+  primaryTransporterId: string;
+  secondaryTransporterId?: string;
+  tertiaryTransporterId?: string;
   transportCost: string;
   pickupLocation?: string;
 }
@@ -58,7 +60,7 @@ export interface OrderWithDetails extends Order {
 const ordersService = {
   // Create a new order (buyers only)
   async createOrder(
-    data: CreateOrderData
+    data: CreateOrderData,
   ): Promise<{ success: boolean; data: Order }> {
     const response = await api.post("/orders", data);
     return response.data;
@@ -99,7 +101,7 @@ const ordersService = {
           };
         }
         return item;
-      }
+      },
     );
 
     return {
@@ -118,7 +120,7 @@ const ordersService = {
 
   // Get single order by ID with full details
   async getOrderById(
-    id: string
+    id: string,
   ): Promise<{ success: boolean; data: OrderWithDetails }> {
     const response = await api.get(`/orders/${id}`);
 
@@ -161,6 +163,10 @@ const ordersService = {
       orderId: string;
       pickupLocation: string;
       deliveryLocation: string;
+      estimatedDistance?: number;
+      estimatedWeightKg?: number;
+      minimumFee?: number;
+      feeNote?: string;
       matches: TransporterMatch[];
     };
   }> {
@@ -168,22 +174,53 @@ const ordersService = {
     return response.data;
   },
 
-  // Assign transporter to order (farmers only)
+  // Assign transporters to order - Cascading system with 3 priority tiers
+  // Farmers select up to 3 transporters; first tier gets priority for 1 hour
   async assignTransporter(
     orderId: string,
-    data: AssignTransporterData
+    data: AssignTransporterData,
   ): Promise<{ success: boolean; data: Order }> {
     const response = await api.post(
       `/orders/${orderId}/assign-transporter`,
-      data
+      data,
     );
+    return response.data;
+  },
+
+  // Get pending transport offers (transporters only)
+  async getTransportOffers(status: string = "pending"): Promise<{
+    success: boolean;
+    data: {
+      offers: any[];
+    };
+  }> {
+    const response = await api.get(`/orders/offers?status=${status}`);
+    return response.data;
+  },
+
+  // Accept transport offer
+  async acceptTransportOffer(
+    offerId: string,
+  ): Promise<{ success: boolean; data: any }> {
+    const response = await api.post(`/orders/offers/${offerId}/accept`);
+    return response.data;
+  },
+
+  // Decline transport offer
+  async declineTransportOffer(
+    offerId: string,
+    reason?: string,
+  ): Promise<{ success: boolean; data: any }> {
+    const response = await api.post(`/orders/offers/${offerId}/decline`, {
+      reason,
+    });
     return response.data;
   },
 
   // Update order status
   async updateOrderStatus(
     orderId: string,
-    status: OrderStatus
+    status: OrderStatus,
   ): Promise<{ success: boolean; data: Order }> {
     const response = await api.patch(`/orders/${orderId}/status`, { status });
     return response.data;
@@ -191,7 +228,7 @@ const ordersService = {
 
   // Confirm delivery (buyers only) - releases escrow
   async confirmDelivery(
-    orderId: string
+    orderId: string,
   ): Promise<{ success: boolean; data: Order }> {
     const response = await api.post(`/orders/${orderId}/confirm-delivery`);
     return response.data;
@@ -200,7 +237,7 @@ const ordersService = {
   // Cancel order
   async cancelOrder(
     orderId: string,
-    reason?: string
+    reason?: string,
   ): Promise<{ success: boolean; data: Order }> {
     const response = await api.post(`/orders/${orderId}/cancel`, { reason });
     return response.data;
