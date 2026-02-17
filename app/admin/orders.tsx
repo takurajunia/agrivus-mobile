@@ -175,14 +175,19 @@ export default function AdminOrdersScreen() {
     }
   };
 
-  const formatCurrency = (amount: number | string) => {
+  const formatCurrency = (amount: number | string | undefined) => {
+    if (!amount && amount !== 0) return "$0.00";
     const num = typeof amount === "string" ? parseFloat(amount) : amount;
-    return `₦${num.toLocaleString()}`;
+    if (isNaN(num)) return "$0.00";
+    return `$${num.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-NG", {
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",

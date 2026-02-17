@@ -254,13 +254,19 @@ export default function AuctionDetailScreen() {
                 $
                 {parseFloat(
                   auction.currentPrice || auction.startingPrice
-                ).toLocaleString()}
+                ).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </Text>
             </View>
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Starting Price</Text>
               <Text style={styles.startingPrice}>
-                ${parseFloat(auction.startingPrice).toLocaleString()}
+                ${parseFloat(auction.startingPrice).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </Text>
             </View>
           </View>

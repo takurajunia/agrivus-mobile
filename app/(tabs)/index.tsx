@@ -24,6 +24,12 @@ import {
   MessageSquare,
   Tag,
   Sparkles,
+  Users,
+  Shield,
+  BarChart3,
+  Settings,
+  TrendingUp,
+  AlertTriangle,
 } from "lucide-react-native";
 
 // Import our textured leaf background
@@ -120,7 +126,25 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
+  const isBuyer = user?.role === "buyer";
+  const isAdmin = user?.role === "admin";
+  const boostMultiplier = user?.boostMultiplier
+    ? parseFloat(user.boostMultiplier)
+    : 1;
   const [refreshing, setRefreshing] = useState(false);
+
+  // Helper function to get user initials
+  const getInitials = (fullName?: string): string => {
+    if (!fullName) return "U";
+    const names = fullName.trim().split(" ");
+    return names.map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  // Helper function to get first name
+  const getFirstName = (fullName?: string): string => {
+    if (!fullName) return "Guest";
+    return fullName.trim().split(" ")[0];
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -131,7 +155,65 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <LeafBackground />
 
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        {/* ================= TOP NAVBAR ================= */}
+        <View style={styles.headerContainer}>
+          {/* 1. LEFT ISLAND: Profile Pill */}
+          <FloatPillow
+            style={styles.profilePill}
+            borderRadius={28}
+            // Align LEFT: flex-start and extra padding
+            contentStyle={{ alignItems: "flex-start", paddingLeft: 8 }}
+            onPress={() => router.push("/(tabs)/profile")}
+          >
+            <View style={styles.profileContent}>
+              <View style={styles.avatarWrapper}>
+                <LinearGradient
+                  colors={COLORS.greenGradient}
+                  style={styles.avatarGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Text style={styles.avatarText}>{getInitials(user?.fullName)}</Text>
+                </LinearGradient>
+                <View style={styles.avatarInnerShadow} />
+              </View>
+
+              <View style={styles.greetingStack}>
+                <Text style={styles.greetingLight}>Good day,</Text>
+                <Text style={styles.greetingBold}>{getFirstName(user?.fullName)}</Text>
+              </View>
+            </View>
+          </FloatPillow>
+
+          {/* 2. RIGHT ISLANDS: The "Soft Tiles" */}
+          <View style={styles.utilityRow}>
+            {/* Notification Bell */}
+            <FloatPillow
+              style={styles.utilityButton}
+              borderRadius={18}
+              onPress={() => router.push("/(tabs)/notifications")}
+            >
+              {/* Thin, Grey, Hollow Bell */}
+              <Bell size={24} color={COLORS.iconGrey} strokeWidth={1.8} />
+            </FloatPillow>
+
+            {/* Chat Bubble */}
+            <FloatPillow
+              style={styles.utilityButton}
+              borderRadius={18}
+              onPress={() => router.push("/(tabs)/chat")}
+            >
+              {/* Thin, Grey, Hollow Bubble */}
+              <MessageSquare
+                size={24}
+                color={COLORS.iconGrey}
+                strokeWidth={1.8}
+              />
+            </FloatPillow>
+          </View>
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -143,231 +225,407 @@ export default function HomeScreen() {
             />
           }
         >
-          {/* ================= TOP NAVBAR ================= */}
-          <View style={styles.headerContainer}>
-            {/* 1. LEFT ISLAND: Profile Pill */}
-            <FloatPillow
-              style={styles.profilePill}
-              borderRadius={28}
-              // Align LEFT: flex-start and extra padding
-              contentStyle={{ alignItems: "flex-start", paddingLeft: 8 }}
-              onPress={() => router.push("/(tabs)/profile")}
-            >
-              <View style={styles.profileContent}>
-                <View style={styles.avatarWrapper}>
-                  <LinearGradient
-                    colors={COLORS.greenGradient}
-                    style={styles.avatarGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={styles.avatarText}>SD</Text>
-                  </LinearGradient>
-                  <View style={styles.avatarInnerShadow} />
-                </View>
-
-                <View style={styles.greetingStack}>
-                  <Text style={styles.greetingLight}>Good day,</Text>
-                  <Text style={styles.greetingBold}>Sam</Text>
-                </View>
-              </View>
-            </FloatPillow>
-
-            {/* 2. RIGHT ISLANDS: The "Soft Tiles" */}
-            <View style={styles.utilityRow}>
-              {/* Notification Bell */}
-              <FloatPillow
-                style={styles.utilityButton}
-                borderRadius={18}
-                onPress={() => router.push("/(tabs)/notifications")}
-              >
-                {/* Thin, Grey, Hollow Bell */}
-                <Bell size={24} color={COLORS.iconGrey} strokeWidth={1.8} />
-              </FloatPillow>
-
-              {/* Chat Bubble */}
-              <FloatPillow
-                style={styles.utilityButton}
-                borderRadius={18}
-                onPress={() => router.push("/(tabs)/chat")}
-              >
-                {/* Thin, Grey, Hollow Bubble */}
-                <MessageSquare
-                  size={24}
-                  color={COLORS.iconGrey}
-                  strokeWidth={1.8}
-                />
-              </FloatPillow>
-            </View>
-          </View>
 
           {/* --- Secondary Nav (Pills) --- */}
-          <View style={styles.pillsRow}>
-            {[
-              "Auctions",
-              "AgriMall",
-              ...(canAccessExport ? ["Export"] : []),
-            ].map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={styles.pillButton}
-                onPress={() => {
-                  if (item === "Auctions") router.push("/(tabs)/auctions");
-                  if (item === "AgriMall") router.push("/(tabs)/agrimall");
-                  if (item === "Export") router.push("/(tabs)/export-gateway");
-                }}
-              >
-                <Text style={styles.pillText}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {!isAdmin && (
+            <View style={styles.pillsRow}>
+              {[
+                "Auctions",
+                "AgriMall",
+                ...(canAccessExport ? ["Export"] : []),
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.pillButton}
+                  onPress={() => {
+                    if (item === "Auctions") router.push("/(tabs)/auctions");
+                    if (item === "AgriMall") router.push("/(tabs)/agrimall");
+                    if (item === "Export") router.push("/(tabs)/export-gateway");
+                  }}
+                >
+                  <Text style={styles.pillText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* --- CTA Banner --- */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.ctaWrapper}
-            onPress={() => router.push("/create-listing")}
-          >
-            <View style={styles.ctaShadowLayer}>
-              <LinearGradient
-                colors={COLORS.greenGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.ctaGradient}
-              >
-                <WaveLines />
-                <View style={styles.ctaContent}>
-                  <Package
-                    size={30}
-                    color="#FFF"
-                    style={{ marginRight: 14 }}
-                    strokeWidth={2}
-                  />
-                  <Text style={styles.ctaText}>
-                    List your products to start selling!
-                  </Text>
-                </View>
-              </LinearGradient>
-            </View>
-          </TouchableOpacity>
+          {!isAdmin && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.ctaWrapper}
+              onPress={() => router.push("/create-listing")}
+            >
+              <View style={styles.ctaShadowLayer}>
+                <LinearGradient
+                  colors={COLORS.greenGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.ctaGradient}
+                >
+                  <WaveLines />
+                  <View style={styles.ctaContent}>
+                    <Package
+                      size={30}
+                      color="#FFF"
+                      style={{ marginRight: 14 }}
+                      strokeWidth={2}
+                    />
+                    <Text style={styles.ctaText}>
+                      List your products to start selling!
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* --- Admin CTA Banner --- */}
+          {isAdmin && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.ctaWrapper}
+              onPress={() => router.push("/admin")}
+            >
+              <View style={styles.ctaShadowLayer}>
+                <LinearGradient
+                  colors={["#667EEA", "#764BA2"] as const}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.ctaGradient}
+                >
+                  <WaveLines />
+                  <View style={styles.ctaContent}>
+                    <Shield
+                      size={30}
+                      color="#FFF"
+                      style={{ marginRight: 14 }}
+                      strokeWidth={2}
+                    />
+                    <Text style={styles.ctaText}>
+                      View Full Admin Dashboard
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
+          )}
 
           {/* --- Stats Grid --- */}
-          <View style={styles.gridContainer}>
-            <View style={styles.gridRow}>
-              {/* Card 1: Active Orders */}
-              <View style={styles.statCard}>
-                <View style={styles.statHeader}>
-                  <InsetDent icon={ShoppingCart} color="#4CD964" />
-                </View>
-                <Text style={styles.statLabel}>Active Orders</Text>
-                <Text style={styles.statMain}>0</Text>
-                <Text style={styles.statSub}>– 0%</Text>
+          {!isAdmin && (
+            <View style={styles.gridContainer}>
+              <View style={styles.gridRow}>
+                {/* Card 1: Active Orders */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push("/(tabs)/orders")}
+                >
+                  <View style={styles.statHeader}>
+                    <InsetDent icon={ShoppingCart} color="#4CD964" />
+                  </View>
+                  <Text style={styles.statLabel}>Active Orders</Text>
+                  <Text style={styles.statMain}>0</Text>
+                  <Text style={styles.statSub}>– 0%</Text>
+                </TouchableOpacity>
+
+                {/* Card 2: Boost */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push("/boost")}
+                >
+                  <View style={styles.statHeader}>
+                    <InsetDent icon={Sparkles} color="#9C27B0" />
+                  </View>
+                  <Text style={styles.statLabel}>Boost</Text>
+                  <Text style={styles.statMain}>
+                    {boostMultiplier.toFixed(1)}x
+                  </Text>
+                  <Text style={styles.statSub}>Visibility</Text>
+                </TouchableOpacity>
               </View>
 
-              {/* Card 2: Revenue */}
-              <View style={styles.statCard}>
-                <View style={styles.statHeader}>
-                  <InsetDent icon={DollarSign} color="#4CD964" />
-                </View>
-                <Text style={styles.statLabel}>Revenue</Text>
-                <Text style={styles.statMain}>$0.00</Text>
-                <Text style={styles.statSub}>– 0%</Text>
+              <View style={styles.gridRow}>
+                {/* Card 3: Live Auctions (Orange) */}
+                {!isBuyer && (
+                  <TouchableOpacity
+                    style={styles.statCard}
+                    activeOpacity={0.85}
+                    onPress={() => router.push("/(tabs)/auctions")}
+                  >
+                    <View style={styles.statHeader}>
+                      <InsetDent icon={Gavel} color="#FF9800" isOrange />
+                    </View>
+                    <Text style={styles.statLabel}>Live Auctions</Text>
+                    <Text style={styles.statMain}>0</Text>
+                    <Text style={styles.statSub}>– 0%</Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Card 4: My Listings */}
+                {!isBuyer && (
+                  <TouchableOpacity
+                    style={styles.statCard}
+                    activeOpacity={0.85}
+                    onPress={() => router.push("/(tabs)/my-listings")}
+                  >
+                    <View style={styles.statHeader}>
+                      <InsetDent icon={Package} color="#4CD964" />
+                    </View>
+                    <Text style={styles.statLabel}>My Listings</Text>
+                    <Text style={styles.statMain}>2</Text>
+                    <Text style={styles.statSub}>– 0%</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
+          )}
 
-            <View style={styles.gridRow}>
-              {/* Card 3: Live Auctions (Orange) */}
-              <View style={styles.statCard}>
-                <View style={styles.statHeader}>
-                  <InsetDent icon={Gavel} color="#FF9800" isOrange />
-                </View>
-                <Text style={styles.statLabel}>Live Auctions</Text>
-                <Text style={styles.statMain}>0</Text>
-                <Text style={styles.statSub}>– 0%</Text>
+          {/* --- Admin Stats Grid --- */}
+          {isAdmin && (
+            <View style={styles.gridContainer}>
+              <View style={styles.gridRow}>
+                {/* Card 1: Total Users */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push("/admin/users")}
+                >
+                  <View style={styles.statHeader}>
+                    <InsetDent icon={Users} color="#667EEA" />
+                  </View>
+                  <Text style={styles.statLabel}>Total Users</Text>
+                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statSub}>Platform</Text>
+                </TouchableOpacity>
+
+                {/* Card 2: Platform Revenue */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push("/admin/transactions")}
+                >
+                  <View style={styles.statHeader}>
+                    <InsetDent icon={DollarSign} color="#4CD964" />
+                  </View>
+                  <Text style={styles.statLabel}>Revenue</Text>
+                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statSub}>Total</Text>
+                </TouchableOpacity>
               </View>
 
-              {/* Card 4: Products */}
-              <View style={styles.statCard}>
-                <View style={styles.statHeader}>
-                  <InsetDent icon={Package} color="#4CD964" />
-                </View>
-                <Text style={styles.statLabel}>Products</Text>
-                <Text style={styles.statMain}>2</Text>
-                <Text style={styles.statSub}>– 0%</Text>
+              <View style={styles.gridRow}>
+                {/* Card 3: All Orders */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push("/admin/orders")}
+                >
+                  <View style={styles.statHeader}>
+                    <InsetDent icon={ShoppingCart} color="#FF9800" isOrange />
+                  </View>
+                  <Text style={styles.statLabel}>All Orders</Text>
+                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statSub}>Total</Text>
+                </TouchableOpacity>
+
+                {/* Card 4: Security */}
+                <TouchableOpacity
+                  style={styles.statCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push("/admin/security")}
+                >
+                  <View style={styles.statHeader}>
+                    <InsetDent icon={Shield} color="#E53E3E" />
+                  </View>
+                  <Text style={styles.statLabel}>Security</Text>
+                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statSub}>Alerts</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </View>
+          )}
 
           {/* --- Quick Actions --- */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.quickActionsCard}>
-              <View style={styles.qaRow}>
-                <TouchableOpacity
-                  style={styles.qaItem}
-                  onPress={() => router.push("/create-listing")}
-                >
-                  <View style={styles.qaActiveIcon}>
-                    <Tag size={22} color="#FFF" strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.qaLabel}>New Listing</Text>
-                </TouchableOpacity>
+          {!isBuyer && !isAdmin && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Quick Actions</Text>
+              <View style={styles.quickActionsCard}>
+                <View style={styles.qaRow}>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/create-listing")}
+                  >
+                    <View style={styles.qaActiveIcon}>
+                      <Tag size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>New Listing</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.qaItem}
-                  onPress={() => router.push("/(tabs)/my-listings")}
-                >
-                  <View style={styles.qaActiveIcon}>
-                    <FileText size={22} color="#FFF" strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.qaLabel}>My Listings</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/(tabs)/my-listings")}
+                  >
+                    <View style={styles.qaActiveIcon}>
+                      <FileText size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>My Listings</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.qaItem}
-                  onPress={() => router.push("/(tabs)/agrimall")}
-                >
-                  <View style={styles.qaActiveIcon}>
-                    <Store size={22} color="#FFF" strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.qaLabel}>AgriMall</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/(tabs)/agrimall")}
+                  >
+                    <View style={styles.qaActiveIcon}>
+                      <Store size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>AgriMall</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.qaItem}
-                  onPress={() => router.push("/(tabs)/export-gateway")}
-                >
-                  <View style={styles.qaActiveIcon}>
-                    <Upload size={22} color="#FFF" strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.qaLabel}>Export</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/(tabs)/export-gateway")}
+                  >
+                    <View style={styles.qaActiveIcon}>
+                      <Upload size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Export</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          )}
+
+          {/* --- Admin Quick Actions --- */}
+          {isAdmin && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Admin Management</Text>
+              <View style={styles.quickActionsCard}>
+                <View style={styles.qaRow}>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/users")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#667EEA" }]}>
+                      <Users size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Users</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/orders")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#F59E0B" }]}>
+                      <ShoppingCart size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Orders</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/transactions")}
+                  >
+                    <View style={styles.qaActiveIcon}>
+                      <DollarSign size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Transactions</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/reports")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#8B5CF6" }]}>
+                      <BarChart3 size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Reports</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* --- Special Features --- */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Special Features</Text>
-            <View style={styles.quickActionsCard}>
-              <View style={[styles.qaRow, { justifyContent: "flex-start" }]}>
-                <TouchableOpacity
-                  style={styles.qaItem}
-                  onPress={() => router.push("/recommendations")}
-                >
-                  <View
-                    style={[
-                      styles.qaActiveIcon,
-                      { backgroundColor: "#9C27B0" },
-                    ]}
+          {!isAdmin && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Special Features</Text>
+              <View style={styles.quickActionsCard}>
+                <View style={[styles.qaRow, { justifyContent: "flex-start" }]}>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/recommendations")}
                   >
-                    <Sparkles size={22} color="#FFF" strokeWidth={2.5} />
-                  </View>
-                  <Text style={styles.qaLabel}>AI Insights</Text>
-                </TouchableOpacity>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#9C27B0" },
+                      ]}
+                    >
+                      <Sparkles size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>AI Insights</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          )}
+
+          {/* --- Admin System Monitoring --- */}
+          {isAdmin && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>System Monitoring</Text>
+              <View style={styles.quickActionsCard}>
+                <View style={[styles.qaRow, { justifyContent: "flex-start" }]}>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/security")}
+                  >
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#E53E3E" },
+                      ]}
+                    >
+                      <Shield size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Security</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/reports")}
+                  >
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#059669" },
+                      ]}
+                    >
+                      <TrendingUp size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Analytics</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin")}
+                  >
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#6366F1" },
+                      ]}
+                    >
+                      <Settings size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Settings</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* --- Recent Activity --- */}
           <View style={styles.section}>
@@ -376,22 +634,34 @@ export default function HomeScreen() {
               <View style={styles.activityRow}>
                 <View style={styles.activityIconBox}>
                   <View style={styles.activityGlow} />
-                  <Bell
-                    size={24}
-                    color={COLORS.greenGradient[1]}
-                    strokeWidth={2.5}
-                  />
+                  {!isAdmin ? (
+                    <Bell
+                      size={24}
+                      color={COLORS.greenGradient[1]}
+                      strokeWidth={2.5}
+                    />
+                  ) : (
+                    <AlertTriangle
+                      size={24}
+                      color="#667EEA"
+                      strokeWidth={2.5}
+                    />
+                  )}
                 </View>
 
                 <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>New Order Received!</Text>
+                  <Text style={styles.activityTitle}>
+                    {!isAdmin ? "New Order Received!" : "Platform Activity"}
+                  </Text>
                   <Text style={styles.activitySub}>
-                    You have a new order to process.
+                    {!isAdmin
+                      ? "You have a new order to process."
+                      : "Monitor all platform activities from here."}
                   </Text>
                 </View>
 
                 <View style={styles.pressedBadge}>
-                  <Text style={styles.pressedText}>New</Text>
+                  <Text style={styles.pressedText}>{!isAdmin ? "New" : "Admin"}</Text>
                 </View>
               </View>
             </FloatPillow>
@@ -406,7 +676,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1, paddingTop: Platform.OS === "android" ? 40 : 0 },
+  safeArea: { flex: 1 },
   scrollContent: { paddingBottom: 100 },
 
   // --- Header ---

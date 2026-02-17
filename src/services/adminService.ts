@@ -3,39 +3,26 @@ import type { User, Order, Transaction } from "../types";
 
 // Admin Statistics Types
 export interface AdminStatistics {
-  users: {
-    total: number;
-    farmers: number;
-    buyers: number;
-    transporters: number;
-    agroSuppliers: number;
-    newThisMonth: number;
-    activeToday: number;
+  overview: {
+    totalUsers: number;
+    totalListings: number;
+    totalOrders: number;
+    totalVolume: number;
   };
-  orders: {
-    total: number;
-    pending: number;
-    inTransit: number;
-    delivered: number;
-    cancelled: number;
-    todayCount: number;
-    thisMonthCount: number;
+  users: Array<{ role: string; count: number }>;
+  orders: Array<{ status: string; count: number }>;
+  revenue: {
+    total_commission?: number | string;
+    total_transport_fees?: number | string;
+    total_transactions?: number;
+    total_volume?: number | string;
   };
-  transactions: {
-    totalVolume: string;
-    todayVolume: string;
-    thisMonthVolume: string;
-    averageOrderValue: string;
-  };
-  listings: {
-    total: number;
-    active: number;
-    sold: number;
-  };
-  auctions: {
-    total: number;
-    live: number;
-    completed: number;
+  recentOrders: any[];
+  recentActivity: any[];
+  platformHealth: {
+    activeUsers: number;
+    pendingOrders: number;
+    securityAlerts: number;
   };
 }
 

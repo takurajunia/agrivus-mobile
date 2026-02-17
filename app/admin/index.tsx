@@ -84,6 +84,18 @@ export default function AdminDashboardScreen() {
     })}`;
   };
 
+  // Helper function to get user count by role
+  const getUserCountByRole = (role: string): number => {
+    const roleData = stats?.users?.find((u) => u.role === role);
+    return roleData ? Number(roleData.count) : 0;
+  };
+
+  // Helper function to get order count by status
+  const getOrderCountByStatus = (status: string): number => {
+    const orderData = stats?.orders?.find((o) => o.status === status);
+    return orderData ? Number(orderData.count) : 0;
+  };
+
   if (user?.role !== "admin") {
     return (
       <NeumorphicScreen variant="dashboard">
@@ -147,7 +159,7 @@ export default function AdminDashboardScreen() {
         <Text style={styles.sectionTitle}>Users</Text>
         <View style={styles.statsGrid}>
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={0}
             variant="stat"
           >
@@ -159,12 +171,12 @@ export default function AdminDashboardScreen() {
             >
               <Users size={24} color={neumorphicColors.primary[600]} />
             </View>
-            <Text style={styles.statValue}>{stats?.users.total || 0}</Text>
+            <Text style={styles.statValue}>{stats?.overview?.totalUsers || 0}</Text>
             <Text style={styles.statLabel}>Total Users</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={50}
             variant="stat"
           >
@@ -177,13 +189,13 @@ export default function AdminDashboardScreen() {
               <UserCheck size={24} color={neumorphicColors.semantic.success} />
             </View>
             <Text style={styles.statValue}>
-              {stats?.users.activeToday || 0}
+              {stats?.platformHealth?.activeUsers || 0}
             </Text>
-            <Text style={styles.statLabel}>Active Today</Text>
+            <Text style={styles.statLabel}>Active Users</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={100}
             variant="stat"
           >
@@ -196,13 +208,13 @@ export default function AdminDashboardScreen() {
               <TrendingUp size={24} color={neumorphicColors.secondary[600]} />
             </View>
             <Text style={styles.statValue}>
-              {stats?.users.newThisMonth || 0}
+              {getUserCountByRole("buyer")}
             </Text>
-            <Text style={styles.statLabel}>New This Month</Text>
+            <Text style={styles.statLabel}>Buyers</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={150}
             variant="stat"
           >
@@ -214,7 +226,7 @@ export default function AdminDashboardScreen() {
             >
               <Package size={24} color={neumorphicColors.semantic.info} />
             </View>
-            <Text style={styles.statValue}>{stats?.users.farmers || 0}</Text>
+            <Text style={styles.statValue}>{getUserCountByRole("farmer")}</Text>
             <Text style={styles.statLabel}>Farmers</Text>
           </NeumorphicCard>
         </View>
@@ -223,7 +235,7 @@ export default function AdminDashboardScreen() {
         <Text style={styles.sectionTitle}>Orders</Text>
         <View style={styles.statsGrid}>
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={200}
             variant="stat"
           >
@@ -235,12 +247,12 @@ export default function AdminDashboardScreen() {
             >
               <ShoppingBag size={24} color={neumorphicColors.primary[600]} />
             </View>
-            <Text style={styles.statValue}>{stats?.orders.total || 0}</Text>
+            <Text style={styles.statValue}>{stats?.overview?.totalOrders || 0}</Text>
             <Text style={styles.statLabel}>Total Orders</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={250}
             variant="stat"
           >
@@ -252,12 +264,12 @@ export default function AdminDashboardScreen() {
             >
               <Package size={24} color={neumorphicColors.semantic.warning} />
             </View>
-            <Text style={styles.statValue}>{stats?.orders.pending || 0}</Text>
+            <Text style={styles.statValue}>{stats?.platformHealth?.pendingOrders || 0}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={300}
             variant="stat"
           >
@@ -269,12 +281,12 @@ export default function AdminDashboardScreen() {
             >
               <TrendingUp size={24} color={neumorphicColors.semantic.info} />
             </View>
-            <Text style={styles.statValue}>{stats?.orders.inTransit || 0}</Text>
+            <Text style={styles.statValue}>{getOrderCountByStatus("in_transit")}</Text>
             <Text style={styles.statLabel}>In Transit</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={350}
             variant="stat"
           >
@@ -286,7 +298,7 @@ export default function AdminDashboardScreen() {
             >
               <UserCheck size={24} color={neumorphicColors.semantic.success} />
             </View>
-            <Text style={styles.statValue}>{stats?.orders.delivered || 0}</Text>
+            <Text style={styles.statValue}>{getOrderCountByStatus("delivered")}</Text>
             <Text style={styles.statLabel}>Delivered</Text>
           </NeumorphicCard>
         </View>
@@ -303,32 +315,32 @@ export default function AdminDashboardScreen() {
               <DollarSign size={24} color={neumorphicColors.semantic.success} />
               <Text style={styles.financialLabel}>Total Volume</Text>
               <Text style={styles.financialValue}>
-                {formatCurrency(stats?.transactions.totalVolume || "0")}
+                {formatCurrency(stats?.overview?.totalVolume || 0)}
               </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.financialItem}>
               <TrendingUp size={24} color={neumorphicColors.primary[600]} />
-              <Text style={styles.financialLabel}>This Month</Text>
+              <Text style={styles.financialLabel}>Commission</Text>
               <Text style={styles.financialValue}>
-                {formatCurrency(stats?.transactions.thisMonthVolume || "0")}
+                {formatCurrency(stats?.revenue?.total_commission || 0)}
               </Text>
             </View>
           </View>
           <View style={styles.financialRow}>
             <View style={styles.financialItem}>
               <BarChart3 size={24} color={neumorphicColors.semantic.info} />
-              <Text style={styles.financialLabel}>Today</Text>
+              <Text style={styles.financialLabel}>Transport Fees</Text>
               <Text style={styles.financialValue}>
-                {formatCurrency(stats?.transactions.todayVolume || "0")}
+                {formatCurrency(stats?.revenue?.total_transport_fees || 0)}
               </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.financialItem}>
               <DollarSign size={24} color={neumorphicColors.secondary[600]} />
-              <Text style={styles.financialLabel}>Avg Order</Text>
+              <Text style={styles.financialLabel}>Transactions</Text>
               <Text style={styles.financialValue}>
-                {formatCurrency(stats?.transactions.averageOrderValue || "0")}
+                {stats?.revenue?.total_transactions || 0}
               </Text>
             </View>
           </View>
@@ -338,7 +350,7 @@ export default function AdminDashboardScreen() {
         <Text style={styles.sectionTitle}>Marketplace</Text>
         <View style={styles.statsGrid}>
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={450}
             variant="stat"
           >
@@ -350,12 +362,12 @@ export default function AdminDashboardScreen() {
             >
               <Package size={24} color={neumorphicColors.primary[600]} />
             </View>
-            <Text style={styles.statValue}>{stats?.listings.active || 0}</Text>
-            <Text style={styles.statLabel}>Active Listings</Text>
+            <Text style={styles.statValue}>{stats?.overview?.totalListings || 0}</Text>
+            <Text style={styles.statLabel}>Total Listings</Text>
           </NeumorphicCard>
 
           <NeumorphicCard
-            style={[styles.statCard, { width: cardWidth }]}
+            style={{ ...styles.statCard, width: cardWidth }}
             animationDelay={500}
             variant="stat"
           >
@@ -367,8 +379,8 @@ export default function AdminDashboardScreen() {
             >
               <Gavel size={24} color={neumorphicColors.semantic.warning} />
             </View>
-            <Text style={styles.statValue}>{stats?.auctions.live || 0}</Text>
-            <Text style={styles.statLabel}>Live Auctions</Text>
+            <Text style={styles.statValue}>{stats?.platformHealth?.securityAlerts || 0}</Text>
+            <Text style={styles.statLabel}>Security Alerts</Text>
           </NeumorphicCard>
         </View>
 

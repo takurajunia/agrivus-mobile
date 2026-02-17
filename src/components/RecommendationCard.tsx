@@ -104,7 +104,10 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
         <View style={styles.metricCard}>
           <Text style={styles.metricLabel}>Potential Revenue</Text>
           <Text style={styles.metricValueGreen}>
-            ${parseFloat(recommendation.potentialRevenue).toLocaleString()}
+            ${parseFloat(recommendation.potentialRevenue).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </Text>
         </View>
         <View style={styles.metricCard}>

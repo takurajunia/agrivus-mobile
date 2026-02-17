@@ -308,14 +308,20 @@ export default function CreateAuctionScreen() {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Starting Price</Text>
                 <Text style={styles.summaryValue}>
-                  ${parseFloat(formData.startingPrice).toLocaleString()}
+                  ${parseFloat(formData.startingPrice).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </Text>
               </View>
               {formData.reservePrice && (
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Reserve Price</Text>
                   <Text style={styles.summaryValue}>
-                    ${parseFloat(formData.reservePrice).toLocaleString()}
+                    ${parseFloat(formData.reservePrice).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </Text>
                 </View>
               )}

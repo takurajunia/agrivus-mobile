@@ -134,14 +134,20 @@ export default function AuctionsScreen() {
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Current Bid:</Text>
               <Text style={styles.currentPrice}>
-                ${parseFloat(auction.currentPrice).toLocaleString()}
+                ${parseFloat(auction.currentPrice).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </Text>
             </View>
             {auction.reservePrice && (
               <View style={styles.priceRow}>
                 <Text style={styles.priceLabel}>Reserve:</Text>
                 <Text style={styles.reservePrice}>
-                  ${parseFloat(auction.reservePrice).toLocaleString()}
+                  ${parseFloat(auction.reservePrice).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
                 </Text>
               </View>
             )}

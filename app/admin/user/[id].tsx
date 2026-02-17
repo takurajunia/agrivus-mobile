@@ -150,7 +150,7 @@ export default function AdminUserDetailScreen() {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-NG", {
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -158,8 +158,11 @@ export default function AdminUserDetailScreen() {
   };
 
   const formatCurrency = (amount?: number) => {
-    if (amount === undefined) return "₦0";
-    return `₦${amount.toLocaleString()}`;
+    if (amount === undefined) return "$0";
+    return `$${amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   const getRoleColor = (role?: string) => {

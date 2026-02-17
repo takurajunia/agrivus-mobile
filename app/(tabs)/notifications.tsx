@@ -36,10 +36,12 @@ import {
   NeumorphicButton,
 } from "../../src/components/neumorphic";
 import notificationsService from "../../src/services/notificationsService";
+import { useAuth } from "../../src/contexts/AuthContext";
 import type { Notification } from "../../src/types";
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -103,13 +105,36 @@ export default function NotificationsScreen() {
     const notificationData = notification.data;
 
     switch (notification.type) {
+      case "transport_offer":
+      case "transport_offer_sent":
+      case "transport_offer_accepted":
+      case "transport_offer_declined":
+      case "transport_offer_countered":
+      case "transport_offer_counter_accepted":
+      case "transport_assigned":
+        // Buyers receiving counter offers should go to order detail to accept
+        if (notification.type === "transport_offer_countered" && user?.role === "buyer" && notificationData?.orderId) {
+          router.push(`/order/${notificationData.orderId}`);
+        } else if (user?.role === "transporter") {
+          // Transporters go to transport offers page
+          router.push("/transport-offers");
+        } else {
+          // Default to transport offers
+          router.push("/transport-offers");
+        }
+        break;
       case "order":
       case "order_placed":
       case "order_received":
       case "order_update":
       case "order_delivered":
         if (notificationData?.orderId) {
-          router.push(`/order/${notificationData.orderId}`);
+          // If user is a transporter and this has an offerId, go to transport offers
+          if (user?.role === "transporter" && notificationData?.offerId) {
+            router.push("/transport-offers");
+          } else {
+            router.push(`/order/${notificationData.orderId}`);
+          }
         } else {
           // Go to orders list if no specific order ID
           router.push("/(tabs)/orders");
@@ -326,10 +351,10 @@ export default function NotificationsScreen() {
             return (
               <NeumorphicCard
                 key={notification.id}
-                style={[
-                  styles.notificationCard,
-                  !notification.isRead && styles.unreadCard,
-                ]}
+                style={{
+                  ...styles.notificationCard,
+                  ...((!notification.isRead && styles.unreadCard) || {}),
+                }}
                 animationDelay={index * 50}
                 onPress={() => handleNotificationPress(notification)}
                 variant="standard"

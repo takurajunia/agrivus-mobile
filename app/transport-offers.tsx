@@ -27,9 +27,16 @@ interface TransportOffer {
   pickupLocation: string;
   deliveryLocation: string;
   transportCost: string;
+  counterFee?: string | null;
+  counteredAt?: string;
   status: "pending" | "accepted" | "declined";
+  tier: "primary" | "secondary" | "tertiary";
+  isActive: boolean;
   offeredAt: string;
   respondedAt?: string;
+  sentToPrimaryAt: string;
+  sentToSecondaryAt?: string;
+  sentToTertiaryAt?: string;
   farmer: {
     id: string;
     fullName: string;
@@ -242,7 +249,31 @@ export default function TransportOffersScreen() {
                 </View>
               </View>
 
-              {offer.status === "pending" && (
+              {/* Tier Badge */}
+              <View style={styles.tierBadgeContainer}>
+                <Text style={[
+                  styles.tierBadge,
+                  offer.tier === 'primary' && styles.tierPrimary,
+                  offer.tier === 'secondary' && styles.tierSecondary,
+                  offer.tier === 'tertiary' && styles.tierTertiary,
+                ]}>
+                  {offer.tier === 'primary' ? '⭐ Priority Tier 1' : 
+                   offer.tier === 'secondary' ? '🥈 Tier 2' : '🥉 Tier 3'}
+                  {offer.isActive && ' - YOUR TURN'}
+                </Text>
+              </View>
+
+              {/* Inactive message */}
+              {!offer.isActive && offer.status === "pending" && (
+                <View style={styles.inactiveMessage}>
+                  <Text style={styles.inactiveMessageText}>
+                    ⏳ This offer is currently with a higher priority transporter. You'll be notified if they decline.
+                  </Text>
+                </View>
+              )}
+
+              {/* Action buttons - only if active */}
+              {offer.status === "pending" && offer.isActive && (
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
                     style={[styles.button, styles.acceptButton]}
@@ -472,6 +503,47 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: neumorphicColors.text.primary,
     fontWeight: "600",
+  },
+  tierBadgeContainer: {
+    marginBottom: spacing.md,
+  },
+  tierBadge: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  tierPrimary: {
+    backgroundColor: "#FEF3C7",
+    color: "#92400E",
+    borderColor: "#FCD34D",
+  },
+  tierSecondary: {
+    backgroundColor: "#DBEAFE",
+    color: "#1E3A8A",
+    borderColor: "#93C5FD",
+  },
+  tierTertiary: {
+    backgroundColor: "#E9D5FF",
+    color: "#581C87",
+    borderColor: "#C084FC",
+  },
+  inactiveMessage: {
+    backgroundColor: "#DBEAFE",
+    borderWidth: 1,
+    borderColor: "#93C5FD",
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  inactiveMessageText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#1E3A8A",
   },
   actionButtons: {
     flexDirection: "row",

@@ -134,7 +134,8 @@ export default function AdminSecurityScreen() {
     fetchIncidents(true);
   }, [fetchIncidents]);
 
-  const getSeverityIcon = (severity: string) => {
+  const getSeverityIcon = (severity: string | undefined) => {
+    if (!severity) return <Shield size={16} color={neumorphicColors.text.tertiary} />;
     switch (severity.toLowerCase()) {
       case "critical":
         return <Ban size={16} color={neumorphicColors.semantic.error} />;
@@ -151,7 +152,8 @@ export default function AdminSecurityScreen() {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: string | undefined) => {
+    if (!severity) return neumorphicColors.text.tertiary;
     switch (severity.toLowerCase()) {
       case "critical":
         return neumorphicColors.semantic.error;
@@ -166,7 +168,8 @@ export default function AdminSecurityScreen() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | undefined) => {
+    if (!status) return <Clock size={14} color={neumorphicColors.text.tertiary} />;
     switch (status.toLowerCase()) {
       case "open":
         return (
@@ -185,7 +188,8 @@ export default function AdminSecurityScreen() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return neumorphicColors.text.tertiary;
     switch (status.toLowerCase()) {
       case "open":
         return neumorphicColors.semantic.error;
@@ -200,9 +204,10 @@ export default function AdminSecurityScreen() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-NG", {
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -241,7 +246,7 @@ export default function AdminSecurityScreen() {
                 { color: getSeverityColor(incident.severity) },
               ]}
             >
-              {incident.severity.toUpperCase()}
+              {incident.severity ? incident.severity.toUpperCase() : "UNKNOWN"}
             </Text>
           </View>
         </View>
@@ -258,7 +263,7 @@ export default function AdminSecurityScreen() {
               { color: getStatusColor(incident.status) },
             ]}
           >
-            {incident.status}
+            {incident.status || "UNKNOWN"}
           </Text>
         </View>
       </View>
