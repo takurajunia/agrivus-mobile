@@ -6,7 +6,14 @@
  */
 
 import React from "react";
-import { View, StyleSheet, ViewStyle, StatusBar, Platform } from "react-native";
+import {
+  View,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  StatusBar,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Leaf } from "lucide-react-native";
@@ -29,8 +36,9 @@ type ScreenVariant =
 interface NeumorphicScreenProps {
   children: React.ReactNode;
   variant?: ScreenVariant;
+  leafPattern?: ScreenVariant;
   showLeaves?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   safeArea?: boolean;
   statusBarStyle?: "light-content" | "dark-content";
   gradient?: boolean;
@@ -39,14 +47,16 @@ interface NeumorphicScreenProps {
 const NeumorphicScreen: React.FC<NeumorphicScreenProps> = ({
   children,
   variant = "default",
+  leafPattern,
   showLeaves = true,
   style,
   safeArea = true,
   statusBarStyle = "dark-content",
   gradient = false,
 }) => {
+  const activeVariant = leafPattern ?? variant;
   const leafConfig: LeafConfig =
-    leafPatterns[variant] || leafPatterns.dashboard;
+    leafPatterns[activeVariant] || leafPatterns.dashboard;
 
   const getGradientColors = (): readonly [string, string, ...string[]] => {
     switch (variant) {

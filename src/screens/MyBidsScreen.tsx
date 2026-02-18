@@ -310,7 +310,7 @@ export default function MyBidsScreen() {
                         $
                         {parseFloat(
                           latestBid.auction?.currentPrice || "0"
-                        ).toLocaleString()}}
+                        ).toLocaleString()}
                       </Text>
                     </View>
                   </View>

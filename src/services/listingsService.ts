@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { getWithCache } from "./api";
 import type {
   ApiResponse,
   Listing,
@@ -8,7 +8,10 @@ import type {
 
 export const listingsService = {
   // Get all listings with filters
-  getListings: async (filters?: ListingFilters) => {
+  getListings: async (
+    filters?: ListingFilters,
+    options?: { forceRefresh?: boolean }
+  ) => {
     const params: Record<string, string> = {};
 
     if (filters?.page) params.page = filters.page.toString();
@@ -20,7 +23,7 @@ export const listingsService = {
     if (filters?.maxPrice) params.maxPrice = filters.maxPrice.toString();
     if (filters?.sortBy) params.sortBy = filters.sortBy;
 
-    const response = await api.get<
+    const response = await getWithCache<
       ApiResponse<{
         listings: ListingWithFarmer[];
         pagination: {
@@ -30,9 +33,16 @@ export const listingsService = {
           totalPages: number;
         };
       }>
-    >("/listings", { params });
+    >(
+      "/listings",
+      { params },
+      {
+        ttlMs: 2 * 60 * 1000,
+        forceRefresh: options?.forceRefresh,
+      }
+    );
 
-    return response.data;
+    return response;
   },
 
   // Get single listing by ID

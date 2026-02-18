@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Animated,
   ActivityIndicator,
+  StyleProp,
   ViewStyle,
   TextStyle,
 } from "react-native";
@@ -27,7 +28,7 @@ import {
 } from "../../theme/neumorphic";
 
 type ButtonVariant = "primary" | "secondary" | "tertiary" | "icon" | "danger";
-type ButtonSize = "small" | "medium" | "large";
+type ButtonSize = "small" | "medium" | "large" | "sm" | "md" | "lg";
 
 interface NeumorphicButtonProps {
   title?: string;
@@ -38,7 +39,7 @@ interface NeumorphicButtonProps {
   loading?: boolean;
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
   fullWidth?: boolean;
 }
@@ -96,7 +97,10 @@ const NeumorphicButton: React.FC<NeumorphicButtonProps> = ({
     text: TextStyle;
     iconSize: number;
   } => {
-    switch (size) {
+    const normalizedSize: "small" | "medium" | "large" =
+      size === "sm" ? "small" : size === "md" ? "medium" : size === "lg" ? "large" : size;
+
+    switch (normalizedSize) {
       case "small":
         return {
           button: { height: 40, paddingHorizontal: 16 },

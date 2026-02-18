@@ -22,10 +22,12 @@ interface NeumorphicStatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  trend?: {
-    value: number;
-    direction: TrendDirection;
-  };
+  trend?:
+    | {
+        value: number;
+        direction: TrendDirection;
+      }
+    | TrendDirection;
   icon?: React.ReactNode;
   iconColor?: string;
   style?: ViewStyle;
@@ -87,7 +89,9 @@ const NeumorphicStatCard: React.FC<NeumorphicStatCardProps> = ({
 
   const getTrendColor = () => {
     if (!trend) return neumorphicColors.text.tertiary;
-    switch (trend.direction) {
+    const direction = typeof trend === "string" ? trend : trend.direction;
+
+    switch (direction) {
       case "up":
         return neumorphicColors.semantic.success;
       case "down":
@@ -101,8 +105,9 @@ const NeumorphicStatCard: React.FC<NeumorphicStatCardProps> = ({
     if (!trend) return null;
     const color = getTrendColor();
     const size = 14;
+    const direction = typeof trend === "string" ? trend : trend.direction;
 
-    switch (trend.direction) {
+    switch (direction) {
       case "up":
         return <TrendingUp size={size} color={color} />;
       case "down":
@@ -141,8 +146,9 @@ const NeumorphicStatCard: React.FC<NeumorphicStatCardProps> = ({
           <View style={styles.trendContainer}>
             {getTrendIcon()}
             <Text style={[styles.trendValue, { color: getTrendColor() }]}>
-              {trend.value > 0 ? "+" : ""}
-              {trend.value}%
+              {typeof trend === "string"
+                ? trend.charAt(0).toUpperCase() + trend.slice(1)
+                : `${trend.value > 0 ? "+" : ""}${trend.value}%`}
             </Text>
           </View>
         )}

@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Animated,
   TouchableOpacity,
+  StyleProp,
   ViewStyle,
   Platform,
 } from "react-native";
@@ -26,7 +27,7 @@ type CardVariant = "standard" | "elevated" | "stat" | "glass" | "bordered";
 
 interface NeumorphicCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   variant?: CardVariant;
   onPress?: () => void;
   disabled?: boolean;

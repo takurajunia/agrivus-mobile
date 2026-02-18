@@ -15,7 +15,8 @@ export interface CreateOrderData {
 }
 
 export interface AssignTransporterData {
-  primaryTransporterId: string;
+  transporterId?: string;
+  primaryTransporterId?: string;
   secondaryTransporterId?: string;
   tertiaryTransporterId?: string;
   transportCost: string;
@@ -180,9 +181,14 @@ const ordersService = {
     orderId: string,
     data: AssignTransporterData,
   ): Promise<{ success: boolean; data: Order }> {
+    const normalizedData = {
+      ...data,
+      primaryTransporterId: data.primaryTransporterId || data.transporterId,
+    };
+
     const response = await api.post(
       `/orders/${orderId}/assign-transporter`,
-      data,
+      normalizedData,
     );
     return response.data;
   },

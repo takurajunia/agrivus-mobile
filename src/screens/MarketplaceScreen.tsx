@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Search, Filter, MapPin, Star, TrendingUp } from "lucide-react-native";
@@ -20,7 +20,7 @@ import {
 import { listingsService } from "../services/listingsService";
 import type { ListingWithFarmer, ListingFilters } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
-import BoostBadge from "../components/BoostBadge";
+import OptimizedImage from "../components/OptimizedImage";
 import {
   NeumorphicScreen,
   NeumorphicCard,
@@ -54,6 +54,7 @@ export default function MarketplaceScreen() {
   const router = useRouter();
   const [listings, setListings] = useState<ListingWithFarmer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -70,30 +71,74 @@ export default function MarketplaceScreen() {
   });
 
   useEffect(() => {
-    fetchListings();
+    const currentPage = filters.page || 1;
+    fetchListings(filters, {
+      append: currentPage > 1,
+      showLoader: currentPage === 1,
+      forceRefresh: refreshing,
+    });
   }, [filters]);
 
-  const fetchListings = async () => {
+  const fetchListings = async (
+    activeFilters: ListingFilters,
+    options?: {
+      append?: boolean;
+      showLoader?: boolean;
+      forceRefresh?: boolean;
+    }
+  ) => {
+    const append = options?.append ?? false;
+    const showLoader = options?.showLoader ?? !append;
+
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
       setError("");
-      const response = await listingsService.getListings(filters);
+      const response = await listingsService.getListings(activeFilters, {
+        forceRefresh: options?.forceRefresh,
+      });
 
       if (response.success && response.data) {
-        setListings(response.data.listings);
+        if (append) {
+          setListings((previous) => {
+            const seen = new Set(previous.map((entry) => entry.listing.id));
+            const newItems = response.data!.listings.filter(
+              (entry) => !seen.has(entry.listing.id)
+            );
+            return [...previous, ...newItems];
+          });
+        } else {
+          setListings(response.data.listings);
+        }
         setPagination(response.data.pagination);
       }
     } catch (err: any) {
       setError(err.message || "Failed to load listings");
     } finally {
       setLoading(false);
+      if (append) {
+        setLoadingMore(false);
+      }
       setRefreshing(false);
     }
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchListings();
+    setFilters((previous) => ({ ...previous, page: 1 }));
+  };
+
+  const handleLoadMore = () => {
+    const currentPage = pagination.page || 1;
+    const totalPages = pagination.totalPages || 1;
+
+    if (loading || refreshing || loadingMore || currentPage >= totalPages) {
+      return;
+    }
+
+    setLoadingMore(true);
+    setFilters((previous) => ({ ...previous, page: (previous.page || 1) + 1 }));
   };
 
   const handleFilterChange = (key: keyof ListingFilters, value: any) => {
@@ -114,10 +159,9 @@ export default function MarketplaceScreen() {
       >
         <View style={styles.imageContainer}>
           {listing.images && listing.images.length > 0 ? (
-            <Image
-              source={{ uri: listing.images[0] }}
+            <OptimizedImage
+              uri={listing.images[0]}
               style={styles.listingImage}
-              resizeMode="cover"
             />
           ) : (
             <View style={styles.placeholderImage}>
@@ -243,7 +287,13 @@ export default function MarketplaceScreen() {
             title="Retry"
             variant="danger"
             size="small"
-            onPress={fetchListings}
+            onPress={() =>
+              fetchListings(filters, {
+                append: false,
+                showLoader: true,
+                forceRefresh: true,
+              })
+            }
           />
         </View>
       ) : null}
@@ -277,15 +327,16 @@ export default function MarketplaceScreen() {
               </Text>
             </View>
           }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.3}
           ListFooterComponent={
-            pagination.page < pagination.totalPages ? (
-              <NeumorphicButton
-                title="Load More"
-                variant="secondary"
-                onPress={() =>
-                  handleFilterChange("page", (filters.page || 1) + 1)
-                }
-              />
+            loadingMore ? (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator
+                  size="small"
+                  color={neumorphicColors.primary[600]}
+                />
+              </View>
             ) : null
           }
         />
@@ -368,6 +419,10 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingMoreContainer: {
+    paddingVertical: spacing.md,
     alignItems: "center",
   },
   errorContainer: {

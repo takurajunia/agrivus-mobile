@@ -26,6 +26,8 @@ export const neumorphicColors = {
     700: "#388E3C",
     800: "#2E7D32",
     900: "#1B5E20",
+    light: "#C8E6C9",
+    main: "#43A047",
   },
 
   // Secondary Orange/Amber Palette
@@ -40,6 +42,8 @@ export const neumorphicColors = {
     700: "#F57C00",
     800: "#EF6C00",
     900: "#E65100",
+    light: "#FFE0B2",
+    main: "#FB8C00",
   },
 
   // Neumorphic Base Colors
@@ -50,6 +54,8 @@ export const neumorphicColors = {
     pressed: "#DCDCE0",
     shadowDark: "#BEBEC3",
     shadowLight: "#FFFFFF",
+    border: "#BEBEC3",
+    surface: "#FAFAFA",
   },
 
   // Semantic Colors

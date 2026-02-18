@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { getWithCache } from "./api";
 import type {
   Product,
   Cart,
@@ -17,9 +17,25 @@ export const agrimallService = {
     search?: string;
     categoryId?: string;
     vendorId?: string;
-  }) {
-    const response = await api.get("/agrimall/products", { params });
-    return response.data;
+  }, options?: { forceRefresh?: boolean }) {
+    const response = await getWithCache<{
+      success: boolean;
+      products: Product[];
+      pagination?: {
+        page: number;
+        limit: number;
+        total: number;
+        hasMore: boolean;
+      };
+    }>(
+      "/agrimall/products",
+      { params },
+      {
+        ttlMs: 2 * 60 * 1000,
+        forceRefresh: options?.forceRefresh,
+      }
+    );
+    return response;
   },
 
   // Get single product

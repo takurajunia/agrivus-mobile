@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Image,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -30,6 +29,7 @@ import {
 import { agrimallService } from "../services/agrimallService";
 import type { Cart, CheckoutSummary } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
@@ -169,8 +169,8 @@ export default function CheckoutScreen() {
               <ChevronLeft size={24} color={neumorphicColors.text.primary} />
             }
             onPress={() => router.back()}
-            variant="flat"
-            size="md"
+            variant="ghost"
+            size="medium"
           />
           <Text style={styles.headerTitle}>Checkout</Text>
           <View style={{ width: 40 }} />
@@ -181,7 +181,7 @@ export default function CheckoutScreen() {
             title="Continue Shopping"
             onPress={() => router.push("/agrimall")}
             variant="primary"
-            size="lg"
+            size="large"
             style={{ marginTop: spacing.xl }}
           />
         </View>
@@ -196,8 +196,8 @@ export default function CheckoutScreen() {
         <NeumorphicIconButton
           icon={<ChevronLeft size={24} color={neumorphicColors.text.primary} />}
           onPress={() => router.back()}
-          variant="flat"
-          size="md"
+          variant="ghost"
+          size="medium"
         />
         <Text style={styles.headerTitle}>Checkout</Text>
         <View style={{ width: 40 }} />
@@ -215,10 +215,9 @@ export default function CheckoutScreen() {
             <View key={item.productId} style={styles.orderItem}>
               <View style={styles.itemImage}>
                 {item.product?.images?.[0] ? (
-                  <Image
-                    source={{ uri: item.product.images[0] }}
+                  <OptimizedImage
+                    uri={item.product.images[0]}
                     style={styles.productImage}
-                    resizeMode="cover"
                   />
                 ) : (
                   <View style={styles.placeholderImage}>
@@ -246,7 +245,7 @@ export default function CheckoutScreen() {
         {/* Shipping Information */}
         <NeumorphicCard style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Truck size={20} color={neumorphicColors.primary.main} />
+            <Truck size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.sectionTitle}>Shipping Information</Text>
           </View>
 
@@ -316,7 +315,7 @@ export default function CheckoutScreen() {
         {/* Payment Method */}
         <NeumorphicCard style={styles.section}>
           <View style={styles.sectionHeader}>
-            <CreditCard size={20} color={neumorphicColors.primary.main} />
+            <CreditCard size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.sectionTitle}>Payment Method</Text>
           </View>
 
@@ -353,7 +352,7 @@ export default function CheckoutScreen() {
         {/* Promo Code */}
         <NeumorphicCard style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Tag size={20} color={neumorphicColors.primary.main} />
+            <Tag size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.sectionTitle}>Promo Code</Text>
           </View>
 
@@ -370,7 +369,7 @@ export default function CheckoutScreen() {
               title={promoApplied ? "Applied" : "Apply"}
               onPress={handleApplyPromo}
               variant={promoApplied ? "secondary" : "primary"}
-              size="md"
+              size="medium"
               disabled={promoApplied}
               style={{ marginLeft: spacing.md }}
             />
@@ -431,7 +430,7 @@ export default function CheckoutScreen() {
           }
           onPress={handlePlaceOrder}
           variant="primary"
-          size="lg"
+          size="large"
           loading={processing}
           disabled={processing}
         />
@@ -494,7 +493,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: neumorphicColors.base.border,
+    borderBottomColor: neumorphicColors.base.shadowDark,
   },
   itemImage: {
     width: 50,
@@ -509,7 +508,7 @@ const styles = StyleSheet.create({
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: neumorphicColors.primary.light,
+    backgroundColor: neumorphicColors.primary[100],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -542,13 +541,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: neumorphicColors.base.border,
+    borderColor: neumorphicColors.base.shadowDark,
     marginBottom: spacing.sm,
     backgroundColor: neumorphicColors.base.card,
   },
   paymentOptionSelected: {
-    borderColor: neumorphicColors.primary.main,
-    backgroundColor: neumorphicColors.primary.light,
+    borderColor: neumorphicColors.primary[600],
+    backgroundColor: neumorphicColors.primary[100],
   },
   paymentInfo: {
     flexDirection: "row",
@@ -564,13 +563,13 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: borderRadius.full,
     borderWidth: 2,
-    borderColor: neumorphicColors.base.border,
+    borderColor: neumorphicColors.base.shadowDark,
     justifyContent: "center",
     alignItems: "center",
   },
   radioButtonSelected: {
-    backgroundColor: neumorphicColors.primary.main,
-    borderColor: neumorphicColors.primary.main,
+    backgroundColor: neumorphicColors.primary[600],
+    borderColor: neumorphicColors.primary[600],
   },
   promoContainer: {
     flexDirection: "row",
@@ -593,7 +592,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: neumorphicColors.base.border,
+    borderTopColor: neumorphicColors.base.shadowDark,
   },
   grandTotalLabel: {
     ...typography.h4,
@@ -601,7 +600,7 @@ const styles = StyleSheet.create({
   },
   grandTotalValue: {
     ...typography.h3,
-    color: neumorphicColors.primary.main,
+    color: neumorphicColors.primary[600],
   },
   securityNote: {
     flexDirection: "row",

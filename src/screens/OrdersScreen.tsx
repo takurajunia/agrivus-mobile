@@ -7,10 +7,10 @@ import {
   spacing,
   borderRadius,
 } from "../theme/neumorphic";
-import { NeumorphicScreen } from "../components/neumorphic/NeumorphicScreen";
-import { NeumorphicCard } from "../components/neumorphic/NeumorphicCard";
-import { NeumorphicButton } from "../components/neumorphic/NeumorphicButton";
-import { NeumorphicBadge } from "../components/neumorphic/NeumorphicBadge";
+import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
+import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
+import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
+import NeumorphicBadge from "../components/neumorphic/NeumorphicBadge";
 
 interface Order {
   id: string;
@@ -169,7 +169,7 @@ const OrdersScreen = () => {
 
       <View style={styles.actionButtons}>
         <NeumorphicButton
-          label="View Details"
+          title="View Details"
           onPress={() => {}}
           variant="secondary"
           size="small"
@@ -177,7 +177,7 @@ const OrdersScreen = () => {
         />
         {item.status === "delivered" && (
           <NeumorphicButton
-            label="Reorder"
+            title="Reorder"
             onPress={() => {}}
             variant="primary"
             size="small"
@@ -200,7 +200,7 @@ const OrdersScreen = () => {
         Your order history will appear here once you make a purchase.
       </Text>
       <NeumorphicButton
-        label="Start Shopping"
+        title="Start Shopping"
         onPress={() => {}}
         variant="primary"
         style={styles.shopButton}

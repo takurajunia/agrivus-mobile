@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   Alert,
 } from "react-native";
@@ -26,6 +25,7 @@ import {
 import agrimallService from "../services/agrimallService";
 import type { Cart, CartItem } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
@@ -170,8 +170,8 @@ export default function CartScreen() {
           <NeumorphicIconButton
             icon={<Trash2 size={20} color={neumorphicColors.semantic.error} />}
             onPress={handleClearCart}
-            variant="flat"
-            size="md"
+            variant="ghost"
+            size="medium"
           />
         )}
       </View>
@@ -184,7 +184,7 @@ export default function CartScreen() {
             title="Retry"
             onPress={loadCart}
             variant="secondary"
-            size="sm"
+            size="small"
             style={{ marginTop: spacing.md }}
           />
         </NeumorphicCard>
@@ -199,7 +199,7 @@ export default function CartScreen() {
             title="Browse Products"
             onPress={() => router.push("/agrimall")}
             variant="primary"
-            size="lg"
+            size="large"
             style={{ marginTop: spacing.xl }}
           />
         </View>
@@ -212,7 +212,7 @@ export default function CartScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={[neumorphicColors.primary.main]}
+                colors={[neumorphicColors.primary[600]]}
               />
             }
           >
@@ -221,10 +221,9 @@ export default function CartScreen() {
                 {/* Product Image */}
                 <View style={styles.itemImage}>
                   {item.product.images && item.product.images.length > 0 ? (
-                    <Image
-                      source={{ uri: item.product.images[0] }}
+                    <OptimizedImage
+                      uri={item.product.images[0]}
                       style={styles.image}
-                      resizeMode="cover"
                     />
                   ) : (
                     <View style={styles.placeholderImage}>
@@ -325,7 +324,7 @@ export default function CartScreen() {
               title="Proceed to Checkout"
               onPress={() => router.push("/agrimall/checkout")}
               variant="primary"
-              size="lg"
+              size="large"
               icon={
                 <ArrowRight size={20} color={neumorphicColors.text.inverse} />
               }
@@ -438,7 +437,7 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     ...typography.h5,
-    color: neumorphicColors.primary.main,
+    color: neumorphicColors.primary[600],
     marginTop: spacing.sm,
   },
   unavailableText: {
@@ -452,7 +451,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: neumorphicColors.base.border,
+    borderTopColor: neumorphicColors.base.shadowDark,
   },
   quantityButton: {
     width: 36,
@@ -489,7 +488,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: neumorphicColors.base.border,
+    borderTopColor: neumorphicColors.base.shadowDark,
   },
   subtotalLabel: {
     ...typography.body,

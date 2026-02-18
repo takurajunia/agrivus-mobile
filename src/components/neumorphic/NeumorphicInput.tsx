@@ -29,6 +29,7 @@ interface NeumorphicInputProps extends Omit<TextInputProps, "style"> {
   label?: string;
   error?: string;
   hint?: string;
+  helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   containerStyle?: ViewStyle;
@@ -41,6 +42,7 @@ const NeumorphicInput: React.FC<NeumorphicInputProps> = ({
   label,
   error,
   hint,
+  helperText,
   leftIcon,
   rightIcon,
   containerStyle,
@@ -190,9 +192,9 @@ const NeumorphicInput: React.FC<NeumorphicInputProps> = ({
         )}
       </Animated.View>
 
-      {(error || hint) && (
+      {(error || hint || helperText) && (
         <Text style={[styles.helperText, error && styles.errorText]}>
-          {error || hint}
+          {error || helperText || hint}
         </Text>
       )}
     </View>

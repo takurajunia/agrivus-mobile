@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   RefreshControl,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -29,6 +28,7 @@ import {
 import { auctionsService } from "../services/auctionsService";
 import type { AuctionDetailResponse, BidWithBidder } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
@@ -215,10 +215,9 @@ export default function AuctionDetailScreen() {
         {/* Image */}
         <View style={styles.imageContainer}>
           {listing?.images && listing.images.length > 0 ? (
-            <Image
-              source={{ uri: listing.images[0] }}
+            <OptimizedImage
+              uri={listing.images[0]}
               style={styles.image}
-              resizeMode="cover"
             />
           ) : (
             <View style={styles.placeholderImage}>

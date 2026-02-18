@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  StyleProp,
   ViewStyle,
 } from "react-native";
 import {
@@ -17,8 +18,13 @@ import {
   spacing,
 } from "../../theme/neumorphic";
 
-type ButtonSize = "small" | "medium" | "large";
-type ButtonVariant = "default" | "primary" | "secondary" | "ghost";
+type ButtonSize = "small" | "medium" | "large" | "sm" | "md" | "lg";
+type ButtonVariant =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "flat";
 
 interface NeumorphicIconButtonProps {
   icon: React.ReactNode;
@@ -26,7 +32,7 @@ interface NeumorphicIconButtonProps {
   size?: ButtonSize;
   variant?: ButtonVariant;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   badge?: number;
 }
 
@@ -60,12 +66,18 @@ const NeumorphicIconButton: React.FC<NeumorphicIconButtonProps> = ({
   }, [scaleAnim]);
 
   const getSizeStyles = () => {
+    const normalizedSize: "small" | "medium" | "large" =
+      size === "sm" ? "small" : size === "md" ? "medium" : size === "lg" ? "large" : size;
+
     const sizes: Record<ButtonSize, number> = {
       small: 36,
       medium: 48,
       large: 56,
+      sm: 36,
+      md: 48,
+      lg: 56,
     };
-    return sizes[size];
+    return sizes[normalizedSize];
   };
 
   const getVariantStyles = (): ViewStyle => {
@@ -81,6 +93,7 @@ const NeumorphicIconButton: React.FC<NeumorphicIconButtonProps> = ({
           ...getNeumorphicShadow(1),
         };
       case "ghost":
+      case "flat":
         return {
           backgroundColor: "transparent",
         };

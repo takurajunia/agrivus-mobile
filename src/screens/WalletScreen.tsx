@@ -40,7 +40,12 @@ import {
   NeumorphicStatCard,
 } from "../components/neumorphic";
 
-const PAYMENT_METHODS = [
+const PAYMENT_METHODS: Array<{
+  id: PaymentMethodType;
+  name: string;
+  icon: typeof Smartphone;
+  description: string;
+}> = [
   {
     id: "ecocash",
     name: "EcoCash",
@@ -909,7 +914,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   lockedTitle: {
-    ...typography.bodyMedium,
+    ...typography.body,
     fontWeight: "700",
     color: neumorphicColors.semantic.error,
     marginBottom: spacing.xs,

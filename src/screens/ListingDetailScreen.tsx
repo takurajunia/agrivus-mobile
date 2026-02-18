@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   MapPin,
@@ -21,6 +21,7 @@ import {
 import { listingsService } from "../services/listingsService";
 import type { ListingWithFarmer } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 import {
   NeumorphicScreen,
   NeumorphicCard,
@@ -138,10 +139,9 @@ export default function ListingDetailScreen() {
         <View style={styles.imageGallery}>
           <View style={styles.mainImageContainer}>
             {listing.images && listing.images.length > 0 ? (
-              <Image
-                source={{ uri: listing.images[selectedImageIndex] }}
+              <OptimizedImage
+                uri={listing.images[selectedImageIndex]}
                 style={styles.mainImage}
-                resizeMode="cover"
               />
             ) : (
               <View style={styles.placeholderImage}>
@@ -170,10 +170,9 @@ export default function ListingDetailScreen() {
                   shadowLevel={1}
                   animated={false}
                 >
-                  <Image
-                    source={{ uri: image }}
+                  <OptimizedImage
+                    uri={image}
                     style={styles.thumbnailImage}
-                    resizeMode="cover"
                   />
                 </NeumorphicCard>
               ))}

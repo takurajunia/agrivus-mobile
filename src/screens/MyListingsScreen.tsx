@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   RefreshControl,
   Alert,
 } from "react-native";
@@ -34,6 +33,7 @@ import {
 import { listingsService } from "../services/listingsService";
 import type { Listing } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 
 export default function MyListingsScreen() {
   const router = useRouter();
@@ -190,10 +190,9 @@ export default function MyListingsScreen() {
                 {/* Image */}
                 <View style={styles.imageContainer}>
                   {listing.images && listing.images.length > 0 ? (
-                    <Image
-                      source={{ uri: listing.images[0] }}
+                    <OptimizedImage
+                      uri={listing.images[0]}
                       style={styles.listingImage}
-                      resizeMode="cover"
                     />
                   ) : (
                     <View style={styles.placeholderImage}>

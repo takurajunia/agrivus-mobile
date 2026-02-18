@@ -1,5 +1,6 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { AxiosRequestConfig } from "axios";
 
 // Use the deployed Railway backend for both dev and production
 // This ensures consistent behavior and no need to run local backend
@@ -71,5 +72,88 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+const CACHE_KEY_PREFIX = "api_cache:";
+const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
+
+interface CachedEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+interface CacheOptions {
+  ttlMs?: number;
+  forceRefresh?: boolean;
+}
+
+const toStableString = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value !== "object") {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => toStableString(item)).join(",")}]`;
+  }
+
+  const objectValue = value as Record<string, unknown>;
+  const sortedKeys = Object.keys(objectValue).sort();
+  return `{${sortedKeys
+    .map((key) => `${key}:${toStableString(objectValue[key])}`)
+    .join(",")}}`;
+};
+
+const getCacheKey = (url: string, config?: AxiosRequestConfig): string => {
+  const params = config?.params ? toStableString(config.params) : "";
+  return `${CACHE_KEY_PREFIX}${url}?${params}`;
+};
+
+const getCachedEntry = async <T>(cacheKey: string): Promise<CachedEntry<T> | null> => {
+  try {
+    const raw = await AsyncStorage.getItem(cacheKey);
+    if (!raw) {
+      return null;
+    }
+
+    return JSON.parse(raw) as CachedEntry<T>;
+  } catch {
+    return null;
+  }
+};
+
+export const getWithCache = async <T>(
+  url: string,
+  config?: AxiosRequestConfig,
+  options?: CacheOptions
+): Promise<T> => {
+  const cacheKey = getCacheKey(url, config);
+  const ttlMs = options?.ttlMs ?? DEFAULT_CACHE_TTL_MS;
+  const now = Date.now();
+  const cached = await getCachedEntry<T>(cacheKey);
+  const isFresh =
+    !!cached && now - cached.timestamp < Math.max(ttlMs, 0);
+
+  if (!options?.forceRefresh && isFresh) {
+    return cached.data;
+  }
+
+  try {
+    const response = await api.get<T>(url, config);
+    const entry: CachedEntry<T> = {
+      data: response.data,
+      timestamp: now,
+    };
+    await AsyncStorage.setItem(cacheKey, JSON.stringify(entry));
+    return response.data;
+  } catch (error) {
+    if (cached) {
+      return cached.data;
+    }
+    throw error;
+  }
+};
 
 export default api;

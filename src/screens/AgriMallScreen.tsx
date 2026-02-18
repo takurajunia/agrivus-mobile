@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   RefreshControl,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -27,6 +27,7 @@ import {
 import agrimallService from "../services/agrimallService";
 import type { Product, Cart } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
@@ -38,27 +39,67 @@ export default function AgriMallScreen() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    loadProducts();
+    loadProducts({
+      page: 1,
+      append: false,
+      showLoader: true,
+      forceRefresh: false,
+    });
     loadCartCount();
   }, [search]);
 
-  const loadProducts = async () => {
+  const loadProducts = async (options?: {
+    page?: number;
+    append?: boolean;
+    showLoader?: boolean;
+    forceRefresh?: boolean;
+  }) => {
+    const targetPage = options?.page ?? 1;
+    const append = options?.append ?? false;
+    const showLoader = options?.showLoader ?? !append;
+
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
       setError("");
-      const response = await agrimallService.getProducts({ search, limit: 50 });
-      setProducts(response.products || []);
+      const response = await agrimallService.getProducts(
+        { search, page: targetPage, limit: 20 },
+        { forceRefresh: options?.forceRefresh }
+      );
+
+      const fetchedProducts = response.products || [];
+      if (append) {
+        setProducts((previous) => {
+          const seen = new Set(previous.map((product) => product.id));
+          const uniqueNew = fetchedProducts.filter(
+            (product) => !seen.has(product.id)
+          );
+          return [...previous, ...uniqueNew];
+        });
+      } else {
+        setProducts(fetchedProducts);
+      }
+
+      setPage(targetPage);
+      setHasMore(response.pagination?.hasMore ?? fetchedProducts.length === 20);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load products");
     } finally {
       setLoading(false);
+      if (append) {
+        setLoadingMore(false);
+      }
       setRefreshing(false);
     }
   };
@@ -74,8 +115,27 @@ export default function AgriMallScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadProducts();
+    loadProducts({
+      page: 1,
+      append: false,
+      showLoader: false,
+      forceRefresh: true,
+    });
     loadCartCount();
+  };
+
+  const handleLoadMore = () => {
+    if (loading || refreshing || loadingMore || !hasMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+    loadProducts({
+      page: page + 1,
+      append: true,
+      showLoader: false,
+      forceRefresh: false,
+    });
   };
 
   const handleAddToCart = async (productId: string) => {
@@ -104,10 +164,9 @@ export default function AgriMallScreen() {
         {/* Image */}
         <View style={styles.imageContainer}>
           {item.images && item.images.length > 0 ? (
-            <Image
-              source={{ uri: item.images[0] }}
+            <OptimizedImage
+              uri={item.images[0]}
               style={styles.productImage}
-              resizeMode="cover"
             />
           ) : (
             <View style={styles.placeholderImage}>
@@ -222,7 +281,14 @@ export default function AgriMallScreen() {
           <Text style={styles.errorText}>{error}</Text>
           <NeumorphicButton
             title="Retry"
-            onPress={loadProducts}
+            onPress={() =>
+              loadProducts({
+                page: 1,
+                append: false,
+                showLoader: true,
+                forceRefresh: true,
+              })
+            }
             variant="danger"
             size="small"
           />
@@ -255,6 +321,18 @@ export default function AgriMallScreen() {
               <Text style={styles.emptyTitle}>No products found</Text>
               <Text style={styles.emptyText}>Try a different search term</Text>
             </View>
+          }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator
+                  size="small"
+                  color={neumorphicColors.primary[600]}
+                />
+              </View>
+            ) : null
           }
         />
       )}
@@ -291,6 +369,10 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingMoreContainer: {
+    paddingVertical: spacing.md,
     alignItems: "center",
   },
   errorContainer: {

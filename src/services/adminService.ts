@@ -83,7 +83,17 @@ export interface UserWithDetails extends User {
   profile?: any;
   listingsCount?: number;
   ordersCount?: number;
-  totalVolume?: string;
+  totalVolume: string;
+  status?: "active" | "suspended" | "pending" | string;
+  location?: string;
+  rating?: number;
+  totalProducts?: number;
+  totalOrders?: number;
+  totalRevenue?: number;
+  boostTier?: string;
+  boostExpiresAt?: string;
+  lastActiveAt?: string;
+  lastOrderAt?: string;
 }
 
 const adminService = {

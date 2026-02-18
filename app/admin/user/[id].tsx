@@ -90,7 +90,7 @@ export default function AdminUserDetailScreen() {
     fetchUserDetails(true);
   }, [fetchUserDetails]);
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: "active" | "suspended") => {
     if (!user) return;
 
     const action = newStatus === "active" ? "activate" : "suspend";
@@ -106,14 +106,21 @@ export default function AdminUserDetailScreen() {
           onPress: async () => {
             try {
               setActionLoading(true);
+              const isActive = newStatus === "active";
               const response = await adminService.updateUserStatus(
                 user.id,
-                newStatus
+                isActive
               );
 
               if (response.success) {
                 setUser((prev) =>
-                  prev ? { ...prev, status: newStatus } : null
+                  prev
+                    ? {
+                        ...prev,
+                        status: newStatus,
+                        isActive,
+                      }
+                    : null
                 );
                 Alert.alert("Success", `User has been ${action}d`);
               }
@@ -270,7 +277,7 @@ export default function AdminUserDetailScreen() {
             </View>
             {user.boostTier && user.boostTier !== "none" && (
               <View style={styles.boostBadgeContainer}>
-                <BoostBadge tier={user.boostTier} size="sm" />
+                <BoostBadge label={`${user.boostTier} boost`} />
               </View>
             )}
           </View>

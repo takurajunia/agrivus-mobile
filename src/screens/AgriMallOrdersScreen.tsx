@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -26,6 +25,7 @@ import {
 import { agrimallService } from "../services/agrimallService";
 import type { AgrimallOrder } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import OptimizedImage from "../components/OptimizedImage";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
@@ -254,10 +254,9 @@ export default function AgriMallOrdersScreen() {
                     <View key={index} style={styles.itemPreview}>
                       <View style={styles.itemImageContainer}>
                         {item.product?.imageUrl ? (
-                          <Image
-                            source={{ uri: item.product.imageUrl }}
+                          <OptimizedImage
+                            uri={item.product.imageUrl}
                             style={styles.itemImage}
-                            resizeMode="cover"
                           />
                         ) : (
                           <View style={styles.placeholderImage}>
@@ -281,7 +280,7 @@ export default function AgriMallOrdersScreen() {
                   <View>
                     <Text style={styles.totalLabel}>Total</Text>
                     <Text style={styles.totalValue}>
-                      ${parseFloat(order.total).toLocaleString("en-US", {
+                      ${parseFloat(order.totalAmount).toLocaleString("en-US", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
