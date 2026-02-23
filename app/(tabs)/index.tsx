@@ -128,6 +128,7 @@ export default function HomeScreen() {
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const isBuyer = user?.role === "buyer";
   const isAdmin = user?.role === "admin";
+  const isModerator = user?.role === "support_moderator";
   const boostMultiplier = user?.boostMultiplier
     ? parseFloat(user.boostMultiplier)
     : 1;
@@ -227,7 +228,7 @@ export default function HomeScreen() {
         >
 
           {/* --- Secondary Nav (Pills) --- */}
-          {!isAdmin && (
+          {!isAdmin && !isModerator && (
             <View style={styles.pillsRow}>
               {[
                 "Auctions",
@@ -250,7 +251,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- CTA Banner --- */}
-          {!isAdmin && (
+          {!isAdmin && !isModerator && (
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.ctaWrapper}
@@ -311,8 +312,39 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
+          {/* --- Moderator CTA Banner --- */}
+          {isModerator && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.ctaWrapper}
+              onPress={() => router.push("/moderator")}
+            >
+              <View style={styles.ctaShadowLayer}>
+                <LinearGradient
+                  colors={["#6366F1", "#8B5CF6"] as const}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.ctaGradient}
+                >
+                  <WaveLines />
+                  <View style={styles.ctaContent}>
+                    <Shield
+                      size={30}
+                      color="#FFF"
+                      style={{ marginRight: 14 }}
+                      strokeWidth={2}
+                    />
+                    <Text style={styles.ctaText}>
+                      View Moderator Dashboard
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
+          )}
+
           {/* --- Stats Grid --- */}
-          {!isAdmin && (
+          {!isAdmin && !isModerator && (
             <View style={styles.gridContainer}>
               <View style={styles.gridRow}>
                 {/* Card 1: Active Orders */}
@@ -448,7 +480,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- Quick Actions --- */}
-          {!isBuyer && !isAdmin && (
+          {!isBuyer && !isAdmin && !isModerator && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Quick Actions</Text>
               <View style={styles.quickActionsCard}>
@@ -547,8 +579,58 @@ export default function HomeScreen() {
             </View>
           )}
 
+          {/* --- Moderator Quick Actions --- */}
+          {isModerator && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Moderator Tools</Text>
+              <View style={styles.quickActionsCard}>
+                <View style={styles.qaRow}>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/users")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#6366F1" }]}>
+                      <Users size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Users</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/orders")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#F59E0B" }]}>
+                      <ShoppingCart size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Orders</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/admin/transactions")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#8B5CF6" }]}>
+                      <DollarSign size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Transactions</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/moderator")}
+                  >
+                    <View style={[styles.qaActiveIcon, { backgroundColor: "#10B981" }]}>
+                      <Shield size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Dashboard</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
           {/* --- Special Features --- */}
-          {!isAdmin && (
+          {!isAdmin && !isModerator && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Special Features</Text>
               <View style={styles.quickActionsCard}>

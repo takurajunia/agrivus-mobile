@@ -281,6 +281,63 @@ const adminService = {
     const response = await api.get("/admin/export", { params });
     return response.data;
   },
+
+  // Moderator Dashboard - get moderation stats
+  async getModeratorDashboard(): Promise<{
+    success: boolean;
+    data: {
+      pendingReports: number;
+      resolvedToday: number;
+      activeUsers: number;
+      flaggedContent: number;
+      recentActivity: any[];
+    };
+  }> {
+    const response = await api.get("/admin/moderator/dashboard");
+    return response.data;
+  },
+
+  // Get moderator activity log
+  async getModeratorActivityLog(params?: {
+    page?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{
+    success: boolean;
+    data: {
+      activities: any[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+  }> {
+    const response = await api.get("/admin/moderator/activity-log", { params });
+    return response.data;
+  },
+
+  // Flag/unflag content (moderator action)
+  async flagListing(
+    listingId: string,
+    reason: string
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await api.post(`/admin/listings/${listingId}/flag`, {
+      reason,
+    });
+    return response.data;
+  },
+
+  // Update user role (admin/moderator can promote users)
+  async updateUserRole(
+    userId: string,
+    role: string
+  ): Promise<{ success: boolean; message: string; data: any }> {
+    const response = await api.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
 };
 
 export default adminService;

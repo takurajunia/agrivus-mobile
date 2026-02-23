@@ -91,7 +91,7 @@ export default function CreateListingScreen() {
 
     try {
       setLoading(true);
-      await listingsService.createListing({
+      const response = await listingsService.createListing({
         cropType: form.cropType,
         cropName: form.cropName || form.cropType,
         quantity: form.quantity,
@@ -102,9 +102,17 @@ export default function CreateListingScreen() {
         description: form.description || undefined,
         status: "active",
       });
-      Alert.alert("Success", "Listing created successfully!", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+
+      const createdListingId = response.data?.id;
+      if (createdListingId) {
+        router.replace(`/listing/${createdListingId}` as any);
+        return;
+      }
+
+      Alert.alert(
+        "Success",
+        "Listing was created, but we couldn't open it automatically."
+      );
     } catch (error: any) {
       Alert.alert(
         "Error",

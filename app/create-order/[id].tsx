@@ -173,13 +173,21 @@ export default function CreateOrderScreen() {
       const response = await ordersService.createOrder(orderData);
 
       if (response.success) {
+        const createdOrderId =
+          (response as any)?.data?.order?.id || (response as any)?.data?.id;
+
+        if (!createdOrderId) {
+          setError("Order created, but we could not open its detail page");
+          return;
+        }
+
         Alert.alert(
           "Order Placed! 🎉",
           "Your order has been created successfully. The farmer will be notified.",
           [
             {
-              text: "View Orders",
-              onPress: () => router.replace("/orders" as any),
+              text: "View Order",
+              onPress: () => router.replace(`/order/${createdOrderId}` as any),
             },
           ]
         );

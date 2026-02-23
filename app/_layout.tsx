@@ -65,6 +65,7 @@ function AuthNavigator() {
       currentSegment === "order" ||
       currentSegment === "chat" ||
       currentSegment === "admin" ||
+      currentSegment === "moderator" ||
       currentSegment === "create-order" ||
       currentSegment === "export" ||
       currentSegment === "payment" ||
@@ -148,6 +149,13 @@ function AuthNavigator() {
         <Stack.Screen name="cart" options={{ headerShown: false }} />
         <Stack.Screen name="checkout" options={{ headerShown: false }} />
         <Stack.Screen name="export-gateway" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/index" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/users" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/orders" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/transactions" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/reports" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/security" options={{ headerShown: false }} />
+        <Stack.Screen name="moderator/index" options={{ headerShown: false }} />
         <Stack.Screen
           name="payment/[paymentId]"
           options={{ headerShown: false }}

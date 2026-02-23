@@ -185,13 +185,20 @@ export default function AuctionCheckoutScreen() {
       const response = await auctionsService.chooseTransport(id!, formData);
 
       if (response.success) {
+        const createdOrderId = response?.data?.order?.id;
+
+        if (!createdOrderId) {
+          setError("Order created, but we could not open its detail page");
+          return;
+        }
+
         Alert.alert(
           "Success! 🎉",
           "Your order has been created successfully! The transporter will be in contact shortly.",
           [
             {
-              text: "View Orders",
-              onPress: () => router.replace("/orders" as any),
+              text: "View Order",
+              onPress: () => router.replace(`/order/${createdOrderId}` as any),
             },
           ]
         );

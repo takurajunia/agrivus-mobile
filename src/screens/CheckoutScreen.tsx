@@ -121,7 +121,7 @@ export default function CheckoutScreen() {
     try {
       setProcessing(true);
 
-      await agrimallService.checkout({
+      const response = await agrimallService.checkout({
         deliveryAddress: `${shippingInfo.fullName}, ${shippingInfo.phone}, ${
           shippingInfo.address
         }, ${shippingInfo.city}${
@@ -130,8 +130,26 @@ export default function CheckoutScreen() {
         buyerNotes: shippingInfo.notes || undefined,
       });
 
-      Alert.alert("Success", "Order placed successfully!", [
-        { text: "View Orders", onPress: () => router.push("/orders") },
+      const createdOrders = response?.data?.orders || [];
+      const firstCreatedOrderId = createdOrders[0]?.orderId;
+      const createdCount = createdOrders.length;
+
+      const actionLabel =
+        createdOrders.length === 1 && firstCreatedOrderId
+          ? "View Order"
+          : "View Orders";
+      const successTitle = createdCount === 1 ? "Order Placed" : "Orders Placed";
+      const successMessage =
+        createdCount === 1
+          ? "Order placed successfully!"
+          : "Orders placed successfully!";
+      const actionHandler =
+        createdOrders.length === 1 && firstCreatedOrderId
+          ? () => router.push(`/agrimall/order/${firstCreatedOrderId}` as any)
+          : () => router.push("/agrimall/orders" as any);
+
+      Alert.alert(successTitle, successMessage, [
+        { text: actionLabel, onPress: actionHandler },
       ]);
     } catch (err: any) {
       Alert.alert(

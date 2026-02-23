@@ -4,6 +4,8 @@ export type UserRole =
   | "buyer"
   | "transporter"
   | "agro_supplier"
+  | "vendor"
+  | "support_moderator"
   | "admin";
 
 export interface User {

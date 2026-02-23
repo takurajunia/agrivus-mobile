@@ -121,7 +121,7 @@ export default function CreateAuctionScreen() {
     try {
       setSubmitting(true);
 
-      await auctionsService.createAuction({
+      const response = await auctionsService.createAuction({
         listingId: formData.listingId,
         startingPrice: parseFloat(formData.startingPrice),
         reservePrice: formData.reservePrice
@@ -131,9 +131,16 @@ export default function CreateAuctionScreen() {
         durationHours: parseInt(formData.duration),
       });
 
-      Alert.alert("Success", "Auction created successfully!", [
-        { text: "OK", onPress: () => router.push("/auctions") },
-      ]);
+      const createdAuctionId = response?.data?.id;
+      if (createdAuctionId) {
+        router.replace(`/auction/${createdAuctionId}` as any);
+        return;
+      }
+
+      Alert.alert(
+        "Success",
+        "Auction was created, but we couldn't open it automatically."
+      );
     } catch (err: any) {
       Alert.alert(
         "Error",

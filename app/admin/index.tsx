@@ -66,7 +66,7 @@ export default function AdminDashboardScreen() {
   }, []);
 
   useEffect(() => {
-    if (user?.role === "admin") {
+    if (user?.role === "admin" || user?.role === "support_moderator") {
       fetchStats();
     }
   }, [fetchStats, user]);
@@ -96,7 +96,7 @@ export default function AdminDashboardScreen() {
     return orderData ? Number(orderData.count) : 0;
   };
 
-  if (user?.role !== "admin") {
+  if (user?.role !== "admin" && user?.role !== "support_moderator") {
     return (
       <NeumorphicScreen variant="dashboard">
         <View style={styles.accessDenied}>
