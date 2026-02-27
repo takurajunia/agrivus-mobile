@@ -27,6 +27,7 @@ import {
   borderRadius,
 } from "../theme/neumorphic";
 import { agrimallService } from "../services/agrimallService";
+import { buildOrderFailureMessage } from "../services/orderErrorMessage";
 import type { Cart, CheckoutSummary } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import OptimizedImage from "../components/OptimizedImage";
@@ -152,10 +153,7 @@ export default function CheckoutScreen() {
         { text: actionLabel, onPress: actionHandler },
       ]);
     } catch (err: any) {
-      Alert.alert(
-        "Error",
-        err.response?.data?.message || "Failed to place order"
-      );
+      Alert.alert("Error", buildOrderFailureMessage(err, "Failed to place order"));
     } finally {
       setProcessing(false);
     }

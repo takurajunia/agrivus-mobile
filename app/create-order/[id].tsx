@@ -37,6 +37,7 @@ import {
 } from "../../src/theme/neumorphic";
 import { listingsService } from "../../src/services/listingsService";
 import ordersService from "../../src/services/ordersService";
+import { buildOrderFailureMessage } from "../../src/services/orderErrorMessage";
 import { useAuth } from "../../src/contexts/AuthContext";
 import type { Listing } from "../../src/types";
 
@@ -193,9 +194,7 @@ export default function CreateOrderScreen() {
         );
       }
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || err.message || "Failed to create order"
-      );
+      setError(buildOrderFailureMessage(err, "Failed to create order"));
     } finally {
       setSubmitting(false);
     }

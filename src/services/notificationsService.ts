@@ -20,7 +20,7 @@ const notificationsService = {
   async getNotifications(
     unreadOnly: boolean = false,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<NotificationsResponse> {
     const response = await api.get("/notifications", {
       params: { unreadOnly, limit, offset },
@@ -33,8 +33,16 @@ const notificationsService = {
     success: boolean;
     data: { unreadCount: number };
   }> {
-    const response = await api.get("/notifications/unread-count");
-    return response.data;
+    const response = await api.get("/notifications", {
+      params: { unreadOnly: true, limit: 1, offset: 0 },
+    });
+
+    return {
+      success: !!response.data?.success,
+      data: {
+        unreadCount: response.data?.data?.unreadCount || 0,
+      },
+    };
   },
 
   // Mark a single notification as read
@@ -51,7 +59,7 @@ const notificationsService = {
 
   // Delete a notification
   async deleteNotification(
-    notificationId: string
+    notificationId: string,
   ): Promise<{ success: boolean }> {
     const response = await api.delete(`/notifications/${notificationId}`);
     return response.data;

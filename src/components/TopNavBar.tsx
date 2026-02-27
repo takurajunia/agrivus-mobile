@@ -5,7 +5,7 @@
  * chat, notifications, and auctions navigation.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   Image,
   Platform,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { MessageCircle, Bell } from "lucide-react-native";
 import { useAuth } from "../contexts/AuthContext";
@@ -39,8 +40,28 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useAuth();
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const { unreadCount: notificationCount } = useNotifications();
+
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      if (!user?.id) {
+        setProfilePhotoUri(null);
+        return;
+      }
+
+      try {
+        const savedPhoto = await AsyncStorage.getItem(`profile-photo:${user.id}`);
+        setProfilePhotoUri(savedPhoto);
+      } catch (error) {
+        console.error("Failed to load top nav profile photo:", error);
+        setProfilePhotoUri(null);
+      }
+    };
+
+    loadProfilePhoto();
+  }, [user?.id]);
 
   // Get user initials for avatar placeholder (always use fullName if available)
   const getInitials = () => {
@@ -79,9 +100,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           onPress={handleProfilePress}
           activeOpacity={0.7}
         >
-          {(user as any)?.profilePicture ? (
+          {profilePhotoUri || (user as any)?.profilePicture ? (
             <Image
-              source={{ uri: (user as any).profilePicture }}
+              source={{ uri: profilePhotoUri || (user as any).profilePicture }}
               style={styles.avatarImage}
             />
           ) : (

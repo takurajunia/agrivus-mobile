@@ -4,10 +4,12 @@ import type {
   RegisterData,
   AuthResponse,
   User,
+  ProfileUpdateData,
+  AuthProfileResponseData,
 } from "../types";
 
 export const login = async (
-  credentials: LoginCredentials
+  credentials: LoginCredentials,
 ): Promise<AuthResponse> => {
   const response = await api.post<AuthResponse>("/auth/login", credentials);
   return response.data;
@@ -19,9 +21,31 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
 };
 
 export const fetchUser = async (): Promise<User> => {
-  const response = await api.get<{ success: boolean; data: User }>(
-    "/auth/user"
-  );
+  const response = await api.get<{
+    success: boolean;
+    data: AuthProfileResponseData;
+  }>("/auth/profile");
+  return response.data.data.user;
+};
+
+export const getProfile = async (): Promise<AuthProfileResponseData> => {
+  const response = await api.get<{
+    success: boolean;
+    data: AuthProfileResponseData;
+  }>("/auth/profile");
+
+  return response.data.data;
+};
+
+export const updateProfile = async (
+  payload: ProfileUpdateData,
+): Promise<AuthProfileResponseData> => {
+  const response = await api.patch<{
+    success: boolean;
+    message: string;
+    data: AuthProfileResponseData;
+  }>("/auth/profile", payload);
+
   return response.data.data;
 };
 

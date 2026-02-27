@@ -11,8 +11,14 @@ import type {
   LoginCredentials,
   RegisterData,
   AuthResponse,
+  ProfileUpdateData,
 } from "../types";
-import { login, register, fetchUser } from "../services/authService";
+import {
+  login,
+  register,
+  fetchUser,
+  updateProfile as updateProfileRequest,
+} from "../services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +26,7 @@ interface AuthContextType {
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  updateProfile: (data: ProfileUpdateData) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -123,12 +130,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Note: Backend doesn't have a logout endpoint, so we just clear locally
   };
 
+  const handleUpdateProfile = async (data: ProfileUpdateData) => {
+    const response = await updateProfileRequest(data);
+    setUser(response.user);
+    await AsyncStorage.setItem("user", JSON.stringify(response.user));
+  };
+
   const value = {
     user,
     token,
     loading,
     login: handleLogin,
     register: handleRegister,
+    updateProfile: handleUpdateProfile,
     logout: handleLogout,
     isAuthenticated: !!token && !!user,
   };

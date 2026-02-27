@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Agrivus Mobile",
+    "name": "Agrivus",
     "slug": "agrivus-mobile",
     "version": "1.0.0",
     "jsEngine": "hermes",
@@ -41,3 +41,4 @@
     }
   }
 }
+

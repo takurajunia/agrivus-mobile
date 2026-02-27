@@ -35,6 +35,8 @@ export interface ConversationWithUser {
     fullName: string;
     email: string;
     phone?: string;
+    lastActiveDate?: string | null;
+    lastLoginAt?: string | null;
   };
   unreadCount: number;
 }
@@ -56,9 +58,7 @@ export interface SendMessageData {
 
 const chatService = {
   // Get or create conversation with another user
-  async getOrCreateConversation(
-    otherUserId: string
-  ): Promise<{
+  async getOrCreateConversation(otherUserId: string): Promise<{
     success: boolean;
     data: {
       conversation: Conversation;
@@ -67,6 +67,8 @@ const chatService = {
         fullName: string;
         email: string;
         phone?: string;
+        lastActiveDate?: string | null;
+        lastLoginAt?: string | null;
       };
     };
   }> {
@@ -87,7 +89,7 @@ const chatService = {
   async getMessages(
     conversationId: string,
     page: number = 1,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<{
     success: boolean;
     data: {
@@ -104,7 +106,7 @@ const chatService = {
       `/chat/conversations/${conversationId}/messages`,
       {
         params: { page, limit },
-      }
+      },
     );
     return response.data;
   },
@@ -112,11 +114,11 @@ const chatService = {
   // Send a message to a conversation
   async sendMessage(
     conversationId: string,
-    data: SendMessageData
+    data: SendMessageData,
   ): Promise<{ success: boolean; data: MessageWithSender }> {
     const response = await api.post(
       `/chat/conversations/${conversationId}/messages`,
-      data
+      data,
     );
     return response.data;
   },
@@ -133,7 +135,7 @@ const chatService = {
   // Mark messages as read
   async markAsRead(conversationId: string): Promise<{ success: boolean }> {
     const response = await api.patch(
-      `/chat/conversations/${conversationId}/read`
+      `/chat/conversations/${conversationId}/read`,
     );
     return response.data;
   },

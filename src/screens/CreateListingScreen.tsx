@@ -5,11 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import {
   Package,
@@ -55,6 +56,7 @@ export default function CreateListingScreen() {
   const [loading, setLoading] = useState(false);
   const [showCropPicker, setShowCropPicker] = useState(false);
   const [showUnitPicker, setShowUnitPicker] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     cropType: "",
@@ -91,6 +93,15 @@ export default function CreateListingScreen() {
 
     try {
       setLoading(true);
+      let uploadedImages: string[] = [];
+
+      if (selectedImages.length > 0) {
+        const uploadResponse = await listingsService.uploadListingImages(
+          selectedImages,
+        );
+        uploadedImages = uploadResponse.data?.images || [];
+      }
+
       const response = await listingsService.createListing({
         cropType: form.cropType,
         cropName: form.cropName || form.cropType,
@@ -100,6 +111,7 @@ export default function CreateListingScreen() {
         location: form.location,
         harvestDate: form.harvestDate || undefined,
         description: form.description || undefined,
+        images: uploadedImages,
         status: "active",
       });
 
@@ -128,6 +140,41 @@ export default function CreateListingScreen() {
     if (errors[key]) {
       setErrors((prev) => ({ ...prev, [key]: "" }));
     }
+  };
+
+  const handlePickImages = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission required",
+        "Please allow photo library access to upload listing images.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: Math.max(1, 5 - selectedImages.length),
+    });
+
+    if (result.canceled || !result.assets?.length) {
+      return;
+    }
+
+    const pickedUris = result.assets.map((asset) => asset.uri);
+    setSelectedImages((previous) => {
+      const merged = [...previous, ...pickedUris];
+      return merged.slice(0, 5);
+    });
+  };
+
+  const removeImageAt = (indexToRemove: number) => {
+    setSelectedImages((previous) =>
+      previous.filter((_, index) => index !== indexToRemove),
+    );
   };
 
   return (
@@ -298,6 +345,43 @@ export default function CreateListingScreen() {
               }
             />
 
+            <View style={styles.inputGroup}>
+              <View style={styles.imagesHeaderRow}>
+                <Text style={styles.label}>Listing Images (Optional)</Text>
+                <Text style={styles.imagesCounter}>{selectedImages.length}/5</Text>
+              </View>
+
+              {selectedImages.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.imagesList}
+                  contentContainerStyle={styles.imagesListContent}
+                >
+                  {selectedImages.map((uri, index) => (
+                    <View key={`${uri}-${index}`} style={styles.imagePreviewCard}>
+                      <Image source={{ uri }} style={styles.imagePreview} />
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => removeImageAt(index)}
+                      >
+                        <Text style={styles.removeImageText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+
+              <NeumorphicButton
+                title={selectedImages.length >= 5 ? "Maximum images reached" : "Add Images"}
+                onPress={handlePickImages}
+                variant="secondary"
+                size="small"
+                disabled={selectedImages.length >= 5 || loading}
+                icon={<ImageIcon size={16} color={neumorphicColors.primary.main} />}
+              />
+            </View>
+
             {/* Submit Button */}
             <NeumorphicButton
               title="Create Listing"
@@ -396,5 +480,53 @@ const styles = StyleSheet.create({
   pickerOptionText: {
     ...typography.body,
     color: neumorphicColors.text.primary,
+  },
+  imagesHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  imagesCounter: {
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+  },
+  imagesList: {
+    marginBottom: spacing.sm,
+  },
+  imagesListContent: {
+    gap: spacing.sm,
+    paddingRight: spacing.sm,
+  },
+  imagePreviewCard: {
+    width: 90,
+    height: 90,
+    borderRadius: borderRadius.md,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: neumorphicColors.base.border,
+    backgroundColor: neumorphicColors.base.card,
+    position: "relative",
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: neumorphicColors.semantic.error,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeImageText: {
+    color: neumorphicColors.text.inverse,
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: "700",
   },
 });

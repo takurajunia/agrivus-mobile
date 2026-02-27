@@ -8,6 +8,8 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Linking,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -24,6 +26,7 @@ import {
   typography,
   spacing,
   borderRadius,
+  getNeumorphicShadow,
 } from "../theme/neumorphic";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
@@ -57,9 +60,13 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const router = useRouter();
   const { register } = useAuth();
+
+  const termsUrl =
+    "https://www.privacypolicies.com/live/177285ff-e311-474c-98e4-79f73cc3ed8e";
 
   const handleRegister = async () => {
     if (
@@ -82,6 +89,14 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (!acceptedTerms) {
+      Alert.alert(
+        "Terms & Conditions Required",
+        "Please agree to the Terms & Conditions and Privacy Policy to create your account."
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       await register(formData);
@@ -99,10 +114,18 @@ export default function RegisterScreen() {
     router.back();
   };
 
+  const openTerms = async () => {
+    try {
+      await Linking.openURL(termsUrl);
+    } catch (error) {
+      Alert.alert("Error", "Unable to open Terms & Conditions right now.");
+    }
+  };
+
   const selectedRole = userRoles.find((role) => role.value === formData.role);
 
   return (
-    <NeumorphicScreen variant="default" showLeaves={true}>
+    <NeumorphicScreen variant="auth" showLeaves={true}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -113,6 +136,13 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("../../assets/noBackgroundLogo.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
               Join the Agrivus community today
@@ -189,9 +219,7 @@ export default function RegisterScreen() {
                   size={20}
                   color={neumorphicColors.text.tertiary}
                   style={{
-                    transform: showRolePicker
-                      ? "rotate(180deg)"
-                      : "rotate(0deg)",
+                    transform: [{ rotate: showRolePicker ? "180deg" : "0deg" }],
                   }}
                 />
               </TouchableOpacity>
@@ -279,10 +307,36 @@ export default function RegisterScreen() {
             />
 
             <View style={styles.termsContainer}>
-              <Text style={styles.termsText}>
-                By creating an account, you agree to our Terms of Service and
-                Privacy Policy.
+              <TouchableOpacity
+                style={styles.termsCheckRow}
+                onPress={() => setAcceptedTerms((previous) => !previous)}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    acceptedTerms && styles.checkboxChecked,
+                  ]}
+                >
+                  {acceptedTerms && (
+                    <Check size={14} color={neumorphicColors.text.inverse} />
+                  )}
+                </View>
+                <Text style={styles.termsText}>
+                  I agree to the Terms & Conditions and Privacy Policy.
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={styles.termsSummary}>
+                By agreeing, you consent to Agrivus collecting and using your
+                personal data to provide services, manage your account,
+                communicate important updates, and improve platform performance
+                in line with applicable laws and our retention policy.
               </Text>
+
+              <TouchableOpacity onPress={openTerms}>
+                <Text style={styles.termsLink}>Read full Terms & Conditions</Text>
+              </TouchableOpacity>
             </View>
 
             <NeumorphicButton
@@ -318,7 +372,22 @@ const styles = StyleSheet.create({
     paddingTop: spacing["2xl"],
   },
   header: {
-    marginBottom: spacing.xl,
+    alignItems: "center",
+    marginBottom: spacing["2xl"],
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.full,
+    backgroundColor: neumorphicColors.base.card,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    ...getNeumorphicShadow(3),
+  },
+  logo: {
+    width: 70,
+    height: 70,
   },
   title: {
     ...typography.h1,
@@ -413,11 +482,42 @@ const styles = StyleSheet.create({
   termsContainer: {
     marginVertical: spacing.lg,
   },
+  termsCheckRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: neumorphicColors.base.border,
+    backgroundColor: neumorphicColors.base.input,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.sm,
+  },
+  checkboxChecked: {
+    backgroundColor: neumorphicColors.primary[600],
+    borderColor: neumorphicColors.primary[600],
+  },
   termsText: {
     ...typography.caption,
     color: neumorphicColors.text.tertiary,
-    textAlign: "center",
+    flex: 1,
     lineHeight: 18,
+  },
+  termsSummary: {
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    lineHeight: 18,
+    marginBottom: spacing.sm,
+  },
+  termsLink: {
+    ...typography.caption,
+    color: neumorphicColors.primary[600],
+    fontWeight: "700",
   },
   registerButton: {
     marginBottom: spacing.xl,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   RefreshControl,
   Platform,
   Dimensions,
+  Image,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,7 +31,6 @@ import {
   BarChart3,
   Settings,
   TrendingUp,
-  AlertTriangle,
 } from "lucide-react-native";
 
 // Import our textured leaf background
@@ -38,6 +39,9 @@ import {
   BACKGROUND_COLOR,
 } from "../../src/components/LeafBackground";
 import { useAuth } from "../../src/contexts/AuthContext";
+import notificationsService from "../../src/services/notificationsService";
+import chatService from "../../src/services/chatService";
+import type { Notification } from "../../src/types";
 
 const { width } = Dimensions.get("window");
 
@@ -125,6 +129,7 @@ const WaveLines = () => (
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const isBuyer = user?.role === "buyer";
   const isAdmin = user?.role === "admin";
@@ -133,6 +138,164 @@ export default function HomeScreen() {
     ? parseFloat(user.boostMultiplier)
     : 1;
   const [refreshing, setRefreshing] = useState(false);
+  const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  const fetchRecentNotifications = useCallback(async () => {
+    try {
+      const response = await notificationsService.getNotifications(false, 5, 0);
+      if (response.success && response.data?.notifications) {
+        setRecentNotifications(response.data.notifications);
+      }
+    } catch (error) {
+      console.error("Error fetching recent notifications:", error);
+    }
+  }, []);
+
+  const fetchUnreadCounts = useCallback(async () => {
+    try {
+      const [notificationsResponse, chatsResponse] = await Promise.all([
+        notificationsService.getUnreadCount(),
+        chatService.getUnreadCount(),
+      ]);
+
+      setUnreadNotificationCount(
+        notificationsResponse?.data?.unreadCount || 0,
+      );
+      setUnreadChatCount(chatsResponse?.data?.unreadCount || 0);
+    } catch (error) {
+      console.error("Error fetching unread counts:", error);
+      setUnreadNotificationCount(0);
+      setUnreadChatCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentNotifications();
+    fetchUnreadCounts();
+  }, [fetchRecentNotifications, fetchUnreadCounts]);
+
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      if (!user?.id) {
+        setProfilePhotoUri(null);
+        return;
+      }
+
+      try {
+        const savedPhoto = await AsyncStorage.getItem(`profile-photo:${user.id}`);
+        setProfilePhotoUri(savedPhoto);
+      } catch (error) {
+        console.error("Error loading profile photo for home:", error);
+        setProfilePhotoUri(null);
+      }
+    };
+
+    loadProfilePhoto();
+  }, [user?.id]);
+
+  const latestFiveNotifications = useMemo(
+    () =>
+      [...recentNotifications]
+        .sort(
+          (first, second) =>
+            new Date(second.createdAt).getTime() -
+            new Date(first.createdAt).getTime()
+        )
+        .slice(0, 5),
+    [recentNotifications]
+  );
+
+  const getActivityBadgeLabel = (notification: Notification): string => {
+    return notification.isRead ? "Read" : "New";
+  };
+
+  const handleActivityPress = async (notification: Notification) => {
+    if (!notification.isRead) {
+      setRecentNotifications((previous) =>
+        previous.map((item) =>
+          item.id === notification.id ? { ...item, isRead: true } : item
+        )
+      );
+
+      try {
+        await notificationsService.markAsRead(notification.id);
+      } catch (error) {
+        console.error("Error marking activity notification as read:", error);
+      }
+    }
+
+    const notificationData = notification.data;
+
+    switch (notification.type) {
+      case "transport_offer":
+      case "transport_offer_sent":
+      case "transport_offer_accepted":
+      case "transport_offer_declined":
+      case "transport_offer_countered":
+      case "transport_offer_counter_accepted":
+      case "transport_assigned":
+        if (
+          notification.type === "transport_offer_countered" &&
+          user?.role === "buyer" &&
+          notificationData?.orderId
+        ) {
+          router.push(`/order/${notificationData.orderId}`);
+        } else {
+          router.push("/transport-offers");
+        }
+        break;
+      case "order":
+      case "order_placed":
+      case "order_received":
+      case "order_update":
+      case "order_delivered":
+        if (notificationData?.orderId) {
+          if (user?.role === "transporter" && notificationData?.offerId) {
+            router.push("/transport-offers");
+          } else {
+            router.push(`/order/${notificationData.orderId}`);
+          }
+        } else {
+          router.push("/(tabs)/orders");
+        }
+        break;
+      case "bid":
+      case "auction":
+      case "auction_won":
+      case "auction_outbid":
+        if (notificationData?.auctionId) {
+          router.push(`/auction/${notificationData.auctionId}`);
+        } else {
+          router.push("/(tabs)/auctions");
+        }
+        break;
+      case "message":
+      case "chat":
+        if (notificationData?.conversationId) {
+          router.push(`/chat/${notificationData.conversationId}`);
+        } else {
+          router.push("/(tabs)/chat");
+        }
+        break;
+      case "payment":
+      case "payment_received":
+      case "wallet":
+        router.push("/(tabs)/wallet");
+        break;
+      case "listing":
+        if (notificationData?.listingId) {
+          router.push(`/listing/${notificationData.listingId}`);
+        } else {
+          router.push("/(tabs)/marketplace");
+        }
+        break;
+      default:
+        router.push("/(tabs)/notifications");
+        break;
+    }
+  };
 
   // Helper function to get user initials
   const getInitials = (fullName?: string): string => {
@@ -149,7 +312,9 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
+    await fetchRecentNotifications();
+    await fetchUnreadCounts();
+    setRefreshing(false);
   };
 
   return (
@@ -169,14 +334,18 @@ export default function HomeScreen() {
           >
             <View style={styles.profileContent}>
               <View style={styles.avatarWrapper}>
-                <LinearGradient
-                  colors={COLORS.greenGradient}
-                  style={styles.avatarGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Text style={styles.avatarText}>{getInitials(user?.fullName)}</Text>
-                </LinearGradient>
+                {profilePhotoUri ? (
+                  <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+                ) : (
+                  <LinearGradient
+                    colors={COLORS.greenGradient}
+                    style={styles.avatarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.avatarText}>{getInitials(user?.fullName)}</Text>
+                  </LinearGradient>
+                )}
                 <View style={styles.avatarInnerShadow} />
               </View>
 
@@ -197,6 +366,13 @@ export default function HomeScreen() {
             >
               {/* Thin, Grey, Hollow Bell */}
               <Bell size={24} color={COLORS.iconGrey} strokeWidth={1.8} />
+              {unreadNotificationCount > 0 && (
+                <View style={styles.utilityBadge}>
+                  <Text style={styles.utilityBadgeText}>
+                    {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+                  </Text>
+                </View>
+              )}
             </FloatPillow>
 
             {/* Chat Bubble */}
@@ -211,6 +387,13 @@ export default function HomeScreen() {
                 color={COLORS.iconGrey}
                 strokeWidth={1.8}
               />
+              {unreadChatCount > 0 && (
+                <View style={styles.utilityBadge}>
+                  <Text style={styles.utilityBadgeText}>
+                    {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                  </Text>
+                </View>
+              )}
             </FloatPillow>
           </View>
         </View>
@@ -712,41 +895,72 @@ export default function HomeScreen() {
           {/* --- Recent Activity --- */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <FloatPillow style={styles.activityCard} borderRadius={24}>
-              <View style={styles.activityRow}>
-                <View style={styles.activityIconBox}>
-                  <View style={styles.activityGlow} />
-                  {!isAdmin ? (
+            {latestFiveNotifications.length > 0 ? (
+              latestFiveNotifications.map((notification) => (
+                <FloatPillow
+                  key={notification.id}
+                  style={styles.activityCard}
+                  borderRadius={24}
+                  onPress={() => handleActivityPress(notification)}
+                >
+                  <View style={styles.activityRow}>
+                    <View style={styles.activityIconBox}>
+                      <View style={styles.activityGlow} />
+                      <Bell
+                        size={24}
+                        color={COLORS.greenGradient[1]}
+                        strokeWidth={2.5}
+                      />
+                    </View>
+
+                    <View style={styles.activityContent}>
+                      <Text style={styles.activityTitle} numberOfLines={1}>
+                        {notification.title}
+                      </Text>
+                      <Text style={styles.activitySub} numberOfLines={2}>
+                        {notification.message}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.pressedBadge,
+                        !notification.isRead && styles.newBadge,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.pressedText,
+                          !notification.isRead && styles.newBadgeText,
+                        ]}
+                      >
+                        {getActivityBadgeLabel(notification)}
+                      </Text>
+                    </View>
+                  </View>
+                </FloatPillow>
+              ))
+            ) : (
+              <FloatPillow style={styles.activityCard} borderRadius={24}>
+                <View style={styles.activityRow}>
+                  <View style={styles.activityIconBox}>
+                    <View style={styles.activityGlow} />
                     <Bell
                       size={24}
                       color={COLORS.greenGradient[1]}
                       strokeWidth={2.5}
                     />
-                  ) : (
-                    <AlertTriangle
-                      size={24}
-                      color="#667EEA"
-                      strokeWidth={2.5}
-                    />
-                  )}
-                </View>
+                  </View>
 
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>
-                    {!isAdmin ? "New Order Received!" : "Platform Activity"}
-                  </Text>
-                  <Text style={styles.activitySub}>
-                    {!isAdmin
-                      ? "You have a new order to process."
-                      : "Monitor all platform activities from here."}
-                  </Text>
+                  <View style={styles.activityContent}>
+                    <Text style={styles.activityTitle}>No notifications yet</Text>
+                    <Text style={styles.activitySub}>
+                      Your latest activity will appear here.
+                    </Text>
+                  </View>
                 </View>
-
-                <View style={styles.pressedBadge}>
-                  <Text style={styles.pressedText}>{!isAdmin ? "New" : "Admin"}</Text>
-                </View>
-              </View>
-            </FloatPillow>
+              </FloatPillow>
+            )}
           </View>
 
           <View style={{ height: 100 }} />
@@ -801,6 +1015,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 22,
+  },
   avatarInnerShadow: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 22,
@@ -824,6 +1043,25 @@ const styles = StyleSheet.create({
     height: 52,
     alignItems: "center",
     justifyContent: "center",
+  },
+  utilityBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: "#EF4444",
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  utilityBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
   },
 
   // --- Shared Pillow Style ---
@@ -1098,5 +1336,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: COLORS.textGray,
+  },
+  newBadge: {
+    backgroundColor: "#E6F9EC",
+    borderColor: "#8ED6A5",
+    borderTopColor: "#D8F4E3",
+    borderLeftColor: "#D8F4E3",
+  },
+  newBadgeText: {
+    color: "#1F8A4C",
   },
 });

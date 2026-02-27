@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -47,6 +47,69 @@ export default function AgriMallScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
+
+  const parseRating = (value?: string | null) => {
+    const parsed = Number.parseFloat(value || "0");
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const vendorSections = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        vendorId: string;
+        storeName: string;
+        vendorRating: number;
+        products: Product[];
+      }
+    >();
+
+    for (const product of products) {
+      const vendorId = product.vendor?.id || product.vendorId || "unknown-vendor";
+      const storeName = product.vendor?.storeName || "Unknown Store";
+      const vendorRating = parseRating(product.vendor?.rating);
+
+      if (!grouped.has(vendorId)) {
+        grouped.set(vendorId, {
+          vendorId,
+          storeName,
+          vendorRating,
+          products: [],
+        });
+      }
+
+      const section = grouped.get(vendorId)!;
+      section.products.push(product);
+
+      if (vendorRating > section.vendorRating) {
+        section.vendorRating = vendorRating;
+      }
+    }
+
+    const sections = Array.from(grouped.values()).map((section) => ({
+      ...section,
+      products: [...section.products].sort((first, second) => {
+        if (first.isFeatured !== second.isFeatured) {
+          return first.isFeatured ? -1 : 1;
+        }
+
+        const ratingDiff = parseRating(second.rating) - parseRating(first.rating);
+        if (ratingDiff !== 0) {
+          return ratingDiff;
+        }
+
+        return (second.reviewCount || 0) - (first.reviewCount || 0);
+      }),
+    }));
+
+    return sections.sort((first, second) => {
+      if (second.vendorRating !== first.vendorRating) {
+        return second.vendorRating - first.vendorRating;
+      }
+
+      return second.products.length - first.products.length;
+    });
+  }, [products]);
 
   useEffect(() => {
     loadProducts({
@@ -237,6 +300,45 @@ export default function AgriMallScreen() {
     );
   };
 
+  const renderVendorSection = ({
+    item,
+  }: {
+    item: {
+      vendorId: string;
+      storeName: string;
+      vendorRating: number;
+      products: Product[];
+    };
+  }) => {
+    return (
+      <View style={styles.vendorSection}>
+        <View style={styles.vendorSectionHeader}>
+          <View style={styles.vendorSectionTitleRow}>
+            <Store size={14} color={neumorphicColors.primary[600]} />
+            <Text style={styles.vendorSectionTitle} numberOfLines={1}>
+              {item.storeName}
+            </Text>
+          </View>
+          <View style={styles.vendorSectionMeta}>
+            <Star size={12} color={neumorphicColors.secondary[500]} />
+            <Text style={styles.vendorSectionMetaText}>
+              {item.vendorRating > 0 ? item.vendorRating.toFixed(1) : "New"}
+            </Text>
+          </View>
+        </View>
+
+        <FlatList
+          data={item.products}
+          renderItem={renderProductCard}
+          keyExtractor={(product) => product.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.vendorProductsRow}
+        />
+      </View>
+    );
+  };
+
   return (
     <NeumorphicScreen variant="list" showLeaves>
       {/* Header */}
@@ -295,18 +397,16 @@ export default function AgriMallScreen() {
         </View>
       ) : null}
 
-      {/* Products */}
+      {/* Products grouped by vendor (top sellers first) */}
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
       ) : (
         <FlatList
-          data={products}
-          renderItem={renderProductCard}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
+          data={vendorSections}
+          renderItem={renderVendorSection}
+          keyExtractor={(item) => item.vendorId}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -392,15 +492,52 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: 0,
   },
-  columnWrapper: {
+  vendorSection: {
+    marginBottom: spacing.lg,
+  },
+  vendorSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  vendorSectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  vendorSectionTitle: {
+    ...typography.body,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
+    flex: 1,
+  },
+  vendorSectionMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: `${neumorphicColors.secondary[500]}15`,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  vendorSectionMetaText: {
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    fontWeight: "600",
+  },
+  vendorProductsRow: {
+    paddingRight: spacing.sm,
     gap: spacing.md,
   },
   productCard: {
-    flex: 1,
+    width: 210,
     backgroundColor: neumorphicColors.base.card,
     borderRadius: borderRadius.lg,
     overflow: "hidden",
-    marginBottom: spacing.md,
     padding: 0,
   },
   imageContainer: {

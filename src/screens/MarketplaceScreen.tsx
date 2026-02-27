@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  FlatList,
+  Animated,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Search, Filter, MapPin, Star, TrendingUp } from "lucide-react-native";
@@ -50,8 +51,11 @@ const SORT_OPTIONS = [
   { label: "Price: High to Low", value: "price_desc" },
 ];
 
+const BOOST_BANNER_HEIGHT = 58;
+
 export default function MarketplaceScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const [listings, setListings] = useState<ListingWithFarmer[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -68,6 +72,28 @@ export default function MarketplaceScreen() {
     limit: 20,
     total: 0,
     totalPages: 0,
+  });
+
+  const numColumns = width >= 1200 ? 4 : width >= 900 ? 3 : width >= 700 ? 2 : 1;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const bannerTravel = BOOST_BANNER_HEIGHT + spacing.md;
+
+  const bannerOpacity = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const bannerTranslateY = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [0, -bannerTravel],
+    extrapolate: "clamp",
+  });
+
+  const listTranslateY = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [0, -bannerTravel],
+    extrapolate: "clamp",
   });
 
   useEffect(() => {
@@ -145,6 +171,25 @@ export default function MarketplaceScreen() {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
+  const getListingDisplayName = (listing: ListingWithFarmer["listing"]) => {
+    const cropType = listing.cropType?.trim();
+    const cropName = listing.cropName?.trim();
+
+    if (!cropType) {
+      return cropName || "Crop";
+    }
+
+    if (!cropName) {
+      return cropType;
+    }
+
+    if (cropType.toLowerCase() === cropName.toLowerCase()) {
+      return cropType;
+    }
+
+    return `${cropType} (${cropName})`;
+  };
+
   const renderListingCard = ({ item }: { item: ListingWithFarmer }) => {
     const { listing, farmer } = item;
     const boostMultiplier = farmer.boostMultiplier
@@ -157,7 +202,14 @@ export default function MarketplaceScreen() {
         onPress={() => router.push(`/listing/${listing.id}`)}
         variant="standard"
       >
-        <View style={styles.imageContainer}>
+        <View
+          style={[
+            styles.imageContainer,
+            numColumns === 1
+              ? styles.imageContainerSingleColumn
+              : styles.imageContainerMultiColumn,
+          ]}
+        >
           {listing.images && listing.images.length > 0 ? (
             <OptimizedImage
               uri={listing.images[0]}
@@ -180,7 +232,7 @@ export default function MarketplaceScreen() {
         </View>
 
         <View style={styles.cardContent}>
-          <Text style={styles.cropType}>{listing.cropType}</Text>
+          <Text style={styles.cropType}>{getListingDisplayName(listing)}</Text>
           <Text style={styles.quantity}>
             {listing.quantity} {listing.unit}
           </Text>
@@ -272,12 +324,22 @@ export default function MarketplaceScreen() {
       </ScrollView>
 
       {/* Boost Info Banner */}
-      <NeumorphicCard variant="glass" style={styles.boostBanner}>
-        <TrendingUp size={20} color={neumorphicColors.primary[600]} />
-        <Text style={styles.boostText}>
-          Smart Ranking: Top sellers appear first
-        </Text>
-      </NeumorphicCard>
+      <Animated.View
+        style={[
+          styles.boostBannerContainer,
+          {
+            opacity: bannerOpacity,
+            transform: [{ translateY: bannerTranslateY }],
+          },
+        ]}
+      >
+        <NeumorphicCard variant="glass" style={styles.boostBanner}>
+          <TrendingUp size={20} color={neumorphicColors.primary[600]} />
+          <Text style={styles.boostText}>
+            Smart Ranking: Top sellers appear first
+          </Text>
+        </NeumorphicCard>
+      </Animated.View>
 
       {/* Error Message */}
       {error ? (
@@ -304,42 +366,57 @@ export default function MarketplaceScreen() {
           <LoadingSpinner />
         </View>
       ) : (
-        <FlatList
-          data={listings}
-          renderItem={renderListingCard}
-          keyExtractor={(item) => item.listing.id}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[neumorphicColors.primary[600]]}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>🌾</Text>
-              <Text style={styles.emptyTitle}>No listings found</Text>
-              <Text style={styles.emptyText}>
-                Try adjusting your filters or check back later
-              </Text>
-            </View>
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={
-            loadingMore ? (
-              <View style={styles.loadingMoreContainer}>
-                <ActivityIndicator
-                  size="small"
-                  color={neumorphicColors.primary[600]}
-                />
+        <Animated.View
+          style={[
+            styles.listWrapper,
+            {
+              transform: [{ translateY: listTranslateY }],
+            },
+          ]}
+        >
+          <Animated.FlatList
+            key={`marketplace-columns-${numColumns}`}
+            data={listings}
+            renderItem={renderListingCard}
+            keyExtractor={(item) => item.listing.id}
+            numColumns={numColumns}
+            columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[neumorphicColors.primary[600]]}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyIcon}>🌾</Text>
+                <Text style={styles.emptyTitle}>No listings found</Text>
+                <Text style={styles.emptyText}>
+                  Try adjusting your filters or check back later
+                </Text>
               </View>
-            ) : null
-          }
-        />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.3}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: true }
+            )}
+            scrollEventThrottle={16}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={styles.loadingMoreContainer}>
+                  <ActivityIndicator
+                    size="small"
+                    color={neumorphicColors.primary[600]}
+                  />
+                </View>
+              ) : null
+            }
+          />
+        </Animated.View>
       )}
     </NeumorphicScreen>
   );
@@ -377,12 +454,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   filterTag: {
+    minWidth: 64,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     backgroundColor: neumorphicColors.base.card,
     borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: neumorphicColors.base.border,
+    alignItems: "center",
+    justifyContent: "center",
     // Neumorphic shadow
     shadowColor: neumorphicColors.base.shadowDark,
     shadowOffset: { width: 2, height: 2 },
@@ -391,25 +471,34 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   filterTagActive: {
-    backgroundColor: neumorphicColors.primary[600],
-    borderColor: neumorphicColors.primary[600],
-    shadowColor: neumorphicColors.primary[500],
+    backgroundColor: neumorphicColors.primary[700],
+    borderColor: neumorphicColors.primary[700],
+    shadowColor: neumorphicColors.primary[600],
   },
   filterTagText: {
-    ...typography.caption,
-    color: neumorphicColors.text.secondary,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+    letterSpacing: 0.1,
+    color: neumorphicColors.text.primary,
   },
   filterTagTextActive: {
     color: neumorphicColors.text.inverse,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   boostBanner: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
+    height: BOOST_BANNER_HEIGHT,
     padding: spacing.md,
     gap: spacing.sm,
+  },
+  boostBannerContainer: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  listWrapper: {
+    flex: 1,
   },
   boostText: {
     ...typography.body,
@@ -453,7 +542,12 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: "relative",
-    height: 120,
+  },
+  imageContainerSingleColumn: {
+    height: 190,
+  },
+  imageContainerMultiColumn: {
+    height: 150,
   },
   listingImage: {
     width: "100%",

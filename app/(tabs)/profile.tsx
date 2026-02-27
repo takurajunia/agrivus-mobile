@@ -1,17 +1,20 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
+  Linking,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
   User,
   Settings,
-  CreditCard,
   Bell,
   Shield,
   HelpCircle,
@@ -40,14 +43,98 @@ import {
   borderRadius,
   getNeumorphicShadow,
 } from "../../src/theme/neumorphic";
+import ordersService from "../../src/services/ordersService";
+import listingsService from "../../src/services/listingsService";
+import agrimallService from "../../src/services/agrimallService";
+import adminService from "../../src/services/adminService";
+
+type ProfileStat = {
+  label: string;
+  value: string;
+  icon: any;
+};
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [stats, setStats] = useState<ProfileStat[]>([
+    { label: "Orders", value: "0", icon: ShoppingBag },
+    { label: "Score", value: "0.0", icon: Star },
+    { label: "Products", value: "0", icon: Package },
+  ]);
 
-  const handleLogout = () => {
-    // Just call logout - AuthNavigator will handle the redirect
-    logout();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace("/login");
+    } catch (error) {
+      Alert.alert("Error", "Unable to log out right now. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [router, user]);
+
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      if (!user?.id) {
+        setProfilePhotoUri(null);
+        return;
+      }
+
+      try {
+        const savedPhoto = await AsyncStorage.getItem(`profile-photo:${user.id}`);
+        setProfilePhotoUri(savedPhoto);
+      } catch (error) {
+        console.error("Failed to load profile photo:", error);
+        setProfilePhotoUri(null);
+      }
+    };
+
+    loadProfilePhoto();
+  }, [user?.id]);
+
+  const handlePickProfilePhoto = async () => {
+    if (!user?.id) {
+      Alert.alert("Error", "Please log in to update your profile photo.");
+      return;
+    }
+
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permission required",
+          "Please allow photo library access to set your profile picture."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (result.canceled || !result.assets?.length) {
+        return;
+      }
+
+      const selectedPhotoUri = result.assets[0].uri;
+      setProfilePhotoUri(selectedPhotoUri);
+      await AsyncStorage.setItem(`profile-photo:${user.id}`, selectedPhotoUri);
+    } catch (error) {
+      console.error("Failed to set profile photo:", error);
+      Alert.alert("Error", "Unable to update profile photo right now.");
+    }
   };
 
   // Build menu sections dynamically based on user role
@@ -79,22 +166,17 @@ export default function ProfileScreen() {
       title: "Preferences",
       items: [
         {
-          label: "Payment Methods",
-          icon: CreditCard,
-          color: neumorphicColors.secondary[600],
-          route: "/payment-methods",
-        },
-        {
           label: "Notifications",
           icon: Bell,
           color: neumorphicColors.semantic.error,
-          route: "/notifications-settings",
+          route: "/(tabs)/notifications",
         },
         {
           label: "Privacy & Security",
           icon: Shield,
           color: neumorphicColors.primary[700],
-          route: "/privacy-security",
+          route:
+            "https://www.privacypolicies.com/live/177285ff-e311-474c-98e4-79f73cc3ed8e",
         },
       ],
     },
@@ -105,7 +187,8 @@ export default function ProfileScreen() {
           label: "Help Center",
           icon: HelpCircle,
           color: neumorphicColors.semantic.info,
-          route: "/help",
+          route:
+            "https://www.privacypolicies.com/live/177285ff-e311-474c-98e4-79f73cc3ed8e#contact-us",
         },
       ],
     },
@@ -130,11 +213,135 @@ export default function ProfileScreen() {
         ]
       : baseMenuSections;
 
-  const stats = [
-    { label: "Orders", value: "156", icon: ShoppingBag },
-    { label: "Rating", value: "4.8", icon: Star },
-    { label: "Products", value: "24", icon: Package },
-  ];
+  const fetchProfileStats = useCallback(async () => {
+    if (!user) {
+      setStatsLoading(false);
+      setStats([
+        { label: "Orders", value: "0", icon: ShoppingBag },
+        { label: "Score", value: "0.0", icon: Star },
+        { label: "Products", value: "0", icon: Package },
+      ]);
+      return;
+    }
+
+    const role = user.role;
+    const scoreValue = Number(user.platformScore || 0).toFixed(1);
+
+    try {
+      setStatsLoading(true);
+      if (role === "admin") {
+        const response = await adminService.getStatistics();
+        const totalOrders = response.data?.overview?.totalOrders ?? 0;
+        const totalUsers = response.data?.overview?.totalUsers ?? 0;
+
+        setStats([
+          { label: "Orders", value: String(totalOrders), icon: ShoppingBag },
+          { label: "Score", value: scoreValue, icon: Star },
+          { label: "Users", value: String(totalUsers), icon: User },
+        ]);
+        return;
+      }
+
+      const ordersResponse = await ordersService.getOrders({ page: 1, limit: 1 });
+      const ordersCount = ordersResponse.data?.pagination?.total ?? 0;
+
+      if (role === "farmer") {
+        const listingsResponse = await listingsService.getMyListings();
+        const productsCount = Array.isArray(listingsResponse.data)
+          ? listingsResponse.data.length
+          : 0;
+
+        setStats([
+          { label: "Orders", value: String(ordersCount), icon: ShoppingBag },
+          { label: "Score", value: scoreValue, icon: Star },
+          { label: "Products", value: String(productsCount), icon: Package },
+        ]);
+        return;
+      }
+
+      if (role === "transporter") {
+        const deliveriesCount = (ordersResponse.data?.orders || []).filter(
+          (order) =>
+            order.status === "delivered" || order.status === "confirmed"
+        ).length;
+
+        setStats([
+          { label: "Orders", value: String(ordersCount), icon: ShoppingBag },
+          { label: "Score", value: scoreValue, icon: Star },
+          { label: "Deliveries", value: String(deliveriesCount), icon: Package },
+        ]);
+        return;
+      }
+
+      if (role === "vendor" || role === "agro_supplier") {
+        const vendorProductsResponse = await agrimallService.getVendorProducts();
+        const vendorProducts = Array.isArray(vendorProductsResponse.data)
+          ? vendorProductsResponse.data.length
+          : Array.isArray(vendorProductsResponse.products)
+          ? vendorProductsResponse.products.length
+          : 0;
+
+        setStats([
+          { label: "Orders", value: String(ordersCount), icon: ShoppingBag },
+          { label: "Score", value: scoreValue, icon: Star },
+          { label: "Products", value: String(vendorProducts), icon: Package },
+        ]);
+        return;
+      }
+
+      if (role === "support_moderator") {
+        const incidentsResponse = await adminService.getSecurityIncidents({
+          status: "pending",
+          page: 1,
+          limit: 1,
+        });
+        const pendingCases = incidentsResponse.data?.pagination?.total ?? 0;
+
+        setStats([
+          { label: "Orders", value: String(ordersCount), icon: ShoppingBag },
+          { label: "Score", value: scoreValue, icon: Star },
+          { label: "Cases", value: String(pendingCases), icon: Shield },
+        ]);
+        return;
+      }
+
+      if (role === "buyer") {
+        const agrimallOrdersResponse = await agrimallService.getOrders({
+          page: 1,
+          limit: 100,
+        });
+        const purchasesCount = Array.isArray(agrimallOrdersResponse.data)
+          ? agrimallOrdersResponse.data.length
+          : 0;
+
+        setStats([
+          { label: "Orders", value: String(ordersCount), icon: ShoppingBag },
+          { label: "Score", value: scoreValue, icon: Star },
+          { label: "Purchases", value: String(purchasesCount), icon: Package },
+        ]);
+        return;
+      }
+
+      setStats([
+        { label: "Orders", value: String(ordersCount), icon: ShoppingBag },
+        { label: "Score", value: scoreValue, icon: Star },
+        { label: "Products", value: "0", icon: Package },
+      ]);
+    } catch (error) {
+      console.error("Error loading profile stats:", error);
+      setStats([
+        { label: "Orders", value: "0", icon: ShoppingBag },
+        { label: "Score", value: scoreValue, icon: Star },
+        { label: "Products", value: "0", icon: Package },
+      ]);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfileStats();
+  }, [fetchProfileStats]);
 
   return (
     <NeumorphicScreen variant="profile" showLeaves={true}>
@@ -146,7 +353,9 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Profile</Text>
-          <TouchableOpacity onPress={() => router.push("/settings" as any)}>
+          <TouchableOpacity
+            onPress={() => Alert.alert("Coming soon", "Settings is coming soon.")}
+          >
             <Settings size={24} color={neumorphicColors.text.secondary} />
           </TouchableOpacity>
         </View>
@@ -155,23 +364,25 @@ export default function ProfileScreen() {
         <NeumorphicCard variant="elevated" style={styles.profileCard}>
           <View style={styles.profileHeader}>
             <NeumorphicAvatar
+              source={profilePhotoUri ? { uri: profilePhotoUri } : undefined}
               name={user?.fullName}
               size="xlarge"
               status="online"
               showStatus
             />
-            <TouchableOpacity style={styles.editAvatarButton}>
+            <TouchableOpacity
+              style={styles.editAvatarButton}
+              onPress={handlePickProfilePhoto}
+            >
               <Edit size={16} color={neumorphicColors.text.inverse} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.userName}>{user?.fullName || "Demo User"}</Text>
-          <Text style={styles.userEmail}>
-            {user?.email || "demo@agrivus.com"}
-          </Text>
+          <Text style={styles.userName}>{user?.fullName || ""}</Text>
+          <Text style={styles.userEmail}>{user?.email || ""}</Text>
 
           <NeumorphicBadge
-            label={user?.role || "Farmer"}
+            label={user?.role || ""}
             variant="primary"
             size="medium"
             style={styles.roleBadge}
@@ -183,8 +394,17 @@ export default function ProfileScreen() {
                 <View style={styles.statIconContainer}>
                   <stat.icon size={16} color={neumorphicColors.primary[600]} />
                 </View>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
+                {statsLoading ? (
+                  <>
+                    <View style={styles.statValueSkeleton} />
+                    <View style={styles.statLabelSkeleton} />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.statValue}>{stat.value}</Text>
+                    <Text style={styles.statLabel}>{stat.label}</Text>
+                  </>
+                )}
               </View>
             ))}
           </View>
@@ -199,11 +419,40 @@ export default function ProfileScreen() {
                 key={itemIndex}
                 variant="standard"
                 style={styles.menuItem}
-                onPress={() =>
-                  item.route
-                    ? router.push(item.route as any)
-                    : console.log(`${item.label} pressed`)
-                }
+                onPress={() => {
+                  if (section.title === "Account" && item.label === "Edit Profile") {
+                    if (user?.role === "buyer" || user?.role === "farmer") {
+                      if (item.route) {
+                        router.push(item.route as any);
+                      }
+                    } else {
+                      Alert.alert(
+                        "Not available",
+                        "Edit Profile is currently available for buyers and farmers only."
+                      );
+                    }
+                    return;
+                  }
+
+                  if (section.title === "Account") {
+                    Alert.alert("Coming soon", `${item.label} is coming soon.`);
+                    return;
+                  }
+
+                  if (item.route?.startsWith("http")) {
+                    Linking.openURL(item.route).catch(() => {
+                      Alert.alert("Error", "Unable to open link right now.");
+                    });
+                    return;
+                  }
+
+                  if (item.route) {
+                    router.push(item.route as any);
+                    return;
+                  }
+
+                  console.log(`${item.label} pressed`);
+                }}
                 animationDelay={(sectionIndex * 3 + itemIndex) * 50}
               >
                 <View style={styles.menuItemContent}>
@@ -330,6 +579,19 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: neumorphicColors.text.secondary,
     fontWeight: "500",
+  },
+  statValueSkeleton: {
+    width: 34,
+    height: 18,
+    borderRadius: borderRadius.sm,
+    backgroundColor: neumorphicColors.base.border,
+    marginBottom: spacing.xs,
+  },
+  statLabelSkeleton: {
+    width: 48,
+    height: 12,
+    borderRadius: borderRadius.sm,
+    backgroundColor: neumorphicColors.base.border,
   },
   menuSection: {
     marginBottom: spacing.xl,

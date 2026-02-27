@@ -37,6 +37,8 @@ import chatService, {
 } from "../../src/services/chatService";
 import { useAuth } from "../../src/contexts/AuthContext";
 
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+
 export default function ChatConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -51,6 +53,8 @@ export default function ChatConversationScreen() {
   const [otherUserData, setOtherUserData] = useState<{
     id: string;
     fullName: string;
+    lastActiveDate?: string | null;
+    lastLoginAt?: string | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -191,6 +195,41 @@ export default function ChatConversationScreen() {
     return senderId === user?.id;
   };
 
+  const formatLastSeen = (dateString?: string | null) => {
+    if (!dateString) {
+      return "last seen recently";
+    }
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return "last seen recently";
+    }
+
+    const now = Date.now();
+    const diffMs = Math.max(0, now - date.getTime());
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) {
+      return "last seen just now";
+    }
+
+    if (diffMins < 60) {
+      return `last seen ${diffMins} min ago`;
+    }
+
+    if (diffHours < 24) {
+      return `last seen ${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    }
+
+    if (diffDays === 1) {
+      return "last seen yesterday";
+    }
+
+    return `last seen ${date.toLocaleDateString()}`;
+  };
+
   // Group messages by date
   const groupedMessages = messages.reduce((groups, msg) => {
     const date = new Date(msg.message.createdAt).toDateString();
@@ -224,6 +263,27 @@ export default function ChatConversationScreen() {
     messages[0]?.sender?.fullName ||
     "Chat";
 
+  const latestOtherMessageAt = messages
+    .filter((msg) => msg.sender?.id !== user?.id)
+    .reduce<string | null>((latest, msg) => {
+      if (!latest) return msg.message.createdAt;
+      return new Date(msg.message.createdAt) > new Date(latest)
+        ? msg.message.createdAt
+        : latest;
+    }, null);
+
+  const lastSeenAt =
+    otherUserData?.lastActiveDate ||
+    otherUserData?.lastLoginAt ||
+    conversation?.otherUser?.lastActiveDate ||
+    conversation?.otherUser?.lastLoginAt ||
+    latestOtherMessageAt;
+
+  const isOnline =
+    !!lastSeenAt &&
+    Date.now() - new Date(lastSeenAt).getTime() < ONLINE_THRESHOLD_MS;
+  const statusLabel = isOnline ? "online" : formatLastSeen(lastSeenAt);
+
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>
       {/* Header */}
@@ -239,12 +299,12 @@ export default function ChatConversationScreen() {
           <NeumorphicAvatar
             name={otherUserName}
             size="small"
-            status="online"
-            showStatus
+            status={isOnline ? "online" : "offline"}
+            showStatus={isOnline}
           />
           <View style={styles.headerText}>
             <Text style={styles.headerName}>{otherUserName}</Text>
-            <Text style={styles.headerStatus}>Online</Text>
+            <Text style={styles.headerStatus}>{statusLabel}</Text>
           </View>
         </View>
 

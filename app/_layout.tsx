@@ -18,8 +18,7 @@ function AuthNavigator() {
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
-  const isNavigatingRef = useRef(false);
-  const lastAuthStateRef = useRef<boolean | null>(null);
+  const lastRedirectRef = useRef<string | null>(null);
 
   useEffect(() => {
     console.log("AuthNavigator state:", {
@@ -33,12 +32,6 @@ function AuthNavigator() {
 
     // Don't do anything if navigation isn't ready or still loading auth
     if (!navigationState?.key || loading) return;
-
-    // Prevent concurrent navigation attempts
-    if (isNavigatingRef.current) {
-      console.log("Navigation in progress, skipping...");
-      return;
-    }
 
     // Get current segment - treat empty segments as being on the login page (index)
     const currentSegment = segments[0] ?? "index";
@@ -69,14 +62,19 @@ function AuthNavigator() {
       currentSegment === "create-order" ||
       currentSegment === "export" ||
       currentSegment === "payment" ||
-      currentSegment === "payment-history";
+      currentSegment === "payment-history" ||
+      currentSegment === "edit-profile";
 
-    const onLoginPage = currentSegment === "index" || currentSegment === "";
+    const onAuthPage =
+      currentSegment === "index" ||
+      currentSegment === "" ||
+      currentSegment === "login" ||
+      currentSegment === "register";
 
     console.log("Navigation decision:", {
       currentSegment,
       inProtectedRoute,
-      onLoginPage,
+      onAuthPage,
       isAuthenticated,
     });
 
@@ -85,58 +83,31 @@ function AuthNavigator() {
       console.log(
         "Redirecting to login - not authenticated on protected route",
       );
-      isNavigatingRef.current = true;
-
-      // Use dismissAll to clear the stack, then navigate to login
-      try {
-        if (router.canDismiss()) {
-          router.dismissAll();
-        }
-      } catch (e) {
-        // Ignore errors from dismissAll
+      if (lastRedirectRef.current !== "/login") {
+        lastRedirectRef.current = "/login";
+        router.replace("/login");
       }
-
-      // Navigate to login after a short delay to allow stack to clear
-      setTimeout(() => {
-        router.replace("/");
-        // Reset navigation flag after navigation completes
-        setTimeout(() => {
-          isNavigatingRef.current = false;
-          lastAuthStateRef.current = isAuthenticated;
-        }, 300);
-      }, 50);
       return;
     }
 
-    // Handle login: authenticated but on login page
-    if (isAuthenticated && onLoginPage) {
-      // Only redirect if auth state actually changed to authenticated
-      if (lastAuthStateRef.current === isAuthenticated) {
-        console.log("Already on correct auth state, skipping...");
-        return;
+    // Handle login: authenticated but on auth pages
+    if (isAuthenticated && onAuthPage) {
+      console.log("Redirecting to tabs - authenticated on auth page");
+      if (lastRedirectRef.current !== "/(tabs)") {
+        lastRedirectRef.current = "/(tabs)";
+        router.replace("/(tabs)");
       }
-
-      console.log("Redirecting to tabs - authenticated on login page");
-      isNavigatingRef.current = true;
-
-      router.replace("/(tabs)");
-
-      // Reset navigation flag after a delay
-      setTimeout(() => {
-        isNavigatingRef.current = false;
-        lastAuthStateRef.current = isAuthenticated;
-      }, 500);
       return;
     }
 
-    // Update last auth state when no navigation needed
-    lastAuthStateRef.current = isAuthenticated;
+    lastRedirectRef.current = null;
   }, [isAuthenticated, segments, loading, navigationState?.key]);
 
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="create-listing" options={{ headerShown: false }} />
@@ -161,6 +132,7 @@ function AuthNavigator() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="payment-history" options={{ headerShown: false }} />
+        <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

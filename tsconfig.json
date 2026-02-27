@@ -16,6 +16,10 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    "types": [
+      "react",
+      "react-native"
+    ],
     "target": "ESNext",
     "strict": true,
     "paths": {

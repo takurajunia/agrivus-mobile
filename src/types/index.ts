@@ -62,6 +62,29 @@ export interface AuthResponse {
   };
 }
 
+export interface ProfileUpdateData {
+  fullName: string;
+  phone: string;
+  profile: {
+    businessLocation?: string;
+    buyerType?: string;
+    purchaseVolume?: string;
+    qualityRequirements?: string;
+    productsInterested?: string[];
+    farmLocation?: string;
+    farmSize?: string;
+    crops?: string[];
+    productionMethod?: string;
+    experienceYears?: string;
+    harvestPeriod?: string;
+  };
+}
+
+export interface AuthProfileResponseData {
+  user: User;
+  profile: Record<string, any> | null;
+}
+
 // Listing Types
 export type ListingStatus = "active" | "sold" | "expired" | "draft";
 

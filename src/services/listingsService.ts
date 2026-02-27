@@ -7,10 +7,45 @@ import type {
 } from "../types";
 
 export const listingsService = {
+  // Upload listing images (returns hosted URLs)
+  uploadListingImages: async (imageUris: string[]) => {
+    const formData = new FormData();
+
+    imageUris.forEach((uri, index) => {
+      const uriParts = uri.split(".");
+      const extension = uriParts[uriParts.length - 1]?.toLowerCase() || "jpg";
+      const mimeType =
+        extension === "png"
+          ? "image/png"
+          : extension === "webp"
+            ? "image/webp"
+            : "image/jpeg";
+
+      formData.append("images", {
+        uri,
+        name: `listing-${Date.now()}-${index}.${extension}`,
+        type: mimeType,
+      } as any);
+    });
+
+    const response = await api.post<
+      ApiResponse<{
+        images: string[];
+        count: number;
+      }>
+    >("/upload/images", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  },
+
   // Get all listings with filters
   getListings: async (
     filters?: ListingFilters,
-    options?: { forceRefresh?: boolean }
+    options?: { forceRefresh?: boolean },
   ) => {
     const params: Record<string, string> = {};
 
@@ -39,7 +74,7 @@ export const listingsService = {
       {
         ttlMs: 2 * 60 * 1000,
         forceRefresh: options?.forceRefresh,
-      }
+      },
     );
 
     return response;
@@ -59,7 +94,7 @@ export const listingsService = {
   // Get my listings (farmers only)
   getMyListings: async () => {
     const response = await api.get<ApiResponse<Listing[]>>(
-      "/listings/my/listings"
+      "/listings/my/listings",
     );
     return response.data;
   },
@@ -74,7 +109,7 @@ export const listingsService = {
   updateListing: async (id: string, data: Partial<Listing>) => {
     const response = await api.put<ApiResponse<Listing>>(
       `/listings/${id}`,
-      data
+      data,
     );
     return response.data;
   },
@@ -89,11 +124,11 @@ export const listingsService = {
   updateListingQuantity: async (
     id: string,
     quantity: number,
-    reason?: string
+    reason?: string,
   ) => {
     const response = await api.patch<ApiResponse<Listing>>(
       `/listings/${id}/quantity`,
-      { quantity, reason }
+      { quantity, reason },
     );
     return response.data;
   },
