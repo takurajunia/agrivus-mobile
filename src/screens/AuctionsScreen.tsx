@@ -25,6 +25,7 @@ import {
   NeumorphicIconButton,
   NeumorphicButton,
 } from "../components/neumorphic";
+import OptimizedImage from "../components/OptimizedImage";
 
 interface AuctionItem {
   auction: {
@@ -39,6 +40,7 @@ interface AuctionItem {
   listing: {
     id: string;
     cropType: string;
+    cropName?: string;
     quantity: string;
     unit: string;
     location: string;
@@ -94,11 +96,31 @@ export default function AuctionsScreen() {
     return `${minutes}m left`;
   };
 
+  const getListingDisplayName = (listing: AuctionItem["listing"]) => {
+    const cropType = listing.cropType?.trim();
+    const cropName = listing.cropName?.trim();
+
+    if (!cropType) {
+      return cropName || "Crop";
+    }
+
+    if (!cropName || cropType.toLowerCase() === cropName.toLowerCase()) {
+      return cropType;
+    }
+
+    return `${cropType} (${cropName})`;
+  };
+
+  const getListingImage = (listing: AuctionItem["listing"]) =>
+    listing.images?.find((image) => image.trim().length > 0);
+
   const renderAuctionCard = ({ item }: { item: AuctionItem }) => {
     const { auction, listing, bidCount } = item;
     const timeRemaining = getTimeRemaining(auction.endTime);
     const isEnding =
       timeRemaining.includes("m left") && !timeRemaining.includes("h");
+    const listingName = getListingDisplayName(listing);
+    const listingImage = getListingImage(listing);
 
     return (
       <NeumorphicCard
@@ -114,16 +136,18 @@ export default function AuctionsScreen() {
 
         {/* Image */}
         <View style={styles.imageContainer}>
-          <View style={styles.placeholderImage}>
-            <Text style={styles.placeholderText}>
-              {listing.cropType?.charAt(0) || "🌾"}
-            </Text>
-          </View>
+          {listingImage ? (
+            <OptimizedImage uri={listingImage} style={styles.listingImage} />
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Text style={styles.placeholderText}>🌾</Text>
+            </View>
+          )}
         </View>
 
         {/* Content */}
         <View style={styles.cardContent}>
-          <Text style={styles.cropType}>{listing.cropType || "Crop"}</Text>
+          <Text style={styles.cropType}>{listingName}</Text>
           <Text style={styles.quantity}>
             {listing.quantity} {listing.unit}
           </Text>
@@ -375,18 +399,23 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     height: 150,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    overflow: "hidden",
+  },
+  listingImage: {
+    width: "100%",
+    height: "100%",
   },
   placeholderImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: neumorphicColors.primary[100],
+    backgroundColor: `${neumorphicColors.text.secondary}15`,
     justifyContent: "center",
     alignItems: "center",
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
   },
   placeholderText: {
-    fontSize: 56,
+    fontSize: 44,
   },
   cardContent: {
     padding: spacing.lg,

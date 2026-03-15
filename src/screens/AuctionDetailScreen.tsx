@@ -186,6 +186,13 @@ export default function AuctionDetailScreen() {
 
   const { auction, listing, bids } = auctionData;
   const isActive = auction.status === "active" && timeRemaining !== "Ended";
+  const cropType = listing?.cropType?.trim();
+  const cropName = listing?.cropName?.trim();
+  const listingDisplayName = !cropType
+    ? cropName || "Auction"
+    : !cropName || cropType.toLowerCase() === cropName.toLowerCase()
+      ? cropType
+      : `${cropType} (${cropName})`;
 
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>
@@ -244,7 +251,7 @@ export default function AuctionDetailScreen() {
 
         {/* Auction Info */}
         <NeumorphicCard style={styles.infoSection} variant="elevated">
-          <Text style={styles.title}>{listing?.cropType || "Auction"}</Text>
+          <Text style={styles.title}>{listingDisplayName}</Text>
 
           <View style={styles.priceSection}>
             <View style={styles.priceItem}>

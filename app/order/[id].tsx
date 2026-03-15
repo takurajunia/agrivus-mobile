@@ -159,6 +159,66 @@ export default function OrderDetailScreen() {
     );
   };
 
+  const handleApproveOrder = async () => {
+    if (!order) return;
+
+    Alert.alert(
+      "Approve Order",
+      "Approve this order? Buyer funds will then be held in escrow.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Approve",
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await ordersService.updateOrderStatus(order.id, "paid");
+              Alert.alert(
+                "Success",
+                "Order approved. Buyer funds are now secured in escrow."
+              );
+              fetchOrder();
+            } catch (error) {
+              console.error("Error approving order:", error);
+              Alert.alert("Error", "Failed to approve order");
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeclineOrder = async () => {
+    if (!order) return;
+
+    Alert.alert(
+      "Decline Order",
+      "Decline this order? No payment will be processed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Decline",
+          style: "destructive",
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await ordersService.updateOrderStatus(order.id, "cancelled");
+              Alert.alert("Success", "Order declined. Buyer was notified.");
+              fetchOrder();
+            } catch (error) {
+              console.error("Error declining order:", error);
+              Alert.alert("Error", "Failed to decline order");
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleCancelOrder = async () => {
     if (!order) return;
 
@@ -301,6 +361,7 @@ export default function OrderDetailScreen() {
 
   const formatStatus = (status: string) => {
     if (!status) return "Unknown";
+    if (status === "pending") return "Awaiting Farmer Approval";
     return status
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -525,6 +586,32 @@ export default function OrderDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
+          {/* Farmer approval gate */}
+          {isFarmer && order.status === "pending" && (
+            <>
+              <NeumorphicButton
+                title="Approve Order"
+                onPress={handleApproveOrder}
+                variant="primary"
+                loading={actionLoading}
+                fullWidth
+                style={styles.actionBtn}
+                icon={
+                  <CheckCircle size={20} color={neumorphicColors.text.inverse} />
+                }
+              />
+              <NeumorphicButton
+                title="Decline Order"
+                onPress={handleDeclineOrder}
+                variant="secondary"
+                loading={actionLoading}
+                fullWidth
+                style={styles.actionBtn}
+                icon={<XCircle size={20} color={neumorphicColors.text.primary} />}
+              />
+            </>
+          )}
+
           {/* Farmer can match transporters for paid orders */}
           {isFarmer &&
             order.status === "paid" &&
