@@ -166,6 +166,7 @@ const ordersService = {
       deliveryLocation: string;
       estimatedDistance?: number;
       estimatedWeightKg?: number;
+      suggestedFee?: number;
       minimumFee?: number;
       feeNote?: string;
       matches: TransporterMatch[];

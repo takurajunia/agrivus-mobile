@@ -72,8 +72,13 @@ export const TransportOfferWizardMobile: React.FC<
   const [proposedFee, setProposedFee] = useState<string>(
     transportCost ? transportCost.toString() : "",
   );
-  const [minimumFee, setMinimumFee] = useState<number>(187.5);
+  const [suggestedFee, setSuggestedFee] = useState<number>(187.5);
   const [feeError, setFeeError] = useState<string | null>(null);
+  const parsedProposedFee = parseFloat(proposedFee);
+  const isBelowSuggestedFee =
+    !Number.isNaN(parsedProposedFee) &&
+    parsedProposedFee > 0 &&
+    parsedProposedFee < suggestedFee;
 
   useEffect(() => {
     loadTransporters();
@@ -87,9 +92,10 @@ export const TransportOfferWizardMobile: React.FC<
       if (response.data?.matches) {
         setTransporters(response.data.matches);
       }
-      if (response.data?.minimumFee) {
-        setMinimumFee(response.data.minimumFee);
-        setProposedFee(response.data.minimumFee.toString());
+      const suggested = response.data?.suggestedFee ?? response.data?.minimumFee;
+      if (suggested && !Number.isNaN(suggested)) {
+        setSuggestedFee(suggested);
+        setProposedFee(suggested.toString());
       }
     } catch (err) {
       setError(
@@ -122,8 +128,8 @@ export const TransportOfferWizardMobile: React.FC<
       return;
     }
 
-    if (feeValue < minimumFee) {
-      setFeeError(`Fee must be at least KES ${minimumFee.toFixed(2)}`);
+    if (feeValue <= 0) {
+      setFeeError("Fee must be greater than 0");
       return;
     }
 
@@ -479,11 +485,18 @@ export const TransportOfferWizardMobile: React.FC<
                 keyboardType="numeric"
                 value={proposedFee}
                 onChangeText={setProposedFee}
-                placeholder={`Minimum KES ${minimumFee.toFixed(2)}`}
+                placeholder={`Suggested KES ${suggestedFee.toFixed(2)}`}
               />
               <Text style={styles.feeHint}>
-                Minimum fee: KES {minimumFee.toFixed(2)} (distance + weight)
+                Suggested fee: KES {suggestedFee.toFixed(2)} (distance +
+                weight). You can still send offers below this estimate.
               </Text>
+              {isBelowSuggestedFee && (
+                <Text style={styles.feeWarning}>
+                  This fee is below the platform suggestion, but it can still
+                  be sent.
+                </Text>
+              )}
               {feeError && <Text style={styles.feeError}>{feeError}</Text>}
             </View>
           </View>
@@ -821,6 +834,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 12,
     color: "#6b7280",
+  },
+  feeWarning: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#b45309",
   },
   feeError: {
     marginTop: 6,
