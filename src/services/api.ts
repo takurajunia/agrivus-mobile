@@ -2,6 +2,30 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { AxiosRequestConfig } from "axios";
 
+type AuthExpiredListener = () => void;
+
+const authExpiredListeners = new Set<AuthExpiredListener>();
+
+let isHandlingUnauthorized = false;
+
+export const onAuthExpired = (listener: AuthExpiredListener): (() => void) => {
+  authExpiredListeners.add(listener);
+
+  return () => {
+    authExpiredListeners.delete(listener);
+  };
+};
+
+const notifyAuthExpired = () => {
+  authExpiredListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      // Ignore listener errors so one consumer cannot block others.
+    }
+  });
+};
+
 // Use the deployed Railway backend for both dev and production
 // This ensures consistent behavior and no need to run local backend
 const API_BASE_URL = "https://agrivus-backend-production.up.railway.app";
@@ -28,7 +52,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for error handling
@@ -37,7 +61,7 @@ api.interceptors.response.use(
     console.log(
       `API Response: ${response.config.method?.toUpperCase()} ${
         response.config.url
-      } - ${response.status}`
+      } - ${response.status}`,
     );
     return response;
   },
@@ -55,9 +79,17 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       // Token expired or invalid
-      console.log("401 received - clearing auth data");
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("user");
+      if (!isHandlingUnauthorized) {
+        isHandlingUnauthorized = true;
+        console.log("401 received - clearing auth data");
+
+        try {
+          await AsyncStorage.multiRemove(["token", "user"]);
+          notifyAuthExpired();
+        } finally {
+          isHandlingUnauthorized = false;
+        }
+      }
     }
 
     // Enhance error with readable message
@@ -70,7 +102,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 const CACHE_KEY_PREFIX = "api_cache:";
@@ -111,7 +143,9 @@ const getCacheKey = (url: string, config?: AxiosRequestConfig): string => {
   return `${CACHE_KEY_PREFIX}${url}?${params}`;
 };
 
-const getCachedEntry = async <T>(cacheKey: string): Promise<CachedEntry<T> | null> => {
+const getCachedEntry = async <T>(
+  cacheKey: string,
+): Promise<CachedEntry<T> | null> => {
   try {
     const raw = await AsyncStorage.getItem(cacheKey);
     if (!raw) {
@@ -127,14 +161,13 @@ const getCachedEntry = async <T>(cacheKey: string): Promise<CachedEntry<T> | nul
 export const getWithCache = async <T>(
   url: string,
   config?: AxiosRequestConfig,
-  options?: CacheOptions
+  options?: CacheOptions,
 ): Promise<T> => {
   const cacheKey = getCacheKey(url, config);
   const ttlMs = options?.ttlMs ?? DEFAULT_CACHE_TTL_MS;
   const now = Date.now();
   const cached = await getCachedEntry<T>(cacheKey);
-  const isFresh =
-    !!cached && now - cached.timestamp < Math.max(ttlMs, 0);
+  const isFresh = !!cached && now - cached.timestamp < Math.max(ttlMs, 0);
 
   if (!options?.forceRefresh && isFresh) {
     return cached.data;

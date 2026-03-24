@@ -19,6 +19,7 @@ import {
   fetchUser,
   updateProfile as updateProfileRequest,
 } from "../services/authService";
+import { onAuthExpired } from "../services/api";
 
 interface AuthContextType {
   user: User | null;
@@ -61,6 +62,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     loadStoredAuth();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthExpired(() => {
+      setUser(null);
+      setToken(null);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   const handleLogin = async (credentials: LoginCredentials) => {

@@ -16,7 +16,7 @@ class WebSocketService {
   private reconnectDelay = 1000;
   private listeners: Map<string, Set<EventCallback>> = new Map();
   private isConnecting = false;
-  private pingInterval: NodeJS.Timeout | null = null;
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
 
   // Connect to WebSocket server
   async connect(): Promise<void> {
@@ -80,7 +80,7 @@ class WebSocketService {
           const delay =
             this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
           console.log(
-            `🔄 Attempting reconnection in ${delay}ms (attempt ${this.reconnectAttempts})`
+            `🔄 Attempting reconnection in ${delay}ms (attempt ${this.reconnectAttempts})`,
           );
           setTimeout(() => this.connect(), delay);
         } else {
