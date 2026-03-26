@@ -41,6 +41,7 @@ import {
 import { useAuth } from "../../src/contexts/AuthContext";
 import notificationsService from "../../src/services/notificationsService";
 import chatService from "../../src/services/chatService";
+import adminService, { AdminStatistics } from "../../src/services/adminService";
 import type { Notification } from "../../src/types";
 
 const { width } = Dimensions.get("window");
@@ -141,6 +142,51 @@ export default function HomeScreen() {
   const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [adminStats, setAdminStats] = useState<AdminStatistics | null>(null);
+  const [adminStatsLoading, setAdminStatsLoading] = useState(false);
+
+  const parseNumericValue = (value: number | string | undefined): number => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+    if (typeof value === "string") {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  };
+
+  const formatCompactNumber = (value: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(Math.max(0, value));
+  };
+
+  const formatCompactCurrency = (value: number): string => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(Math.max(0, value));
+  };
+
+  const fetchAdminStats = useCallback(async () => {
+    if (!isAdmin) {
+      return;
+    }
+
+    setAdminStatsLoading(true);
+    try {
+      const response = await adminService.getStatistics();
+      if (response.success && response.data) {
+        setAdminStats(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching admin home stats:", error);
+    } finally {
+      setAdminStatsLoading(false);
+    }
+  }, [isAdmin]);
 
   const fetchRecentNotifications = useCallback(async () => {
     try {
@@ -175,6 +221,10 @@ export default function HomeScreen() {
     fetchRecentNotifications();
     fetchUnreadCounts();
   }, [fetchRecentNotifications, fetchUnreadCounts]);
+
+  useEffect(() => {
+    fetchAdminStats();
+  }, [fetchAdminStats]);
 
   useEffect(() => {
     const loadProfilePhoto = async () => {
@@ -312,10 +362,23 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchRecentNotifications();
-    await fetchUnreadCounts();
+    await Promise.all([
+      fetchRecentNotifications(),
+      fetchUnreadCounts(),
+      isAdmin ? fetchAdminStats() : Promise.resolve(),
+    ]);
     setRefreshing(false);
   };
+
+  const totalUsersValue = formatCompactNumber(adminStats?.overview?.totalUsers || 0);
+  const allOrdersValue = formatCompactNumber(adminStats?.overview?.totalOrders || 0);
+  const securityValue = formatCompactNumber(
+    parseNumericValue(adminStats?.platformHealth?.securityAlerts),
+  );
+  const platformRevenueValue = formatCompactCurrency(
+    parseNumericValue(adminStats?.revenue?.total_commission) +
+      parseNumericValue(adminStats?.revenue?.total_transport_fees),
+  );
 
   return (
     <View style={styles.container}>
@@ -611,7 +674,9 @@ export default function HomeScreen() {
                     <InsetDent icon={Users} color="#667EEA" />
                   </View>
                   <Text style={styles.statLabel}>Total Users</Text>
-                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statMain}>
+                    {adminStatsLoading ? "..." : totalUsersValue}
+                  </Text>
                   <Text style={styles.statSub}>Platform</Text>
                 </TouchableOpacity>
 
@@ -625,8 +690,10 @@ export default function HomeScreen() {
                     <InsetDent icon={DollarSign} color="#4CD964" />
                   </View>
                   <Text style={styles.statLabel}>Revenue</Text>
-                  <Text style={styles.statMain}>-</Text>
-                  <Text style={styles.statSub}>Total</Text>
+                  <Text style={styles.statMain}>
+                    {adminStatsLoading ? "..." : platformRevenueValue}
+                  </Text>
+                  <Text style={styles.statSub}>Commission + Fees</Text>
                 </TouchableOpacity>
               </View>
 
@@ -641,7 +708,9 @@ export default function HomeScreen() {
                     <InsetDent icon={ShoppingCart} color="#FF9800" isOrange />
                   </View>
                   <Text style={styles.statLabel}>All Orders</Text>
-                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statMain}>
+                    {adminStatsLoading ? "..." : allOrdersValue}
+                  </Text>
                   <Text style={styles.statSub}>Total</Text>
                 </TouchableOpacity>
 
@@ -655,7 +724,9 @@ export default function HomeScreen() {
                     <InsetDent icon={Shield} color="#E53E3E" />
                   </View>
                   <Text style={styles.statLabel}>Security</Text>
-                  <Text style={styles.statMain}>-</Text>
+                  <Text style={styles.statMain}>
+                    {adminStatsLoading ? "..." : securityValue}
+                  </Text>
                   <Text style={styles.statSub}>Alerts</Text>
                 </TouchableOpacity>
               </View>
