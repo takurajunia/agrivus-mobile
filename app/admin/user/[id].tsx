@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
   Alert,
@@ -53,6 +54,8 @@ export default function AdminUserDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [user, setUser] = useState<UserWithDetails | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -69,7 +72,93 @@ export default function AdminUserDetailScreen() {
         const response = await adminService.getUserDetails(id);
 
         if (response.success) {
-          setUser(response.data);
+          const payload: any = response.data;
+          const rawUser = payload?.user ?? payload;
+
+          if (!rawUser) {
+            setUser(null);
+            return;
+          }
+
+          const isActive =
+            rawUser.isActive === true ||
+            rawUser.is_active === true ||
+            rawUser.is_active === "true" ||
+            rawUser.is_active === "t";
+
+          const totalVolumeNumber = Number(
+            rawUser.totalVolume ?? rawUser.total_volume ?? 0
+          );
+
+          const normalizedRecentOrders = Array.isArray(payload?.recentOrders)
+            ? payload.recentOrders.map((order: any) => ({
+                id: order.id,
+                quantity: Number(order.quantity ?? 0),
+                totalAmount: Number(order.totalAmount ?? order.total_amount ?? 0),
+                status: order.status ?? "pending",
+                createdAt: order.createdAt ?? order.created_at,
+              }))
+            : [];
+
+          const normalizedUser: UserWithDetails = {
+            id: rawUser.id,
+            email: rawUser.email,
+            phone: rawUser.phone || "",
+            fullName:
+              rawUser.fullName ?? rawUser.full_name ?? rawUser.name ?? "Unknown User",
+            name:
+              rawUser.fullName ?? rawUser.full_name ?? rawUser.name ?? "Unknown User",
+            role: rawUser.role,
+            isVerified: Boolean(rawUser.isVerified ?? rawUser.is_verified),
+            isActive,
+            platformScore: Number(rawUser.platformScore ?? rawUser.platform_score ?? 0),
+            totalTransactions: Number(
+              rawUser.totalTransactions ?? rawUser.total_transactions ?? 0
+            ),
+            totalVolume: String(rawUser.totalVolume ?? rawUser.total_volume ?? "0"),
+            createdAt: rawUser.createdAt ?? rawUser.created_at,
+            updatedAt: rawUser.updatedAt ?? rawUser.updated_at,
+            status: isActive ? "active" : "suspended",
+            location:
+              rawUser.location ??
+              rawUser.business_location ??
+              rawUser.farm_location ??
+              undefined,
+            rating: Number(rawUser.platformScore ?? rawUser.platform_score ?? 0),
+            totalProducts: Number(rawUser.listingsCount ?? 0),
+            totalOrders: Number(
+              rawUser.totalTransactions ?? rawUser.total_transactions ?? 0
+            ),
+            totalRevenue: Number.isFinite(totalVolumeNumber)
+              ? totalVolumeNumber
+              : 0,
+            lastActiveAt: rawUser.lastActiveAt ?? rawUser.last_active_date,
+            lastOrderAt: normalizedRecentOrders[0]?.createdAt,
+          };
+
+          if (payload?.wallet?.balance !== undefined && payload?.wallet?.balance !== null) {
+            const parsedBalance = Number(payload.wallet.balance);
+            setWalletBalance(Number.isFinite(parsedBalance) ? parsedBalance : null);
+          } else {
+            setWalletBalance(null);
+          }
+
+          setRecentOrders(normalizedRecentOrders);
+
+          // Merge boost details when available.
+          try {
+            const boostResponse = await adminService.getUserBoostInfo(id);
+            if (boostResponse.success && boostResponse.data) {
+              normalizedUser.boostTier = boostResponse.data.tier;
+              normalizedUser.boostMultiplier = String(
+                boostResponse.data.boostMultiplier
+              );
+            }
+          } catch {
+            // Non-blocking: user details should still render without boost info.
+          }
+
+          setUser(normalizedUser);
         }
       } catch (error) {
         console.error("Failed to fetch user details:", error);
@@ -122,7 +211,10 @@ export default function AdminUserDetailScreen() {
                       }
                     : null
                 );
-                Alert.alert("Success", `User has been ${action}d`);
+                Alert.alert(
+                  "Success",
+                  response.message || `User has been ${action}d`
+                );
               }
             } catch (error) {
               console.error("Failed to update user status:", error);
@@ -196,6 +288,33 @@ export default function AdminUserDetailScreen() {
       default:
         return neumorphicColors.text.tertiary;
     }
+  };
+
+  const getOrderStatusColor = (status?: string) => {
+    switch ((status || "").toLowerCase()) {
+      case "confirmed":
+      case "delivered":
+        return neumorphicColors.semantic.success;
+      case "cancelled":
+      case "failed":
+        return neumorphicColors.semantic.error;
+      case "in_transit":
+      case "assigned":
+        return neumorphicColors.semantic.info;
+      case "pending":
+      case "payment_pending":
+      case "paid":
+        return neumorphicColors.semantic.warning;
+      default:
+        return neumorphicColors.text.tertiary;
+    }
+  };
+
+  const formatOrderStatus = (status?: string) => {
+    return (status || "unknown")
+      .split("_")
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(" ");
   };
 
   if (loading) {
@@ -282,7 +401,7 @@ export default function AdminUserDetailScreen() {
             )}
           </View>
 
-          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userName}>{user.fullName}</Text>
 
           <View style={styles.badges}>
             <View
@@ -398,29 +517,31 @@ export default function AdminUserDetailScreen() {
           <NeumorphicCard variant="stat" style={styles.statCard}>
             <Star size={24} color={neumorphicColors.secondary[600]} />
             <Text style={styles.statValue}>
-              {user.rating?.toFixed(1) || "0.0"}
+              {user.platformScore?.toFixed(1) || "0.0"}
             </Text>
-            <Text style={styles.statLabel}>Rating</Text>
+            <Text style={styles.statLabel}>Score</Text>
           </NeumorphicCard>
 
           <NeumorphicCard variant="stat" style={styles.statCard}>
             <Package size={24} color={neumorphicColors.primary[600]} />
-            <Text style={styles.statValue}>{user.totalProducts || 0}</Text>
-            <Text style={styles.statLabel}>Products</Text>
+            <Text style={styles.statValue}>
+              {walletBalance !== null ? formatCurrency(walletBalance) : "$0.00"}
+            </Text>
+            <Text style={styles.statLabel}>Wallet</Text>
           </NeumorphicCard>
 
           <NeumorphicCard variant="stat" style={styles.statCard}>
             <ShoppingCart size={24} color={neumorphicColors.semantic.info} />
-            <Text style={styles.statValue}>{user.totalOrders || 0}</Text>
-            <Text style={styles.statLabel}>Orders</Text>
+            <Text style={styles.statValue}>{user.totalTransactions || 0}</Text>
+            <Text style={styles.statLabel}>Transactions</Text>
           </NeumorphicCard>
 
           <NeumorphicCard variant="stat" style={styles.statCard}>
             <DollarSign size={24} color={neumorphicColors.semantic.success} />
             <Text style={styles.statValue}>
-              {formatCurrency(user.totalRevenue)}
+              {formatCurrency(Number(user.totalVolume || 0))}
             </Text>
-            <Text style={styles.statLabel}>Revenue</Text>
+            <Text style={styles.statLabel}>Total Volume</Text>
           </NeumorphicCard>
         </View>
 
@@ -481,6 +602,60 @@ export default function AdminUserDetailScreen() {
               </Text>
             </View>
           </View>
+        </NeumorphicCard>
+
+        {/* Recent Orders */}
+        <Text style={styles.sectionTitle}>Recent Orders</Text>
+        <NeumorphicCard style={styles.ordersCard}>
+          {recentOrders.length === 0 ? (
+            <Text style={styles.emptyOrdersText}>No recent orders found</Text>
+          ) : (
+            recentOrders.map((order, index) => (
+              <TouchableOpacity
+                key={order.id || index}
+                activeOpacity={0.85}
+                onPress={() =>
+                  order.id ? router.push(`/order/${order.id}` as any) : undefined
+                }
+                style={[
+                  styles.orderRow,
+                  index === recentOrders.length - 1 && styles.orderRowLast,
+                ]}
+              >
+                <View style={styles.orderInfo}>
+                  <Text style={styles.orderIdText}>
+                    Order #{String(order.id || "").slice(0, 8)}
+                  </Text>
+                  <Text style={styles.orderMetaText}>
+                    Qty: {order.quantity || 0} • {formatDate(order.createdAt)}
+                  </Text>
+                </View>
+                <View style={styles.orderRightSection}>
+                  <Text style={styles.orderAmountText}>
+                    {formatCurrency(order.totalAmount || 0)}
+                  </Text>
+                  <View
+                    style={[
+                      styles.orderStatusBadge,
+                      {
+                        backgroundColor:
+                          getOrderStatusColor(order.status) + "20",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.orderStatusText,
+                        { color: getOrderStatusColor(order.status) },
+                      ]}
+                    >
+                      {formatOrderStatus(order.status)}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </NeumorphicCard>
 
         {/* Action Buttons */}
@@ -733,6 +908,60 @@ const styles = StyleSheet.create({
   },
   activityValue: {
     ...typography.body,
+  },
+  ordersCard: {
+    padding: spacing.lg,
+  },
+  emptyOrdersText: {
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    textAlign: "center",
+    paddingVertical: spacing.sm,
+  },
+  orderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderBottomWidth: 1,
+    borderBottomColor: neumorphicColors.base.pressed,
+  },
+  orderRowLast: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  orderInfo: {
+    flex: 1,
+  },
+  orderIdText: {
+    ...typography.bodySmall,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
+  },
+  orderMetaText: {
+    ...typography.caption,
+    marginTop: 2,
+    color: neumorphicColors.text.secondary,
+  },
+  orderRightSection: {
+    alignItems: "flex-end",
+    gap: spacing.xs,
+  },
+  orderAmountText: {
+    ...typography.bodySmall,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
+  },
+  orderStatusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  orderStatusText: {
+    ...typography.caption,
+    fontWeight: "600",
   },
   actionButtons: {
     marginTop: spacing.xl,

@@ -128,7 +128,7 @@ const adminService = {
 
   // Get single user details
   async getUserDetails(
-    userId: string
+    userId: string,
   ): Promise<{ success: boolean; data: UserWithDetails }> {
     const response = await api.get(`/admin/users/${userId}`);
     return response.data;
@@ -138,8 +138,8 @@ const adminService = {
   async updateUserStatus(
     userId: string,
     isActive: boolean,
-    reason?: string
-  ): Promise<{ success: boolean; data: User }> {
+    reason?: string,
+  ): Promise<{ success: boolean; message?: string; data?: User }> {
     const response = await api.put(`/admin/users/${userId}/status`, {
       isActive,
       reason,
@@ -240,7 +240,7 @@ const adminService = {
   // Get revenue report
   async getRevenueReport(
     periodOrStartDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<{ success: boolean; data: RevenueReport }> {
     // Support both period strings (week, month, quarter, year) and date range
     const params: Record<string, string> = {};
@@ -260,7 +260,9 @@ const adminService = {
   async exportData(
     type: "users" | "orders" | "revenue",
     formatOrStartDate?: string,
-    options?: { period?: string; startDate?: string; endDate?: string } | string
+    options?:
+      | { period?: string; startDate?: string; endDate?: string }
+      | string,
   ): Promise<{ success: boolean; data: { url: string } }> {
     // Support both old (startDate, endDate) and new (format, {period}) signatures
     const params: Record<string, string> = { type };
@@ -322,7 +324,7 @@ const adminService = {
   // Flag/unflag content (moderator action)
   async flagListing(
     listingId: string,
-    reason: string
+    reason: string,
   ): Promise<{ success: boolean; message: string }> {
     const response = await api.post(`/admin/listings/${listingId}/flag`, {
       reason,
@@ -333,7 +335,7 @@ const adminService = {
   // Update user role (admin/moderator can promote users)
   async updateUserRole(
     userId: string,
-    role: string
+    role: string,
   ): Promise<{ success: boolean; message: string; data: any }> {
     const response = await api.put(`/admin/users/${userId}/role`, { role });
     return response.data;

@@ -39,11 +39,15 @@ import { useAuth } from "../../src/contexts/AuthContext";
 export default function AdminUsersScreen() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.role === "admin";
   const [users, setUsers] = useState<UserWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<
+    "all" | "active" | "suspended"
+  >("all");
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -55,12 +59,27 @@ export default function AdminUsersScreen() {
     try {
       const response = await adminService.getAllUsers({
         role: selectedRole === "all" ? undefined : selectedRole,
+        isActive:
+          selectedStatus === "all"
+            ? undefined
+            : selectedStatus === "active",
         page: pagination.page,
         limit: pagination.limit,
         search: searchQuery || undefined,
       });
       if (response.success && response.data) {
-        setUsers(response.data.users);
+        const normalizedUsers = response.data.users.map((u: any) => ({
+          ...u,
+          fullName: u.fullName ?? u.full_name ?? "Unknown User",
+          isActive:
+            typeof u.isActive === "boolean"
+              ? u.isActive
+              : typeof u.is_active === "boolean"
+                ? u.is_active
+                : u.is_active === "t" || u.is_active === "true",
+        }));
+
+        setUsers(normalizedUsers);
         setPagination(response.data.pagination);
       }
     } catch (error) {
@@ -69,7 +88,13 @@ export default function AdminUsersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedRole, pagination.page, pagination.limit, searchQuery]);
+  }, [
+    selectedRole,
+    selectedStatus,
+    pagination.page,
+    pagination.limit,
+    searchQuery,
+  ]);
 
   useEffect(() => {
     if (currentUser?.role === "admin" || currentUser?.role === "support_moderator") {
@@ -86,6 +111,11 @@ export default function AdminUsersScreen() {
     userId: string,
     currentStatus: boolean
   ) => {
+    if (!isAdmin) {
+      Alert.alert("Permission Denied", "Only admins can change user status.");
+      return;
+    }
+
     const action = currentStatus ? "suspend" : "activate";
     Alert.alert(
       `${currentStatus ? "Suspend" : "Activate"} User`,
@@ -97,13 +127,19 @@ export default function AdminUsersScreen() {
           style: currentStatus ? "destructive" : "default",
           onPress: async () => {
             try {
-              await adminService.updateUserStatus(userId, !currentStatus);
+              const response = await adminService.updateUserStatus(
+                userId,
+                !currentStatus
+              );
               setUsers(
                 users.map((u) =>
                   u.id === userId ? { ...u, isActive: !currentStatus } : u
                 )
               );
-              Alert.alert("Success", `User ${action}d successfully`);
+              Alert.alert(
+                "Success",
+                response.message || `User ${action}d successfully`
+              );
             } catch (error) {
               console.error("Error updating user status:", error);
               Alert.alert("Error", `Failed to ${action} user`);
@@ -233,6 +269,31 @@ export default function AdminUsersScreen() {
         </View>
       </ScrollView>
 
+      {/* Status Filters */}
+      <View style={styles.statusFiltersContainer}>
+        <NeumorphicButton
+          title="All"
+          variant={selectedStatus === "all" ? "primary" : "tertiary"}
+          size="small"
+          onPress={() => setSelectedStatus("all")}
+          style={styles.statusFilterButton}
+        />
+        <NeumorphicButton
+          title="Active"
+          variant={selectedStatus === "active" ? "primary" : "tertiary"}
+          size="small"
+          onPress={() => setSelectedStatus("active")}
+          style={styles.statusFilterButton}
+        />
+        <NeumorphicButton
+          title="Suspended"
+          variant={selectedStatus === "suspended" ? "primary" : "tertiary"}
+          size="small"
+          onPress={() => setSelectedStatus("suspended")}
+          style={styles.statusFilterButton}
+        />
+      </View>
+
       {/* Users List */}
       <ScrollView
         style={styles.scrollView}
@@ -330,6 +391,29 @@ export default function AdminUsersScreen() {
                           {getRoleLabel(user.role)}
                         </Text>
                       </View>
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          {
+                            backgroundColor: user.isActive
+                              ? neumorphicColors.semantic.success + "20"
+                              : neumorphicColors.semantic.error + "20",
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusText,
+                            {
+                              color: user.isActive
+                                ? neumorphicColors.semantic.success
+                                : neumorphicColors.semantic.error,
+                            },
+                          ]}
+                        >
+                          {user.isActive ? "Active" : "Suspended"}
+                        </Text>
+                      </View>
                       <Text style={styles.userScore}>
                         Score: {user.platformScore}
                       </Text>
@@ -337,31 +421,33 @@ export default function AdminUsersScreen() {
                   </View>
 
                   <View style={styles.userActions}>
-                    <NeumorphicIconButton
-                      icon={
-                        user.isActive ? (
-                          <UserX
-                            size={16}
-                            color={neumorphicColors.semantic.error}
-                          />
-                        ) : (
-                          <UserCheck
-                            size={16}
-                            color={neumorphicColors.semantic.success}
-                          />
-                        )
-                      }
-                      onPress={() =>
-                        handleToggleUserStatus(user.id, user.isActive || false)
-                      }
-                      variant={user.isActive ? "secondary" : "secondary"}
-                      size="small"
-                      style={
-                        user.isActive
-                          ? styles.suspendButton
-                          : styles.activateButton
-                      }
-                    />
+                    {isAdmin && (
+                      <NeumorphicIconButton
+                        icon={
+                          user.isActive ? (
+                            <UserX
+                              size={16}
+                              color={neumorphicColors.semantic.error}
+                            />
+                          ) : (
+                            <UserCheck
+                              size={16}
+                              color={neumorphicColors.semantic.success}
+                            />
+                          )
+                        }
+                        onPress={() =>
+                          handleToggleUserStatus(user.id, user.isActive || false)
+                        }
+                        variant={"secondary"}
+                        size="small"
+                        style={
+                          user.isActive
+                            ? styles.suspendButton
+                            : styles.activateButton
+                        }
+                      />
+                    )}
                     <ChevronRight
                       size={16}
                       color={neumorphicColors.text.tertiary}
@@ -440,6 +526,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tab: {
+    marginRight: spacing.xs,
+  },
+  statusFiltersContainer: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  statusFilterButton: {
     marginRight: spacing.xs,
   },
   scrollView: {
@@ -523,6 +618,15 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
   },
   roleText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  statusText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
   },
