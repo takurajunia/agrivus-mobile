@@ -8,6 +8,13 @@ const authExpiredListeners = new Set<AuthExpiredListener>();
 
 let isHandlingUnauthorized = false;
 
+export const normalizeAuthToken = (rawToken: string | null): string | null => {
+  if (!rawToken) return null;
+  const trimmed = rawToken.trim();
+  if (!trimmed) return null;
+  return trimmed.replace(/^Bearer\s+/i, "");
+};
+
 export const onAuthExpired = (listener: AuthExpiredListener): (() => void) => {
   authExpiredListeners.add(listener);
 
@@ -41,7 +48,8 @@ export const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("token");
+    const rawToken = await AsyncStorage.getItem("token");
+    const token = normalizeAuthToken(rawToken);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

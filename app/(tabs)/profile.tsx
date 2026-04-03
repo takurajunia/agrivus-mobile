@@ -17,6 +17,7 @@ import {
   Settings,
   Bell,
   Shield,
+  DollarSign,
   HelpCircle,
   LogOut,
   ChevronRight,
@@ -211,7 +212,22 @@ export default function ProfileScreen() {
           },
           ...baseMenuSections,
         ]
-      : baseMenuSections;
+      : user?.role === "accounts_officer"
+        ? [
+            {
+              title: "Finance",
+              items: [
+                {
+                  label: "Finance Dashboard",
+                  icon: DollarSign,
+                  color: neumorphicColors.semantic.success,
+                  route: "/accounts",
+                },
+              ],
+            },
+            ...baseMenuSections,
+          ]
+        : baseMenuSections;
 
   const fetchProfileStats = useCallback(async () => {
     if (!user) {

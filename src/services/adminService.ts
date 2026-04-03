@@ -96,6 +96,67 @@ export interface UserWithDetails extends User {
   lastOrderAt?: string;
 }
 
+// ── Finance Types ──────────────────────────────────────────────────────────
+
+export interface PendingCashDeposit {
+  id: string;
+  user_id: string;
+  amount: string | number;
+  currency: string;
+  reference?: string;
+  gateway_transaction_id?: string | null;
+  status: string;
+  created_at: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+}
+
+// ── Moderator Types ─────────────────────────────────────────────────────────
+
+export type DisputeOutcome =
+  | "favour_buyer"
+  | "favour_farmer"
+  | "split"
+  | "escalate_to_admin";
+
+export interface ModeratorDashboardSummary {
+  disputedOrders: number;
+  flaggedListings: number;
+  pendingVerifications: number;
+  activeUsers24h: number;
+}
+
+export interface ModeratorDashboardData {
+  summary: ModeratorDashboardSummary;
+  recentNewUsers: Array<{
+    id: string;
+    full_name: string;
+    email: string;
+    role: string;
+    is_verified: boolean;
+    created_at: string;
+  }>;
+  recentDisputes: Array<{
+    id: string;
+    status: string;
+    total_amount: string | number;
+    created_at: string;
+    delivery_location?: string | null;
+    crop_type?: string | null;
+    farmer_name?: string | null;
+    buyer_name?: string | null;
+  }>;
+}
+
+export interface ModeratorActivityLogEntry {
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  details: any;
+  timestamp: string;
+}
+
 const adminService = {
   // Get platform-wide statistics
   async getStatistics(): Promise<{ success: boolean; data: AdminStatistics }> {
@@ -284,16 +345,57 @@ const adminService = {
     return response.data;
   },
 
-  // Moderator Dashboard - get moderation stats
-  async getModeratorDashboard(): Promise<{
+  // ── Finance APIs ────────────────────────────────────────────────────────
+
+  async getPendingCashDeposits(
+    page = 1,
+    limit = 20,
+  ): Promise<{
     success: boolean;
     data: {
-      pendingReports: number;
-      resolvedToday: number;
-      activeUsers: number;
-      flaggedContent: number;
-      recentActivity: any[];
+      deposits: PendingCashDeposit[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
     };
+  }> {
+    const response = await api.get("/admin/payments/cash-deposits", {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async approveCashDeposit(
+    paymentId: string,
+    data?: { approvalNotes?: string },
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    const response = await api.post(
+      `/admin/payments/cash-deposits/${paymentId}/approve`,
+      data || {},
+    );
+    return response.data;
+  },
+
+  async rejectCashDeposit(
+    paymentId: string,
+    data: { rejectionReason: string },
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    const response = await api.post(
+      `/admin/payments/cash-deposits/${paymentId}/reject`,
+      data,
+    );
+    return response.data;
+  },
+
+  // ── Moderator APIs ───────────────────────────────────────────────────────
+
+  // Moderator Dashboard - get moderation stats (shared for admin + moderator)
+  async getModeratorDashboard(): Promise<{
+    success: boolean;
+    data: ModeratorDashboardData;
   }> {
     const response = await api.get("/admin/moderator/dashboard");
     return response.data;
@@ -303,12 +405,10 @@ const adminService = {
   async getModeratorActivityLog(params?: {
     page?: number;
     limit?: number;
-    startDate?: string;
-    endDate?: string;
   }): Promise<{
     success: boolean;
     data: {
-      activities: any[];
+      logs: ModeratorActivityLogEntry[];
       pagination: {
         page: number;
         limit: number;
@@ -322,13 +422,63 @@ const adminService = {
   },
 
   // Flag/unflag content (moderator action)
+  // Flag/unflag a listing
   async flagListing(
     listingId: string,
-    reason: string,
-  ): Promise<{ success: boolean; message: string }> {
+    actionOrReason: "flag" | "unflag" | string,
+    maybeReason?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    const isAction = actionOrReason === "flag" || actionOrReason === "unflag";
+    const action: "flag" | "unflag" = isAction ? actionOrReason : "flag";
+    const reason = isAction ? maybeReason : actionOrReason;
+
     const response = await api.post(`/admin/listings/${listingId}/flag`, {
-      reason,
+      action,
+      ...(reason ? { reason } : {}),
     });
+    return response.data;
+  },
+
+  async verifyUserProfile(
+    userId: string,
+    verified: boolean,
+    verificationNotes?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    const response = await api.post(`/admin/users/${userId}/verify-profile`, {
+      verified,
+      ...(verificationNotes ? { verificationNotes } : {}),
+    });
+    return response.data;
+  },
+
+  async getDisputedOrders(params?: { page?: number; limit?: number }): Promise<{
+    success: boolean;
+    data: {
+      disputes: any[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+  }> {
+    const response = await api.get("/admin/orders/disputed", { params });
+    return response.data;
+  },
+
+  async resolveDispute(
+    orderId: string,
+    outcome: DisputeOutcome,
+    resolutionNotes: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    const response = await api.post(
+      `/admin/orders/${orderId}/resolve-dispute`,
+      {
+        outcome,
+        resolutionNotes,
+      },
+    );
     return response.data;
   },
 

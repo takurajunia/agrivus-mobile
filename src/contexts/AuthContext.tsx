@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Buffer } from "buffer";
 import type {
   User,
   LoginCredentials,
@@ -19,7 +20,47 @@ import {
   fetchUser,
   updateProfile as updateProfileRequest,
 } from "../services/authService";
-import { onAuthExpired } from "../services/api";
+import { normalizeAuthToken, onAuthExpired } from "../services/api";
+
+type JwtPayload = {
+  exp?: number | string;
+};
+
+const parseJwtPayload = (token: string): JwtPayload | null => {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+
+    const base64Url = parts[1] ?? "";
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const padLength = (4 - (base64.length % 4)) % 4;
+    const padded = `${base64}${"=".repeat(padLength)}`;
+    const json = Buffer.from(padded, "base64").toString("utf8");
+    return JSON.parse(json) as JwtPayload;
+  } catch {
+    return null;
+  }
+};
+
+const isJwtExpired = (token: string, nowMs = Date.now()): boolean => {
+  const payload = parseJwtPayload(token);
+  const expValue = payload?.exp;
+  const expSeconds =
+    typeof expValue === "number"
+      ? expValue
+      : typeof expValue === "string"
+        ? Number.parseInt(expValue, 10)
+        : NaN;
+
+  if (!Number.isFinite(expSeconds) || expSeconds <= 0) {
+    // If we cannot determine expiry, treat the token as invalid.
+    return true;
+  }
+
+  const expMs = expSeconds * 1000;
+  const clockSkewMs = 30_000;
+  return expMs <= nowMs + clockSkewMs;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -47,12 +88,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const loadStoredAuth = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem("token");
-        const storedUser = await AsyncStorage.getItem("user");
+        const [rawStoredToken, storedUser] = await Promise.all([
+          AsyncStorage.getItem("token"),
+          AsyncStorage.getItem("user"),
+        ]);
+
+        const storedToken = normalizeAuthToken(rawStoredToken);
+
+        // Clean up partially persisted auth state.
+        if ((storedToken && !storedUser) || (!storedToken && storedUser)) {
+          await AsyncStorage.multiRemove(["token", "user"]);
+          return;
+        }
 
         if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          if (isJwtExpired(storedToken)) {
+            await AsyncStorage.multiRemove(["token", "user"]);
+            return;
+          }
+
+          try {
+            setToken(storedToken);
+            setUser(JSON.parse(storedUser));
+          } catch {
+            await AsyncStorage.multiRemove(["token", "user"]);
+          }
         }
       } catch (error) {
         console.error("Error loading stored auth:", error);
@@ -82,14 +142,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.success) {
         const { user: userData, token: userToken } = response.data;
+        const normalizedToken = normalizeAuthToken(userToken);
+        if (!normalizedToken) {
+          throw new Error("Invalid token received from server");
+        }
         console.log("Login successful, setting state...");
         console.log("User data:", userData);
         console.log("Token received:", userToken ? "yes" : "no");
 
         setUser(userData);
-        setToken(userToken);
+        setToken(normalizedToken);
 
-        await AsyncStorage.setItem("token", userToken);
+        await AsyncStorage.setItem("token", normalizedToken);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
         console.log("Auth data saved to AsyncStorage");
       } else {
@@ -111,10 +175,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success) {
         const { user: userData, token: userToken } = response.data;
 
-        setUser(userData);
-        setToken(userToken);
+        const normalizedToken = normalizeAuthToken(userToken);
+        if (!normalizedToken) {
+          throw new Error("Invalid token received from server");
+        }
 
-        await AsyncStorage.setItem("token", userToken);
+        setUser(userData);
+        setToken(normalizedToken);
+
+        await AsyncStorage.setItem("token", normalizedToken);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
       } else {
         // Handle case where success is false but no exception was thrown

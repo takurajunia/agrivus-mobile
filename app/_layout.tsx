@@ -59,6 +59,7 @@ function AuthNavigator() {
       currentSegment === "chat" ||
       currentSegment === "admin" ||
       currentSegment === "moderator" ||
+      currentSegment === "accounts" ||
       currentSegment === "create-order" ||
       currentSegment === "export" ||
       currentSegment === "payment" ||
@@ -127,6 +128,15 @@ function AuthNavigator() {
         <Stack.Screen name="admin/reports" options={{ headerShown: false }} />
         <Stack.Screen name="admin/security" options={{ headerShown: false }} />
         <Stack.Screen name="moderator/index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="moderator/activity-log"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="accounts/index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="admin/cash-deposits"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="payment/[paymentId]"
           options={{ headerShown: false }}

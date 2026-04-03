@@ -6,6 +6,7 @@ export type UserRole =
   | "agro_supplier"
   | "vendor"
   | "support_moderator"
+  | "accounts_officer"
   | "admin";
 
 export interface User {

@@ -135,6 +135,7 @@ export default function HomeScreen() {
   const isBuyer = user?.role === "buyer";
   const isAdmin = user?.role === "admin";
   const isModerator = user?.role === "support_moderator";
+  const isAccountsOfficer = user?.role === "accounts_officer";
   const boostMultiplier = user?.boostMultiplier
     ? parseFloat(user.boostMultiplier)
     : 1;
@@ -474,7 +475,7 @@ export default function HomeScreen() {
         >
 
           {/* --- Secondary Nav (Pills) --- */}
-          {!isAdmin && !isModerator && (
+          {!isAdmin && !isModerator && !isAccountsOfficer && (
             <View style={styles.pillsRow}>
               {[
                 "Auctions",
@@ -497,7 +498,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- CTA Banner --- */}
-          {!isAdmin && !isModerator && (
+          {!isAdmin && !isModerator && !isAccountsOfficer && (
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.ctaWrapper}
@@ -558,6 +559,35 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
+          {/* --- Accounts Officer CTA Banner --- */}
+          {isAccountsOfficer && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.ctaWrapper}
+              onPress={() => router.push("/accounts")}
+            >
+              <View style={styles.ctaShadowLayer}>
+                <LinearGradient
+                  colors={COLORS.greenGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.ctaGradient}
+                >
+                  <WaveLines />
+                  <View style={styles.ctaContent}>
+                    <DollarSign
+                      size={30}
+                      color="#FFF"
+                      style={{ marginRight: 14 }}
+                      strokeWidth={2}
+                    />
+                    <Text style={styles.ctaText}>View Finance Dashboard</Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
+          )}
+
           {/* --- Moderator CTA Banner --- */}
           {isModerator && (
             <TouchableOpacity
@@ -590,7 +620,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- Stats Grid --- */}
-          {!isAdmin && !isModerator && (
+          {!isAdmin && !isModerator && !isAccountsOfficer && (
             <View style={styles.gridContainer}>
               <View style={styles.gridRow}>
                 {/* Card 1: Active Orders */}
@@ -734,7 +764,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- Quick Actions --- */}
-          {!isBuyer && !isAdmin && !isModerator && (
+          {!isBuyer && !isAdmin && !isModerator && !isAccountsOfficer && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Quick Actions</Text>
               <View style={styles.quickActionsCard}>
@@ -884,7 +914,7 @@ export default function HomeScreen() {
           )}
 
           {/* --- Special Features --- */}
-          {!isAdmin && !isModerator && (
+          {!isAdmin && !isModerator && !isAccountsOfficer && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Special Features</Text>
               <View style={styles.quickActionsCard}>

@@ -97,7 +97,11 @@ export default function AdminUsersScreen() {
   ]);
 
   useEffect(() => {
-    if (currentUser?.role === "admin" || currentUser?.role === "support_moderator") {
+    if (
+      currentUser?.role === "admin" ||
+      currentUser?.role === "support_moderator" ||
+      currentUser?.role === "accounts_officer"
+    ) {
       fetchUsers();
     }
   }, [fetchUsers, currentUser]);
@@ -196,7 +200,11 @@ export default function AdminUsersScreen() {
     { key: "admin", label: "Admins" },
   ];
 
-  if (currentUser?.role !== "admin" && currentUser?.role !== "support_moderator") {
+  if (
+    currentUser?.role !== "admin" &&
+    currentUser?.role !== "support_moderator" &&
+    currentUser?.role !== "accounts_officer"
+  ) {
     return (
       <NeumorphicScreen variant="list" showLeaves={false}>
         <View style={styles.accessDenied}>
