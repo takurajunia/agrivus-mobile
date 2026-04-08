@@ -397,6 +397,18 @@ export default function AdminDashboardScreen() {
             <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
           </NeumorphicCard>
 
+          {user?.role === "admin" && (
+            <NeumorphicCard
+              style={styles.actionButton}
+              onPress={() => router.push("/admin/crop-tracker")}
+              variant="standard"
+            >
+              <TrendingUp size={20} color={neumorphicColors.primary[600]} />
+              <Text style={styles.actionText}>Crop Tracker</Text>
+              <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+            </NeumorphicCard>
+          )}
+
           <NeumorphicCard
             style={styles.actionButton}
             onPress={() => router.push("/admin/orders")}

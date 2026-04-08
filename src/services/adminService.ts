@@ -96,6 +96,38 @@ export interface UserWithDetails extends User {
   lastOrderAt?: string;
 }
 
+// ── Crop Tracker Types ─────────────────────────────────────────────────────
+
+export type CropTrackerStatus =
+  | "upcoming"
+  | "harvesting"
+  | "harvested"
+  | "cancelled";
+
+export interface CropTrackerFarmer {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+}
+
+export interface CropTrackerEntry {
+  id: string;
+  farmer_id: string;
+  farmer_name: string;
+  farmer_email: string;
+  farmer_phone: string;
+  crop_category: string;
+  quantity: string | null;
+  unit: string | null;
+  harvest_date: string | null;
+  notes: string | null;
+  status: CropTrackerStatus;
+  created_at: string;
+  updated_at: string;
+  created_by_name?: string | null;
+}
+
 // ── Finance Types ──────────────────────────────────────────────────────────
 
 export interface PendingCashDeposit {
@@ -342,6 +374,80 @@ const adminService = {
       if (options.endDate) params.endDate = options.endDate;
     }
     const response = await api.get("/admin/export", { params });
+    return response.data;
+  },
+
+  // ── Crop Tracker APIs ─────────────────────────────────────────────────
+
+  async getCropTrackerEntries(params?: {
+    category?: string;
+    farmer_id?: string;
+    status?: CropTrackerStatus | string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    success: boolean;
+    data: {
+      entries: CropTrackerEntry[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+  }> {
+    const response = await api.get("/admin/crop-tracker", { params });
+    return response.data;
+  },
+
+  async getCropTrackerCategories(): Promise<{
+    success: boolean;
+    data: { categories: string[] };
+  }> {
+    const response = await api.get("/admin/crop-tracker/categories");
+    return response.data;
+  },
+
+  async getCropTrackerFarmers(params?: {
+    search?: string;
+  }): Promise<{ success: boolean; data: { farmers: CropTrackerFarmer[] } }> {
+    const response = await api.get("/admin/crop-tracker/farmers", { params });
+    return response.data;
+  },
+
+  async createCropTrackerEntry(data: {
+    farmer_id: string;
+    crop_category: string;
+    quantity?: number | null;
+    unit?: string | null;
+    harvest_date?: string | null;
+    notes?: string | null;
+    status?: CropTrackerStatus;
+  }): Promise<{ success: boolean; message: string; data?: any }> {
+    const response = await api.post("/admin/crop-tracker", data);
+    return response.data;
+  },
+
+  async updateCropTrackerEntry(
+    id: string,
+    data: {
+      crop_category?: string;
+      quantity?: number | null;
+      unit?: string | null;
+      harvest_date?: string | null;
+      notes?: string | null;
+      status?: CropTrackerStatus;
+    },
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    const response = await api.put(`/admin/crop-tracker/${id}`, data);
+    return response.data;
+  },
+
+  async deleteCropTrackerEntry(
+    id: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await api.delete(`/admin/crop-tracker/${id}`);
     return response.data;
   },
 

@@ -127,6 +127,10 @@ function AuthNavigator() {
         <Stack.Screen name="admin/transactions" options={{ headerShown: false }} />
         <Stack.Screen name="admin/reports" options={{ headerShown: false }} />
         <Stack.Screen name="admin/security" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="admin/crop-tracker"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="moderator/index" options={{ headerShown: false }} />
         <Stack.Screen
           name="moderator/activity-log"
