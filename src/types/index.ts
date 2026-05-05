@@ -435,6 +435,92 @@ export interface LogisticsPartner {
   isActive: boolean;
 }
 
+// Farm Log Types
+export type FarmLogAccessStatus =
+  | "trial"
+  | "active"
+  | "expired"
+  | "cancelled"
+  | "none";
+
+export interface FarmLogSubscription {
+  status: "trial" | "active" | "expired" | "cancelled";
+  trial_ends_at: string;
+  current_period_end: string | null;
+  plan_name: string | null;
+  billing_cycle: string | null;
+  price_usd: string | null;
+}
+
+export interface FarmLogPlan {
+  id: string;
+  name: string;
+  billing_cycle: "monthly" | "annual";
+  price_usd: string;
+}
+
+export interface FarmLogInput {
+  id?: string;
+  input_type: string;
+  name: string;
+  quantity?: number | string | null;
+  unit?: string | null;
+  cost_usd?: number | string | null;
+  supplier?: string | null;
+}
+
+export interface FarmLogYield {
+  id?: string;
+  crop: string;
+  quantity: number | string;
+  unit: string;
+  quality?: string | null;
+  notes?: string | null;
+}
+
+export interface FarmLogEntry {
+  id: string;
+  log_date: string;
+  activity_type: string;
+  crop: string | null;
+  field_area: string | null;
+  description: string | null;
+  weather: string | null;
+  notes: string | null;
+  inputs: FarmLogInput[];
+  yields: FarmLogYield[];
+}
+
+export interface FarmLogDailyReport {
+  date: string;
+  logs: FarmLogEntry[];
+  summary: {
+    total_cost: number | string;
+    total_yield_qty: number | string;
+    total_activities: number | string;
+  };
+}
+
+export interface FarmLogWeeklyReport {
+  startDate: string;
+  endDate: string;
+  byDay: Array<{
+    log_date: string;
+    activities: number | string;
+    total_cost: number | string;
+    total_yield: number | string;
+  }>;
+  byActivity: Array<{
+    activity_type: string;
+    count: number | string;
+  }>;
+  summary: {
+    total_cost: number | string;
+    total_yield: number | string;
+    total_activities: number | string;
+  };
+}
+
 // Wallet Types
 export interface WalletBalance {
   balance: number;

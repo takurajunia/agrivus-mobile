@@ -53,8 +53,17 @@ const SORT_OPTIONS = [
 
 const BOOST_BANNER_HEIGHT = 58;
 
-export default function MarketplaceScreen() {
+type MarketplaceScreenMode = "default" | "guest";
+
+type MarketplaceScreenProps = {
+  mode?: MarketplaceScreenMode;
+};
+
+export default function MarketplaceScreen({
+  mode = "default",
+}: MarketplaceScreenProps) {
   const router = useRouter();
+  const showLoginButton = mode === "guest";
   const { width } = useWindowDimensions();
   const [listings, setListings] = useState<ListingWithFarmer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,7 +276,17 @@ export default function MarketplaceScreen() {
     <NeumorphicScreen variant="list" showLeaves={true}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Marketplace</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Marketplace</Text>
+          {showLoginButton ? (
+            <NeumorphicButton
+              title="Login"
+              onPress={() => router.push("/login")}
+              variant="secondary"
+              size="small"
+            />
+          ) : null}
+        </View>
         <Text style={styles.subtitle}>
           Browse agricultural products from verified farmers
         </Text>
@@ -426,6 +445,11 @@ const styles = StyleSheet.create({
   header: {
     padding: spacing.lg,
     paddingBottom: spacing.sm,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   title: {
     ...typography.h2,

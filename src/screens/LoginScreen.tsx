@@ -166,6 +166,14 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
+            <TouchableOpacity
+              style={styles.guestButton}
+              onPress={() => router.replace("/guest/marketplace")}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.guestButtonText}>Continue as Guest</Text>
+            </TouchableOpacity>
+
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
               <TouchableOpacity onPress={navigateToRegister}>
@@ -312,5 +320,19 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: neumorphicColors.primary[600],
     fontWeight: "700",
+  },
+  guestButton: {
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: neumorphicColors.base.border,
+    marginBottom: spacing.lg,
+  },
+  guestButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
   },
 });

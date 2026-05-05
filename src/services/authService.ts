@@ -49,6 +49,16 @@ export const updateProfile = async (
   return response.data.data;
 };
 
+export const deleteAccount = async (): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  const response = await api.delete<{ success: boolean; message: string }>(
+    "/auth/account",
+  );
+  return response.data;
+};
+
 export const logout = async (): Promise<void> => {
   // Call logout endpoint if your backend has one
   try {

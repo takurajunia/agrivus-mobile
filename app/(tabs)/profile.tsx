@@ -20,6 +20,7 @@ import {
   DollarSign,
   HelpCircle,
   LogOut,
+  Trash2,
   ChevronRight,
   Edit,
   Award,
@@ -160,6 +161,12 @@ export default function ProfileScreen() {
           icon: Award,
           color: neumorphicColors.semantic.warning,
           route: "/verification",
+        },
+        {
+          label: "Delete Account",
+          icon: Trash2,
+          color: neumorphicColors.semantic.error,
+          route: "/delete-account",
         },
       ],
     },
@@ -436,21 +443,28 @@ export default function ProfileScreen() {
                 variant="standard"
                 style={styles.menuItem}
                 onPress={() => {
-                  if (section.title === "Account" && item.label === "Edit Profile") {
-                    if (user?.role === "buyer" || user?.role === "farmer") {
+                  if (section.title === "Account") {
+                    if (item.label === "Edit Profile") {
+                      if (user?.role === "buyer" || user?.role === "farmer") {
+                        if (item.route) {
+                          router.push(item.route as any);
+                        }
+                      } else {
+                        Alert.alert(
+                          "Not available",
+                          "Edit Profile is currently available for buyers and farmers only."
+                        );
+                      }
+                      return;
+                    }
+
+                    if (item.label === "Delete Account") {
                       if (item.route) {
                         router.push(item.route as any);
                       }
-                    } else {
-                      Alert.alert(
-                        "Not available",
-                        "Edit Profile is currently available for buyers and farmers only."
-                      );
+                      return;
                     }
-                    return;
-                  }
 
-                  if (section.title === "Account") {
                     Alert.alert("Coming soon", `${item.label} is coming soon.`);
                     return;
                   }

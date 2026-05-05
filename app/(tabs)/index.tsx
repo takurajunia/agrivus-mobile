@@ -132,6 +132,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
+  const canAccessFarmLog = user?.role === "farmer";
   const isBuyer = user?.role === "buyer";
   const isAdmin = user?.role === "admin";
   const isModerator = user?.role === "support_moderator";
@@ -148,6 +149,7 @@ export default function HomeScreen() {
 
   const parseNumericValue = (value: number | string | undefined): number => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+                ...(canAccessFarmLog ? ["Farm Log"] : []),
     if (typeof value === "string") {
       const parsed = Number.parseFloat(value);
       return Number.isFinite(parsed) ? parsed : 0;
@@ -488,6 +490,7 @@ export default function HomeScreen() {
                   onPress={() => {
                     if (item === "Auctions") router.push("/(tabs)/auctions");
                     if (item === "AgriMall") router.push("/(tabs)/agrimall");
+                    if (item === "Farm Log") router.push("/(tabs)/farm-log");
                     if (item === "Export") router.push("/(tabs)/export-gateway");
                   }}
                 >

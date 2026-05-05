@@ -6,6 +6,7 @@ import {
   useRootNavigationState,
 } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFrameworkReady } from "../hooks/useFrameworkReady";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
@@ -34,7 +35,8 @@ function AuthNavigator() {
     if (!navigationState?.key || loading) return;
 
     // Get current segment - treat empty segments as being on the login page (index)
-    const currentSegment = segments[0] ?? "index";
+    const segmentsArray = Array.from(segments);
+    const currentSegment = segmentsArray[0] ?? "index";
 
     // Skip navigation logic if we're on the not-found page - it's a transient state
     if (currentSegment === "+not-found") {
@@ -43,28 +45,7 @@ function AuthNavigator() {
     }
 
     const inTabsGroup = currentSegment === "(tabs)";
-    const inProtectedRoute =
-      inTabsGroup ||
-      currentSegment === "create-listing" ||
-      currentSegment === "my-listings" ||
-      currentSegment === "create-auction" ||
-      currentSegment === "my-bids" ||
-      currentSegment === "agrimall" ||
-      currentSegment === "cart" ||
-      currentSegment === "checkout" ||
-      currentSegment === "export-gateway" ||
-      currentSegment === "listing" ||
-      currentSegment === "auction" ||
-      currentSegment === "order" ||
-      currentSegment === "chat" ||
-      currentSegment === "admin" ||
-      currentSegment === "moderator" ||
-      currentSegment === "accounts" ||
-      currentSegment === "create-order" ||
-      currentSegment === "export" ||
-      currentSegment === "payment" ||
-      currentSegment === "payment-history" ||
-      currentSegment === "edit-profile";
+    const tabSegment = inTabsGroup ? (segmentsArray[1] ?? "index") : null;
 
     const onAuthPage =
       currentSegment === "index" ||
@@ -72,8 +53,34 @@ function AuthNavigator() {
       currentSegment === "login" ||
       currentSegment === "register";
 
+    // Dedicated guest-only marketplace route (no bottom tabs).
+    const isGuestMarketplace =
+      currentSegment === "guest" && segmentsArray[1] === "marketplace";
+
+    // Marketplace listing details are publicly viewable.
+    const isPublicListing = currentSegment === "listing";
+
+    // Allow viewing auction details without auth, but keep checkout/winning flows protected.
+    const isPublicAuction =
+      currentSegment === "auction" && segmentsArray[1] !== "checkout";
+
+    // Allow browsing AgriMall and product details without auth; orders/cart/checkout require auth.
+    const isPublicAgrimall =
+      currentSegment === "agrimall" &&
+      (segmentsArray.length === 1 || segmentsArray[1] === "product");
+
+    const isPublicRoute =
+      onAuthPage ||
+      isGuestMarketplace ||
+      isPublicListing ||
+      isPublicAuction ||
+      isPublicAgrimall;
+
+    const inProtectedRoute = !isPublicRoute;
+
     console.log("Navigation decision:", {
       currentSegment,
+      tabSegment,
       inProtectedRoute,
       onAuthPage,
       isAuthenticated,
@@ -147,6 +154,7 @@ function AuthNavigator() {
         />
         <Stack.Screen name="payment-history" options={{ headerShown: false }} />
         <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+        <Stack.Screen name="delete-account" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
@@ -158,14 +166,16 @@ export default function RootLayout() {
   useFrameworkReady();
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <ChatProvider>
-          <NotificationsProvider>
-            <AuthNavigator />
-          </NotificationsProvider>
-        </ChatProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <ChatProvider>
+            <NotificationsProvider>
+              <AuthNavigator />
+            </NotificationsProvider>
+          </ChatProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

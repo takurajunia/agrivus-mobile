@@ -9,6 +9,9 @@ import {
   Image,
   TouchableOpacity,
   Linking,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import {
   ArrowLeft,
@@ -24,6 +27,7 @@ import {
   Calendar,
   AlertCircle,
   MessageCircle,
+  Lock,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -37,12 +41,14 @@ import {
   NeumorphicCard,
   NeumorphicButton,
   NeumorphicIconButton,
+  NeumorphicInput,
 } from "../../src/components/neumorphic";
 import ordersService, {
   OrderWithDetails,
 } from "../../src/services/ordersService";
 import { useAuth } from "../../src/contexts/AuthContext";
 import type { TransporterMatch } from "../../src/types";
+import api from "../../src/services/api";
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,6 +61,20 @@ export default function OrderDetailScreen() {
     TransporterMatch[]
   >([]);
   const [showTransporters, setShowTransporters] = useState(false);
+  const [showHandoffModal, setShowHandoffModal] = useState(false);
+  const [handoffPassword, setHandoffPassword] = useState("");
+  const [handoffError, setHandoffError] = useState("");
+  const [handoffLoading, setHandoffLoading] = useState(false);
+  const [handoffSuccess, setHandoffSuccess] = useState(false);
+  const [showPasswordSetup, setShowPasswordSetup] = useState(false);
+  const [hasDeliveryPassword, setHasDeliveryPassword] = useState<
+    boolean | null
+  >(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [passwordSetupError, setPasswordSetupError] = useState("");
+  const [passwordSetupLoading, setPasswordSetupLoading] = useState(false);
+  const [passwordSetupSuccess, setPasswordSetupSuccess] = useState("");
 
   const fetchOrder = useCallback(async () => {
     if (!id) return;
@@ -78,9 +98,32 @@ export default function OrderDetailScreen() {
     }
   }, [id, user]);
 
+  const checkDeliveryPasswordStatus = useCallback(async () => {
+    try {
+      const response = await api.get("/auth/delivery-password/status");
+      if (response.data?.success) {
+        setHasDeliveryPassword(
+          response.data.data?.hasDeliveryPassword ?? false,
+        );
+      }
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  useEffect(() => {
+    if (
+      user?.role === "buyer" ||
+      user?.role === "farmer" ||
+      user?.role === "agro_supplier"
+    ) {
+      checkDeliveryPasswordStatus();
+    }
+  }, [user, checkDeliveryPasswordStatus]);
 
   const handleMatchTransporters = async () => {
     if (!order) return;
@@ -157,6 +200,110 @@ export default function OrderDetailScreen() {
         },
       ]
     );
+  };
+
+  const handleHandoffConfirm = async () => {
+    if (!order) return;
+
+    if (!handoffPassword.trim()) {
+      setHandoffError("Please enter the buyer's delivery password.");
+      return;
+    }
+
+    setHandoffLoading(true);
+    try {
+      const response = await api.post(`/orders/${order.id}/handoff-confirm`, {
+        deliveryPassword: handoffPassword.trim(),
+      });
+
+      if (response.data?.success) {
+        setHandoffSuccess(true);
+        setHandoffError("");
+        fetchOrder();
+        setTimeout(() => {
+          setShowHandoffModal(false);
+          setHandoffPassword("");
+          setHandoffSuccess(false);
+        }, 2000);
+      }
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        "Incorrect password or handoff failed.";
+
+      if (error.response?.data?.data?.fallbackRequired) {
+        setHandoffError(
+          "The buyer has not set a delivery password. Ask them to confirm delivery from their account instead.",
+        );
+      } else {
+        setHandoffError(message);
+      }
+    } finally {
+      setHandoffLoading(false);
+    }
+  };
+
+  const handleSetDeliveryPassword = async () => {
+    const trimmedPassword = newPassword.trim();
+    const trimmedCurrent = currentPassword.trim();
+
+    if (trimmedPassword.length < 4) {
+      setPasswordSetupError("Password must be at least 4 characters.");
+      return;
+    }
+
+    if (hasDeliveryPassword && !trimmedCurrent) {
+      setPasswordSetupError("Current delivery password is required.");
+      return;
+    }
+
+    setPasswordSetupLoading(true);
+    setPasswordSetupError("");
+    try {
+      const payload: { password: string; currentPassword?: string } = {
+        password: trimmedPassword,
+      };
+
+      if (hasDeliveryPassword) {
+        payload.currentPassword = trimmedCurrent;
+      }
+
+      const response = await api.put("/auth/delivery-password", payload);
+
+      if (response.data?.success) {
+        setHasDeliveryPassword(true);
+        setPasswordSetupSuccess(
+          response.data?.message || "Delivery password saved.",
+        );
+        setNewPassword("");
+        setCurrentPassword("");
+        setTimeout(() => {
+          setShowPasswordSetup(false);
+          setPasswordSetupSuccess("");
+        }, 2000);
+      }
+    } catch (error: any) {
+      setPasswordSetupError(
+        error.response?.data?.message || "Failed to set delivery password.",
+      );
+    } finally {
+      setPasswordSetupLoading(false);
+    }
+  };
+
+  const openHandoffModal = () => {
+    setHandoffPassword("");
+    setHandoffError("");
+    setHandoffSuccess(false);
+    setShowHandoffModal(true);
+  };
+
+  const openPasswordSetup = () => {
+    setPasswordSetupError("");
+    setPasswordSetupSuccess("");
+    setNewPassword("");
+    setCurrentPassword("");
+    setShowPasswordSetup(true);
   };
 
   const handleApproveOrder = async () => {
@@ -420,6 +567,8 @@ export default function OrderDetailScreen() {
   const isTransporter = user?.role === "transporter";
   const isAssignedTransporter =
     isTransporter && order.transportAssignment?.transporterId === user?.id;
+  const canInitiateHandoff =
+    (isFarmer || isAssignedTransporter) && order.status === "delivered";
 
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>
@@ -438,6 +587,35 @@ export default function OrderDetailScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
+        {isBuyer && hasDeliveryPassword === false && (
+          <NeumorphicCard
+            style={[styles.card, styles.passwordPromptCard]}
+            animationDelay={80}
+          >
+            <View style={styles.passwordPromptHeader}>
+              <View style={styles.passwordPromptIcon}>
+                <Lock size={20} color={neumorphicColors.secondary[600]} />
+              </View>
+              <View style={styles.passwordPromptContent}>
+                <Text style={styles.passwordPromptTitle}>
+                  Set your delivery password
+                </Text>
+                <Text style={styles.passwordPromptText}>
+                  Set a delivery password so the farmer or transporter can
+                  confirm receipt on your behalf during handoff.
+                </Text>
+              </View>
+            </View>
+            <NeumorphicButton
+              title="Set Delivery Password"
+              onPress={openPasswordSetup}
+              variant="primary"
+              size="small"
+              fullWidth
+            />
+          </NeumorphicCard>
+        )}
+
         {/* Status Card */}
         <NeumorphicCard style={styles.statusCard} variant="elevated">
           <View style={styles.statusHeader}>
@@ -584,6 +762,60 @@ export default function OrderDetailScreen() {
           )}
         </NeumorphicCard>
 
+        {isBuyer && hasDeliveryPassword !== null && (
+          <NeumorphicCard style={styles.card} animationDelay={550}>
+            <View style={styles.passwordStatusRow}>
+              <Text style={styles.cardTitle}>Delivery Password</Text>
+              <View
+                style={[
+                  styles.passwordStatusBadge,
+                  hasDeliveryPassword
+                    ? styles.passwordStatusBadgeSet
+                    : styles.passwordStatusBadgeUnset,
+                ]}
+              >
+                <Text
+                  style={
+                    hasDeliveryPassword
+                      ? styles.passwordStatusTextSet
+                      : styles.passwordStatusTextUnset
+                  }
+                >
+                  {hasDeliveryPassword ? "Set" : "Not set"}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.passwordPromptText}>
+              Used by the farmer or transporter to confirm receipt on your
+              behalf at handoff.
+            </Text>
+            <NeumorphicButton
+              title={hasDeliveryPassword ? "Change Password" : "Set Password"}
+              onPress={openPasswordSetup}
+              variant="secondary"
+              size="small"
+              fullWidth
+              style={styles.inlineButton}
+            />
+          </NeumorphicCard>
+        )}
+
+        {canInitiateHandoff && (
+          <NeumorphicCard style={[styles.card, styles.handoffCard]}>
+            <Text style={styles.cardTitle}>Handoff Confirmation</Text>
+            <Text style={styles.handoffText}>
+              Hand your phone to the buyer. They enter their delivery password
+              to release payment instantly.
+            </Text>
+            <NeumorphicButton
+              title="Confirm Handoff"
+              onPress={openHandoffModal}
+              variant="primary"
+              fullWidth
+            />
+          </NeumorphicCard>
+        )}
+
         {/* Actions */}
         <View style={styles.actionsContainer}>
           {/* Farmer approval gate */}
@@ -721,6 +953,136 @@ export default function OrderDetailScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+
+      <Modal
+        visible={showHandoffModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowHandoffModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <NeumorphicCard style={styles.modalCard} animated={false}>
+            {handoffSuccess ? (
+              <View style={styles.modalSuccessContainer}>
+                <CheckCircle
+                  size={44}
+                  color={neumorphicColors.semantic.success}
+                />
+                <Text style={styles.modalSuccessTitle}>Payment Released</Text>
+                <Text style={styles.modalSuccessText}>
+                  Transaction complete. Thank you.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.modalTitle}>Buyer Confirmation</Text>
+                <Text style={styles.modalSubtitle}>
+                  Hand the phone to the buyer to enter their delivery password.
+                </Text>
+                <NeumorphicInput
+                  label="Delivery Password"
+                  value={handoffPassword}
+                  onChangeText={setHandoffPassword}
+                  placeholder="Enter delivery password"
+                  secureTextEntry
+                  showPasswordToggle
+                  containerStyle={styles.modalInput}
+                  autoFocus
+                />
+                {handoffError ? (
+                  <Text style={styles.modalError}>{handoffError}</Text>
+                ) : null}
+                <NeumorphicButton
+                  title="Confirm and Release Payment"
+                  onPress={handleHandoffConfirm}
+                  variant="primary"
+                  loading={handoffLoading}
+                  fullWidth
+                  style={styles.modalPrimaryButton}
+                />
+                <NeumorphicButton
+                  title="Cancel"
+                  onPress={() => setShowHandoffModal(false)}
+                  variant="secondary"
+                  fullWidth
+                />
+              </>
+            )}
+          </NeumorphicCard>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showPasswordSetup}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPasswordSetup(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <NeumorphicCard style={styles.modalCard} animated={false}>
+            <Text style={styles.modalTitle}>
+              {hasDeliveryPassword ? "Change" : "Set"} Delivery Password
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              This password is used at delivery so the seller can confirm
+              receipt on your behalf.
+            </Text>
+
+            {hasDeliveryPassword && (
+              <NeumorphicInput
+                label="Current Password"
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Enter current password"
+                secureTextEntry
+                showPasswordToggle
+                containerStyle={styles.modalInput}
+              />
+            )}
+
+            <NeumorphicInput
+              label="New Password"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="At least 4 characters"
+              secureTextEntry
+              showPasswordToggle
+              containerStyle={styles.modalInput}
+            />
+
+            {passwordSetupError ? (
+              <Text style={styles.modalError}>{passwordSetupError}</Text>
+            ) : null}
+            {passwordSetupSuccess ? (
+              <Text style={styles.modalSuccessInline}>
+                {passwordSetupSuccess}
+              </Text>
+            ) : null}
+
+            <View style={styles.modalButtonRow}>
+              <NeumorphicButton
+                title="Cancel"
+                onPress={() => setShowPasswordSetup(false)}
+                variant="secondary"
+                style={styles.modalHalfButton}
+              />
+              <NeumorphicButton
+                title="Save Password"
+                onPress={handleSetDeliveryPassword}
+                variant="primary"
+                loading={passwordSetupLoading}
+                style={styles.modalHalfButton}
+              />
+            </View>
+          </NeumorphicCard>
+        </KeyboardAvoidingView>
+      </Modal>
     </NeumorphicScreen>
   );
 }
@@ -952,6 +1314,144 @@ const styles = StyleSheet.create({
   actionsContainer: {
     marginVertical: spacing.lg,
     gap: spacing.md,
+  },
+  passwordPromptCard: {
+    backgroundColor: neumorphicColors.secondary[50],
+    borderWidth: 1,
+    borderColor: neumorphicColors.secondary[200],
+  },
+  passwordPromptHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  passwordPromptIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: neumorphicColors.secondary[100],
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  passwordPromptContent: {
+    flex: 1,
+  },
+  passwordPromptTitle: {
+    ...typography.body,
+    fontWeight: "700",
+    color: neumorphicColors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  passwordPromptText: {
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+  },
+  passwordStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+  },
+  passwordStatusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.lg,
+  },
+  passwordStatusBadgeSet: {
+    backgroundColor: `${neumorphicColors.semantic.success}20`,
+  },
+  passwordStatusBadgeUnset: {
+    backgroundColor: `${neumorphicColors.semantic.warning}20`,
+  },
+  passwordStatusTextSet: {
+    ...typography.caption,
+    color: neumorphicColors.semantic.success,
+    fontWeight: "600",
+  },
+  passwordStatusTextUnset: {
+    ...typography.caption,
+    color: neumorphicColors.semantic.warning,
+    fontWeight: "600",
+  },
+  inlineButton: {
+    marginTop: spacing.md,
+  },
+  handoffCard: {
+    backgroundColor: neumorphicColors.primary[50],
+    borderWidth: 1,
+    borderColor: neumorphicColors.primary[200],
+  },
+  handoffText: {
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    marginBottom: spacing.md,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+  },
+  modalTitle: {
+    ...typography.h4,
+    color: neumorphicColors.text.primary,
+    textAlign: "center",
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    textAlign: "center",
+    marginBottom: spacing.md,
+  },
+  modalInput: {
+    marginBottom: spacing.md,
+  },
+  modalError: {
+    ...typography.bodySmall,
+    color: neumorphicColors.semantic.error,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  modalSuccessContainer: {
+    alignItems: "center",
+    paddingVertical: spacing.lg,
+  },
+  modalSuccessTitle: {
+    ...typography.h4,
+    color: neumorphicColors.semantic.success,
+    marginTop: spacing.sm,
+  },
+  modalSuccessText: {
+    ...typography.bodySmall,
+    color: neumorphicColors.text.secondary,
+    textAlign: "center",
+    marginTop: spacing.xs,
+  },
+  modalSuccessInline: {
+    ...typography.bodySmall,
+    color: neumorphicColors.semantic.success,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  modalPrimaryButton: {
+    marginBottom: spacing.sm,
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  modalHalfButton: {
+    flex: 1,
   },
   actionBtn: {
     marginBottom: spacing.sm,

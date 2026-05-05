@@ -349,6 +349,15 @@ export default function RegisterScreen() {
               style={styles.registerButton}
             />
 
+            <NeumorphicButton
+              title="Continue as Guest"
+              onPress={() => router.replace("/guest/marketplace")}
+              variant="secondary"
+              size="large"
+              fullWidth
+              style={styles.guestButton}
+            />
+
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>Already have an account? </Text>
               <TouchableOpacity onPress={navigateToLogin}>
@@ -521,6 +530,9 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     marginBottom: spacing.xl,
+  },
+  guestButton: {
+    marginBottom: spacing.md,
   },
   footerContainer: {
     flexDirection: "row",
