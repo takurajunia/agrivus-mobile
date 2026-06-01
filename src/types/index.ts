@@ -521,6 +521,550 @@ export interface FarmLogWeeklyReport {
   };
 }
 
+// Farm OS Types
+export type FarmOSAccessStatus =
+  | "trial"
+  | "active"
+  | "expired"
+  | "cancelled"
+  | "none";
+
+export interface FarmOSSubscription {
+  status: "trial" | "active" | "expired" | "cancelled";
+  trial_ends_at?: string | null;
+  current_period_end?: string | null;
+  plan_name?: string | null;
+  billing_cycle?: string | null;
+  price_usd?: string | null;
+}
+
+export interface FarmOSPlan {
+  id: string;
+  name: string;
+  billing_cycle: "monthly" | "annual";
+  price_usd: string;
+}
+
+export interface FarmOSFarm {
+  id: string;
+  owner_id: string;
+  name: string;
+  location?: string | null;
+  total_area_ha?: number | string | null;
+  gps_lat?: number | string | null;
+  gps_lng?: number | string | null;
+  water_sources?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  field_count?: number | string;
+  worker_count?: number | string;
+  active_crops?: number | string;
+  livestock_groups?: number | string;
+}
+
+export interface FarmOSField {
+  id: string;
+  farm_id: string;
+  name: string;
+  area_ha?: number | string | null;
+  soil_type?: string | null;
+  irrigation_type?: string | null;
+  current_use?: string | null;
+  status?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  current_crop_type?: string | null;
+  crop_status?: string | null;
+  expected_harvest_date?: string | null;
+}
+
+export interface FarmOSWorker {
+  id: string;
+  farm_id: string;
+  user_id?: string | null;
+  full_name: string;
+  phone?: string | null;
+  role: "owner" | "manager" | "worker" | string;
+  is_active?: boolean;
+  daily_wage_usd?: number | string | null;
+  invite_code?: string | null;
+  created_at?: string;
+  user_email?: string | null;
+  user_is_active?: boolean | null;
+  total_wages_paid?: number | string | null;
+  total_days_worked?: number | string | null;
+}
+
+export interface FarmOSCropPlan {
+  id: string;
+  farm_id: string;
+  field_id?: string | null;
+  crop_type: string;
+  variety?: string | null;
+  planned_area_ha?: number | string | null;
+  planting_date?: string | null;
+  expected_harvest_date?: string | null;
+  actual_harvest_date?: string | null;
+  expected_yield_kg?: number | string | null;
+  actual_yield_kg?: number | string | null;
+  season?: string | null;
+  status?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  field_name?: string | null;
+  field_area_ha?: number | string | null;
+  activity_count?: number | string | null;
+  total_input_cost?: number | string | null;
+}
+
+export interface FarmOSCropActivity {
+  id: string;
+  crop_plan_id?: string | null;
+  farm_id: string;
+  field_id?: string | null;
+  activity_type: string;
+  activity_date: string;
+  area_covered_ha?: number | string | null;
+  inputs_used?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  logged_by?: string | null;
+  created_at?: string;
+  field_name?: string | null;
+  logged_by_name?: string | null;
+  crop_type?: string | null;
+}
+
+export interface FarmOSLivestockGroup {
+  id: string;
+  farm_id: string;
+  field_id?: string | null;
+  species: string;
+  breed?: string | null;
+  count: number | string;
+  purpose?: string | null;
+  date_acquired?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  field_name?: string | null;
+  activity_count?: number | string | null;
+  total_cost?: number | string | null;
+}
+
+export interface FarmOSLivestockActivity {
+  id: string;
+  livestock_group_id: string;
+  farm_id: string;
+  activity_type: string;
+  activity_date: string;
+  count_affected?: number | string | null;
+  quantity?: number | string | null;
+  unit?: string | null;
+  cost_usd?: number | string | null;
+  description?: string | null;
+  notes?: string | null;
+  logged_by?: string | null;
+  created_at?: string;
+  species?: string | null;
+  breed?: string | null;
+  logged_by_name?: string | null;
+}
+
+export interface FarmOSLabourDay {
+  id: string;
+  farm_id: string;
+  field_id?: string | null;
+  worker_id?: string | null;
+  work_date: string;
+  task_category: string;
+  hours_worked?: number | string | null;
+  area_covered_ha?: number | string | null;
+  wage_usd?: number | string | null;
+  notes?: string | null;
+  logged_by?: string | null;
+  created_at?: string;
+  worker_name?: string | null;
+  worker_role?: string | null;
+  field_name?: string | null;
+}
+
+export interface FarmOSLabourSummary {
+  total_entries?: number | string | null;
+  total_hours?: number | string | null;
+  total_wages?: number | string | null;
+  unique_workers?: number | string | null;
+  total_area_covered?: number | string | null;
+}
+
+export interface FarmOSLabourCategorySummary {
+  task_category: string;
+  entries?: number | string | null;
+  hours?: number | string | null;
+  wages?: number | string | null;
+  area_ha?: number | string | null;
+}
+
+export interface FarmOSInventoryItem {
+  id: string;
+  farm_id: string;
+  item_type: string;
+  name: string;
+  quantity: number | string;
+  unit?: string | null;
+  unit_cost_usd?: number | string | null;
+  reorder_level?: number | string | null;
+  expiry_date?: string | null;
+  supplier?: string | null;
+  updated_at?: string;
+  low_stock?: boolean;
+  expiring_soon?: boolean;
+  usage_last_30d?: number | string | null;
+}
+
+export interface FarmOSInventorySummary {
+  item_type: string;
+  items: number | string;
+  total_value: number | string;
+}
+
+export interface FarmOSCalendarEntry {
+  id: string;
+  farm_id?: string | null;
+  crop_type: string;
+  region?: string | null;
+  recommended_planting_start?: number | string | null;
+  recommended_planting_end?: number | string | null;
+  expected_harvest_weeks?: number | string | null;
+  soil_requirements?: string | null;
+  water_requirements?: string | null;
+  common_pests?: string | null;
+  notes?: string | null;
+  is_ai_generated?: boolean | null;
+  created_at?: string;
+}
+
+export interface FarmOSWeeklyReport {
+  farmName: string;
+  period: { startDate: string; endDate: string };
+  labour: {
+    total_entries?: number | string | null;
+    workers_active?: number | string | null;
+    total_hours?: number | string | null;
+    total_wages?: number | string | null;
+    total_area?: number | string | null;
+  };
+  cropActivities: Array<{
+    activity_type: string;
+    count: number | string;
+    area_covered: number | string;
+  }>;
+  livestock: Array<{
+    activity_type: string;
+    count: number | string;
+    total_cost: number | string;
+  }>;
+  inventoryUsed: Array<{
+    name: string;
+    item_type: string;
+    total_used: number | string;
+    unit?: string | null;
+  }>;
+}
+
+export interface FarmOSMonthlyReport {
+  farmName: string;
+  period: { year: number; month: number; startDate: string; endDate: string };
+  summary: {
+    totalWages: number;
+    totalInputs: number;
+    totalCost: number;
+    totalManDays: number;
+  };
+  labour: {
+    byTask: Array<{
+      task_category: string;
+      man_days: number | string;
+      total_hours: number | string;
+      total_wages: number | string;
+      area_covered: number | string;
+    }>;
+    byWorker: Array<{
+      full_name: string | null;
+      role: string | null;
+      days_worked: number | string;
+      total_hours: number | string;
+      total_wages: number | string;
+    }>;
+  };
+  crops: Array<{
+    crop_type: string | null;
+    activity_type: string;
+    count: number | string;
+    area_covered: number | string;
+  }>;
+  livestock: Array<{
+    species: string;
+    activity_type: string;
+    count: number | string;
+    total_cost: number | string;
+  }>;
+  inventory: Array<{
+    item_type: string;
+    name: string;
+    unit: string | null;
+    total_used: number | string;
+    total_cost: number | string;
+  }>;
+}
+
+// Farm OS Phase 2 Types (Finance + Market)
+export interface FarmOSExpense {
+  id: string;
+  farm_id: string;
+  expense_date: string;
+  category: string;
+  description?: string | null;
+  amount_usd: number | string;
+  field_id?: string | null;
+  crop_plan_id?: string | null;
+  livestock_group_id?: string | null;
+  supplier?: string | null;
+  receipt_ref?: string | null;
+  logged_by?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  field_name?: string | null;
+  crop_type?: string | null;
+  logged_by_name?: string | null;
+}
+
+export interface FarmOSExpenseSummary {
+  total_expenses?: number | string | null;
+  total_entries?: number | string | null;
+  labour_cost?: number | string | null;
+  input_cost?: number | string | null;
+  equipment_cost?: number | string | null;
+  transport_cost?: number | string | null;
+}
+
+export interface FarmOSExpenseCategorySummary {
+  category: string;
+  entries?: number | string | null;
+  total?: number | string | null;
+}
+
+export interface FarmOSRevenue {
+  id: string;
+  farm_id: string;
+  revenue_date: string;
+  category: string;
+  description?: string | null;
+  amount_usd: number | string;
+  quantity?: number | string | null;
+  unit?: string | null;
+  unit_price_usd?: number | string | null;
+  buyer_name?: string | null;
+  field_id?: string | null;
+  crop_plan_id?: string | null;
+  livestock_group_id?: string | null;
+  logged_by?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  field_name?: string | null;
+  crop_type?: string | null;
+  logged_by_name?: string | null;
+}
+
+export interface FarmOSRevenueSummary {
+  total_revenue?: number | string | null;
+  total_entries?: number | string | null;
+  crop_revenue?: number | string | null;
+  livestock_revenue?: number | string | null;
+  produce_revenue?: number | string | null;
+}
+
+export interface FarmOSRevenueCategorySummary {
+  category: string;
+  entries?: number | string | null;
+  total?: number | string | null;
+}
+
+export interface FarmOSProfitability {
+  farmName: string;
+  period: { year: number; month: number; startDate: string; endDate: string };
+  summary: {
+    totalRevenue: number;
+    totalExpenses: number;
+    netProfit: number;
+    profitMargin: string;
+    isProfit: boolean;
+  };
+  expenses: {
+    total_expenses: number | string;
+    labour: number | string;
+    inputs: number | string;
+    fuel: number | string;
+    equipment: number | string;
+    transport: number | string;
+    other: number | string;
+  };
+  revenue: {
+    total_revenue: number | string;
+    crop_sales: number | string;
+    livestock_sales: number | string;
+    produce: number | string;
+  };
+  byCrop: Array<{
+    crop_plan_id: string;
+    crop_type: string;
+    variety?: string | null;
+    planned_area_ha?: number | string | null;
+    actual_yield_kg?: number | string | null;
+    expected_yield_kg?: number | string | null;
+    revenue: number | string;
+    expenses: number | string;
+    profit: number | string;
+  }>;
+  expenseCategories: Array<{
+    category: string;
+    total: number | string;
+    count: number | string;
+  }>;
+  trend: Array<{
+    month: string;
+    expenses: number | string;
+    revenue: number | string;
+    profit: number | string;
+  }>;
+}
+
+export interface FarmOSMarketPrice {
+  id: string;
+  commodity: string;
+  region?: string | null;
+  price_usd: number | string;
+  unit: string;
+  price_date: string;
+  source?: string | null;
+  demand_level?: string | null;
+  notes?: string | null;
+  is_ai_generated?: boolean | null;
+}
+
+export interface FarmOSMarketInsights {
+  marketSummary?: string;
+  recommendations?: Array<{
+    crop: string;
+    action: "sell_now" | "hold" | "plant_more" | "reduce" | string;
+    reason?: string;
+    estimatedPrice?: string;
+    urgency?: "high" | "medium" | "low" | string;
+  }>;
+  suggestedPrices?: Array<{
+    commodity: string;
+    suggestedPrice: number;
+    unit: string;
+    demandLevel?: "low" | "medium" | "high" | "very_high" | string;
+    notes?: string;
+  }>;
+}
+
+export interface FarmOSAnalyticsData {
+  farm?: {
+    name: string;
+    location?: string | null;
+    area?: number | string | null;
+  };
+  kpis: {
+    totalRevenue6m: number | string;
+    totalExpenses6m: number | string;
+    netProfit6m: number | string;
+    totalLabourWages?: number | string;
+    avgYieldAchievement: string;
+  };
+  charts: {
+    revenueVsExpenses: Array<{
+      month: string;
+      month_key?: string;
+      expenses: number | string;
+      revenue: number | string;
+      profit: number | string;
+    }>;
+    labourDistribution: Array<{
+      name: string;
+      value: number | string;
+      man_days?: number | string;
+      hours?: number | string;
+    }>;
+    yieldPerformance: Array<{
+      crop_type: string;
+      variety?: string | null;
+      expected?: number | string;
+      actual?: number | string;
+      area?: number | string;
+      achievement_pct?: number | string;
+      yield_per_ha?: number | string;
+    }>;
+    inventoryValue: Array<{
+      name: string;
+      value: number | string;
+      items?: number | string;
+    }>;
+    expenseCategories: Array<{
+      name: string;
+      value: number | string;
+    }>;
+    livestockCounts: Array<{
+      name: string;
+      value: number | string;
+    }>;
+    cropYieldComparison: Array<{
+      name: string;
+      expected?: number | string;
+      actual?: number | string;
+    }>;
+    labourEfficiency: Array<{
+      month: string;
+      wages?: number | string;
+      area?: number | string;
+      man_days?: number | string;
+      cost_per_ha?: number | string;
+    }>;
+  };
+}
+
+export interface FarmOSSeasonalPredictions {
+  seasonalOutlook: string;
+  nextMonthActions: Array<{
+    action: string;
+    reasoning: string;
+    priority: "high" | "medium" | "low" | string;
+    category: string;
+  }>;
+  cropRecommendations: Array<{
+    crop: string;
+    recommendation: string;
+    notes?: string;
+    timing: string;
+    expectedYieldPerHa?: string;
+  }>;
+  financialForecast?: {
+    expectedRevenue: number | string;
+    expectedExpenses: number | string;
+    keyRisks: string[];
+    opportunities: string[];
+  } | null;
+  labourPlan?: {
+    estimatedManDays: number | string;
+    peakWeeks: string;
+    keyTasks: string[];
+  } | null;
+}
+
 // Wallet Types
 export interface WalletBalance {
   balance: number;

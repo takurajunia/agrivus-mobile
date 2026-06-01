@@ -22,6 +22,7 @@ import {
   Store,
   Upload,
   FileText,
+  ClipboardList,
   Bell,
   MessageSquare,
   Tag,
@@ -133,6 +134,7 @@ export default function HomeScreen() {
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const canAccessFarmLog = user?.role === "farmer";
+  const canAccessFarmOS = user?.role === "farmer" || user?.role === "admin";
   const isBuyer = user?.role === "buyer";
   const isAdmin = user?.role === "admin";
   const isModerator = user?.role === "support_moderator";
@@ -149,7 +151,6 @@ export default function HomeScreen() {
 
   const parseNumericValue = (value: number | string | undefined): number => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-                ...(canAccessFarmLog ? ["Farm Log"] : []),
     if (typeof value === "string") {
       const parsed = Number.parseFloat(value);
       return Number.isFinite(parsed) ? parsed : 0;
@@ -482,6 +483,8 @@ export default function HomeScreen() {
               {[
                 "Auctions",
                 "AgriMall",
+                ...(canAccessFarmOS ? ["Farm OS"] : []),
+                ...(canAccessFarmLog ? ["Farm Log"] : []),
                 ...(canAccessExport ? ["Export"] : []),
               ].map((item) => (
                 <TouchableOpacity
@@ -490,6 +493,7 @@ export default function HomeScreen() {
                   onPress={() => {
                     if (item === "Auctions") router.push("/(tabs)/auctions");
                     if (item === "AgriMall") router.push("/(tabs)/agrimall");
+                    if (item === "Farm OS") router.push("/(tabs)/farm-os");
                     if (item === "Farm Log") router.push("/(tabs)/farm-log");
                     if (item === "Export") router.push("/(tabs)/export-gateway");
                   }}
@@ -812,6 +816,51 @@ export default function HomeScreen() {
                     <Text style={styles.qaLabel}>Export</Text>
                   </TouchableOpacity>
                 </View>
+                {(canAccessFarmOS || canAccessFarmLog) && (
+                  <View
+                    style={[
+                      styles.qaRow,
+                      { justifyContent: "flex-start", marginTop: 16 },
+                    ]}
+                  >
+                    {canAccessFarmOS && (
+                      <TouchableOpacity
+                        style={[styles.qaItem, { marginRight: 20 }]}
+                        onPress={() => router.push("/(tabs)/farm-os")}
+                      >
+                        <View
+                          style={[
+                            styles.qaActiveIcon,
+                            { backgroundColor: "#0EA5E9" },
+                          ]}
+                        >
+                          <Settings size={22} color="#FFF" strokeWidth={2.5} />
+                        </View>
+                        <Text style={styles.qaLabel}>Farm OS</Text>
+                      </TouchableOpacity>
+                    )}
+                    {canAccessFarmLog && (
+                      <TouchableOpacity
+                        style={styles.qaItem}
+                        onPress={() => router.push("/(tabs)/farm-log")}
+                      >
+                        <View
+                          style={[
+                            styles.qaActiveIcon,
+                            { backgroundColor: "#16A34A" },
+                          ]}
+                        >
+                          <ClipboardList
+                            size={22}
+                            color="#FFF"
+                            strokeWidth={2.5}
+                          />
+                        </View>
+                        <Text style={styles.qaLabel}>Farm Log</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
               </View>
             </View>
           )}

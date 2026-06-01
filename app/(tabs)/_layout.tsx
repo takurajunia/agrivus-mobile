@@ -7,6 +7,7 @@ export default function TabLayout() {
   const { user } = useAuth();
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
   const canAccessFarmLog = user?.role === "farmer";
+  const canAccessFarmOS = user?.role === "farmer" || user?.role === "admin";
 
   return (
     <Tabs
@@ -23,6 +24,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="farm-log"
         options={{ title: "Farm Log", href: canAccessFarmLog ? undefined : null }}
+      />
+      <Tabs.Screen
+        name="farm-os"
+        options={{ title: "Farm OS", href: canAccessFarmOS ? undefined : null }}
       />
       <Tabs.Screen
         name="export-gateway"

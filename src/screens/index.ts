@@ -15,3 +15,4 @@ export { default as ExportGatewayScreen } from "./ExportGatewayScreen";
 export { default as MockPaymentScreen } from "./MockPaymentScreen";
 export { default as PaymentHistoryScreen } from "./PaymentHistoryScreen";
 export { default as RecommendationsScreen } from "./RecommendationsScreen";
+export { default as FarmOSScreen } from "./FarmOSScreen";

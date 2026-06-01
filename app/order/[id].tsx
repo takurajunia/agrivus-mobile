@@ -116,11 +116,7 @@ export default function OrderDetailScreen() {
   }, [fetchOrder]);
 
   useEffect(() => {
-    if (
-      user?.role === "buyer" ||
-      user?.role === "farmer" ||
-      user?.role === "agro_supplier"
-    ) {
+    if (user) {
       checkDeliveryPasswordStatus();
     }
   }, [user, checkDeliveryPasswordStatus]);
@@ -561,12 +557,12 @@ export default function OrderDetailScreen() {
   }
 
   const StatusIcon = getStatusIcon(order.status);
-  const otherParty = user?.role === "buyer" ? order.farmer : order.buyer;
-  const isBuyer = user?.role === "buyer";
-  const isFarmer = user?.role === "farmer";
+  const isBuyer = user?.id === order.buyerId;
+  const isFarmer = user?.id === order.farmerId;
   const isTransporter = user?.role === "transporter";
   const isAssignedTransporter =
     isTransporter && order.transportAssignment?.transporterId === user?.id;
+  const otherParty = isBuyer ? order.farmer : order.buyer;
   const canInitiateHandoff =
     (isFarmer || isAssignedTransporter) && order.status === "delivered";
 
