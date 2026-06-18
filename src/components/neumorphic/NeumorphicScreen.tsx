@@ -6,14 +6,8 @@
  */
 
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  StyleProp,
-  ViewStyle,
-  StatusBar,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Leaf } from "lucide-react-native";
@@ -57,6 +51,8 @@ const NeumorphicScreen: React.FC<NeumorphicScreenProps> = ({
   const activeVariant = leafPattern ?? variant;
   const leafConfig: LeafConfig =
     leafPatterns[activeVariant] || leafPatterns.dashboard;
+  const expoStatusBarStyle =
+    statusBarStyle === "light-content" ? "light" : "dark";
 
   const getGradientColors = (): readonly [string, string, ...string[]] => {
     switch (variant) {
@@ -113,11 +109,7 @@ const NeumorphicScreen: React.FC<NeumorphicScreenProps> = ({
   const content = (
     <>
       <LeafBackground />
-      <StatusBar
-        barStyle={statusBarStyle}
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar style={expoStatusBarStyle} />
       {renderLeaves()}
       <View style={[styles.content, style]}>{children}</View>
     </>

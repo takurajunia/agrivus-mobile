@@ -2,8 +2,7 @@
   "expo": {
     "name": "Agrivus",
     "slug": "agrivus-mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "version": "1.0.1",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -11,9 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#2E7D32"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agrivus.mobile",
@@ -32,12 +29,7 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-image",
-      "expo-sharing"
-    ],
+    "plugins": ["expo-router", "expo-font", "expo-image", "expo-sharing"],
     "scheme": "agrivus",
     "extra": {
       "router": {},

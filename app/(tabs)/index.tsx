@@ -133,7 +133,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
-  const canAccessFarmLog = user?.role === "farmer";
+  const canAccessFarmLog = user?.role === "farmer" || user?.role === "admin";
   const canAccessFarmOS = user?.role === "farmer" || user?.role === "admin";
   const isBuyer = user?.role === "buyer";
   const isAdmin = user?.role === "admin";
@@ -143,7 +143,9 @@ export default function HomeScreen() {
     ? parseFloat(user.boostMultiplier)
     : 1;
   const [refreshing, setRefreshing] = useState(false);
-  const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
+  const [recentNotifications, setRecentNotifications] = useState<
+    Notification[]
+  >([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [adminStats, setAdminStats] = useState<AdminStatistics | null>(null);
@@ -210,9 +212,7 @@ export default function HomeScreen() {
         chatService.getUnreadCount(),
       ]);
 
-      setUnreadNotificationCount(
-        notificationsResponse?.data?.unreadCount || 0,
-      );
+      setUnreadNotificationCount(notificationsResponse?.data?.unreadCount || 0);
       setUnreadChatCount(chatsResponse?.data?.unreadCount || 0);
     } catch (error) {
       console.error("Error fetching unread counts:", error);
@@ -238,7 +238,9 @@ export default function HomeScreen() {
       }
 
       try {
-        const savedPhoto = await AsyncStorage.getItem(`profile-photo:${user.id}`);
+        const savedPhoto = await AsyncStorage.getItem(
+          `profile-photo:${user.id}`,
+        );
         setProfilePhotoUri(savedPhoto);
       } catch (error) {
         console.error("Error loading profile photo for home:", error);
@@ -255,10 +257,10 @@ export default function HomeScreen() {
         .sort(
           (first, second) =>
             new Date(second.createdAt).getTime() -
-            new Date(first.createdAt).getTime()
+            new Date(first.createdAt).getTime(),
         )
         .slice(0, 5),
-    [recentNotifications]
+    [recentNotifications],
   );
 
   const getActivityBadgeLabel = (notification: Notification): string => {
@@ -269,8 +271,8 @@ export default function HomeScreen() {
     if (!notification.isRead) {
       setRecentNotifications((previous) =>
         previous.map((item) =>
-          item.id === notification.id ? { ...item, isRead: true } : item
-        )
+          item.id === notification.id ? { ...item, isRead: true } : item,
+        ),
       );
 
       try {
@@ -355,7 +357,11 @@ export default function HomeScreen() {
   const getInitials = (fullName?: string): string => {
     if (!fullName) return "U";
     const names = fullName.trim().split(" ");
-    return names.map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return names
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   // Helper function to get first name
@@ -374,8 +380,12 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const totalUsersValue = formatCompactNumber(adminStats?.overview?.totalUsers || 0);
-  const allOrdersValue = formatCompactNumber(adminStats?.overview?.totalOrders || 0);
+  const totalUsersValue = formatCompactNumber(
+    adminStats?.overview?.totalUsers || 0,
+  );
+  const allOrdersValue = formatCompactNumber(
+    adminStats?.overview?.totalOrders || 0,
+  );
   const securityValue = formatCompactNumber(
     parseNumericValue(adminStats?.platformHealth?.securityAlerts),
   );
@@ -402,7 +412,10 @@ export default function HomeScreen() {
             <View style={styles.profileContent}>
               <View style={styles.avatarWrapper}>
                 {profilePhotoUri ? (
-                  <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+                  <Image
+                    source={{ uri: profilePhotoUri }}
+                    style={styles.avatarImage}
+                  />
                 ) : (
                   <LinearGradient
                     colors={COLORS.greenGradient}
@@ -410,7 +423,9 @@ export default function HomeScreen() {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Text style={styles.avatarText}>{getInitials(user?.fullName)}</Text>
+                    <Text style={styles.avatarText}>
+                      {getInitials(user?.fullName)}
+                    </Text>
                   </LinearGradient>
                 )}
                 <View style={styles.avatarInnerShadow} />
@@ -418,7 +433,9 @@ export default function HomeScreen() {
 
               <View style={styles.greetingStack}>
                 <Text style={styles.greetingLight}>Good day,</Text>
-                <Text style={styles.greetingBold}>{getFirstName(user?.fullName)}</Text>
+                <Text style={styles.greetingBold}>
+                  {getFirstName(user?.fullName)}
+                </Text>
               </View>
             </View>
           </FloatPillow>
@@ -436,7 +453,9 @@ export default function HomeScreen() {
               {unreadNotificationCount > 0 && (
                 <View style={styles.utilityBadge}>
                   <Text style={styles.utilityBadgeText}>
-                    {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+                    {unreadNotificationCount > 99
+                      ? "99+"
+                      : unreadNotificationCount}
                   </Text>
                 </View>
               )}
@@ -476,7 +495,6 @@ export default function HomeScreen() {
             />
           }
         >
-
           {/* --- Secondary Nav (Pills) --- */}
           {!isAdmin && !isModerator && !isAccountsOfficer && (
             <View style={styles.pillsRow}>
@@ -495,7 +513,8 @@ export default function HomeScreen() {
                     if (item === "AgriMall") router.push("/(tabs)/agrimall");
                     if (item === "Farm OS") router.push("/(tabs)/farm-os");
                     if (item === "Farm Log") router.push("/(tabs)/farm-log");
-                    if (item === "Export") router.push("/(tabs)/export-gateway");
+                    if (item === "Export")
+                      router.push("/(tabs)/export-gateway");
                   }}
                 >
                   <Text style={styles.pillText}>{item}</Text>
@@ -617,9 +636,7 @@ export default function HomeScreen() {
                       style={{ marginRight: 14 }}
                       strokeWidth={2}
                     />
-                    <Text style={styles.ctaText}>
-                      View Moderator Dashboard
-                    </Text>
+                    <Text style={styles.ctaText}>View Moderator Dashboard</Text>
                   </View>
                 </LinearGradient>
               </View>
@@ -875,7 +892,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/admin/users")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#667EEA" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#667EEA" },
+                      ]}
+                    >
                       <Users size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Users</Text>
@@ -885,7 +907,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/admin/orders")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#F59E0B" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#F59E0B" },
+                      ]}
+                    >
                       <ShoppingCart size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Orders</Text>
@@ -905,7 +932,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/admin/reports")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#8B5CF6" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#8B5CF6" },
+                      ]}
+                    >
                       <BarChart3 size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Reports</Text>
@@ -925,7 +957,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/admin/users")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#6366F1" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#6366F1" },
+                      ]}
+                    >
                       <Users size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Users</Text>
@@ -935,7 +972,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/admin/orders")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#F59E0B" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#F59E0B" },
+                      ]}
+                    >
                       <ShoppingCart size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Orders</Text>
@@ -945,7 +987,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/admin/transactions")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#8B5CF6" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#8B5CF6" },
+                      ]}
+                    >
                       <DollarSign size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Transactions</Text>
@@ -955,7 +1002,12 @@ export default function HomeScreen() {
                     style={styles.qaItem}
                     onPress={() => router.push("/moderator")}
                   >
-                    <View style={[styles.qaActiveIcon, { backgroundColor: "#10B981" }]}>
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#10B981" },
+                      ]}
+                    >
                       <Shield size={22} color="#FFF" strokeWidth={2.5} />
                     </View>
                     <Text style={styles.qaLabel}>Dashboard</Text>
@@ -1045,6 +1097,31 @@ export default function HomeScreen() {
             </View>
           )}
 
+          {/* --- Admin General Activities --- */}
+          {isAdmin && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>General Activities</Text>
+              <View style={styles.quickActionsCard}>
+                <View style={[styles.qaRow, { justifyContent: "flex-start" }]}>
+                  <TouchableOpacity
+                    style={styles.qaItem}
+                    onPress={() => router.push("/(tabs)/farm-os")}
+                  >
+                    <View
+                      style={[
+                        styles.qaActiveIcon,
+                        { backgroundColor: "#2E7D32" },
+                      ]}
+                    >
+                      <ClipboardList size={22} color="#FFF" strokeWidth={2.5} />
+                    </View>
+                    <Text style={styles.qaLabel}>Farm OS</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
           {/* --- Recent Activity --- */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Recent Activity</Text>
@@ -1106,7 +1183,9 @@ export default function HomeScreen() {
                   </View>
 
                   <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>No notifications yet</Text>
+                    <Text style={styles.activityTitle}>
+                      No notifications yet
+                    </Text>
                     <Text style={styles.activitySub}>
                       Your latest activity will appear here.
                     </Text>

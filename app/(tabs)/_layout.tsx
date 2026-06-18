@@ -6,7 +6,7 @@ import { useAuth } from "../../src/contexts/AuthContext";
 export default function TabLayout() {
   const { user } = useAuth();
   const canAccessExport = user?.role === "farmer" || user?.role === "admin";
-  const canAccessFarmLog = user?.role === "farmer";
+  const canAccessFarmLog = user?.role === "farmer" || user?.role === "admin";
   const canAccessFarmOS = user?.role === "farmer" || user?.role === "admin";
 
   return (
@@ -23,7 +23,10 @@ export default function TabLayout() {
       <Tabs.Screen name="my-listings" options={{ title: "My Listings" }} />
       <Tabs.Screen
         name="farm-log"
-        options={{ title: "Farm Log", href: canAccessFarmLog ? undefined : null }}
+        options={{
+          title: "Farm Log",
+          href: canAccessFarmLog ? undefined : null,
+        }}
       />
       <Tabs.Screen
         name="farm-os"
