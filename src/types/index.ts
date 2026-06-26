@@ -587,6 +587,7 @@ export interface FarmOSWorker {
   full_name: string;
   phone?: string | null;
   role: "owner" | "manager" | "worker" | string;
+  date_of_birth?: string | null;
   is_active?: boolean;
   daily_wage_usd?: number | string | null;
   invite_code?: string | null;

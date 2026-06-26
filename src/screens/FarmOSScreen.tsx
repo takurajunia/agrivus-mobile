@@ -15,7 +15,7 @@ import {
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
-import { ClipboardList, Plus, X } from "lucide-react-native";
+import { ChevronDown, ClipboardList, Plus, X } from "lucide-react-native";
 import Svg, {
   Circle,
   G,
@@ -82,6 +82,10 @@ import type {
 } from "../types";
 import { neumorphicColors, spacing, borderRadius } from "../theme/neumorphic";
 
+type FarmOSWorkerWithDob = FarmOSWorker & {
+  date_of_birth?: string | null;
+};
+
 type SectionKey =
   | "setup"
   | "crops"
@@ -119,6 +123,7 @@ type WorkerFormState = {
   full_name: string;
   phone: string;
   role: string;
+  date_of_birth: string;
   daily_wage_usd: string;
 };
 
@@ -127,6 +132,7 @@ type CropPlanFormState = {
   crop_type: string;
   variety: string;
   planned_area_ha: string;
+  planned_area_unit: AreaUnit;
   planting_date: string;
   expected_harvest_date: string;
   expected_yield_kg: string;
@@ -250,6 +256,22 @@ type MarketPriceFormState = {
   notes: string;
 };
 
+const AREA_UNIT_OPTIONS = [
+  { id: "ha", label: "Hectares (ha)" },
+  { id: "acre", label: "Acres (ac)" },
+  { id: "are", label: "Ares (a)" },
+  { id: "m2", label: "Square meters (m2)" },
+] as const;
+
+type AreaUnit = (typeof AREA_UNIT_OPTIONS)[number]["id"];
+
+const AREA_UNIT_TO_HA: Record<AreaUnit, number> = {
+  ha: 1,
+  acre: 0.40468564224,
+  are: 0.01,
+  m2: 0.0001,
+};
+
 const todayIso = () => new Date().toISOString().split("T")[0];
 
 const toOptionalNumber = (value: string) => {
@@ -269,6 +291,31 @@ const toCurrencyNumber = (
 ): number => {
   const numeric = Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const formatAreaValue = (value: number) => {
+  const rounded = Number(value.toFixed(6));
+  return Number.isFinite(rounded) ? String(rounded) : "";
+};
+
+const convertAreaValue = (
+  value: number,
+  fromUnit: AreaUnit,
+  toUnit: AreaUnit,
+) => (value * AREA_UNIT_TO_HA[fromUnit]) / AREA_UNIT_TO_HA[toUnit];
+
+const getAreaUnitLabel = (unit: AreaUnit) =>
+  AREA_UNIT_OPTIONS.find((option) => option.id === unit)?.label ??
+  AREA_UNIT_OPTIONS[0].label;
+
+const convertAreaInput = (
+  value: string,
+  fromUnit: AreaUnit,
+  toUnit: AreaUnit,
+) => {
+  const numeric = toOptionalNumber(value);
+  if (numeric === null) return value;
+  return formatAreaValue(convertAreaValue(numeric, fromUnit, toUnit));
 };
 
 const formatDate = (value?: string | null) => {
@@ -717,6 +764,7 @@ export default function FarmOSScreen() {
     full_name: "",
     phone: "",
     role: "worker",
+    date_of_birth: "",
     daily_wage_usd: "",
   });
   const [cropPlanForm, setCropPlanForm] = useState<CropPlanFormState>({
@@ -724,6 +772,7 @@ export default function FarmOSScreen() {
     crop_type: "",
     variety: "",
     planned_area_ha: "",
+    planned_area_unit: "ha",
     planting_date: "",
     expected_harvest_date: "",
     expected_yield_kg: "",
@@ -731,6 +780,8 @@ export default function FarmOSScreen() {
     status: "planned",
     notes: "",
   });
+  const [cropPlanAreaUnitPickerOpen, setCropPlanAreaUnitPickerOpen] =
+    useState(false);
   const [cropActivityForm, setCropActivityForm] =
     useState<CropActivityFormState>({
       crop_plan_id: "",
@@ -1909,13 +1960,14 @@ export default function FarmOSScreen() {
     ]);
   };
 
-  const openWorkerModal = (worker?: FarmOSWorker) => {
+  const openWorkerModal = (worker?: FarmOSWorkerWithDob) => {
     if (worker) {
       setEditingWorkerId(worker.id);
       setWorkerForm({
         full_name: worker.full_name ?? "",
         phone: worker.phone ?? "",
         role: worker.role ?? "worker",
+        date_of_birth: worker.date_of_birth ?? "",
         daily_wage_usd: worker.daily_wage_usd
           ? String(worker.daily_wage_usd)
           : "",
@@ -1926,6 +1978,7 @@ export default function FarmOSScreen() {
         full_name: "",
         phone: "",
         role: "worker",
+        date_of_birth: "",
         daily_wage_usd: "",
       });
     }
@@ -1938,12 +1991,18 @@ export default function FarmOSScreen() {
       return;
     }
 
+    if (!workerForm.date_of_birth.trim()) {
+      Alert.alert("Missing date of birth", "Worker date of birth is required.");
+      return;
+    }
+
     try {
       setSaving(true);
       const payload = {
         full_name: workerForm.full_name.trim(),
         phone: workerForm.phone.trim() || null,
         role: workerForm.role,
+        date_of_birth: workerForm.date_of_birth.trim(),
         daily_wage_usd: toOptionalNumber(workerForm.daily_wage_usd),
       };
 
@@ -2005,6 +2064,7 @@ export default function FarmOSScreen() {
   };
 
   const openCropPlanModal = (plan?: FarmOSCropPlan) => {
+    setCropPlanAreaUnitPickerOpen(false);
     if (plan) {
       setEditingCropPlanId(plan.id);
       setCropPlanForm({
@@ -2014,6 +2074,7 @@ export default function FarmOSScreen() {
         planned_area_ha: plan.planned_area_ha
           ? String(plan.planned_area_ha)
           : "",
+        planned_area_unit: "ha",
         planting_date: plan.planting_date ?? "",
         expected_harvest_date: plan.expected_harvest_date ?? "",
         expected_yield_kg: plan.expected_yield_kg
@@ -2030,6 +2091,7 @@ export default function FarmOSScreen() {
         crop_type: "",
         variety: "",
         planned_area_ha: "",
+        planned_area_unit: "ha",
         planting_date: "",
         expected_harvest_date: "",
         expected_yield_kg: "",
@@ -2049,11 +2111,19 @@ export default function FarmOSScreen() {
 
     try {
       setSaving(true);
+      const plannedAreaValue = toOptionalNumber(cropPlanForm.planned_area_ha);
       const payload = {
         field_id: cropPlanForm.field_id || null,
         crop_type: cropPlanForm.crop_type.trim(),
         variety: cropPlanForm.variety.trim() || null,
-        planned_area_ha: toOptionalNumber(cropPlanForm.planned_area_ha),
+        planned_area_ha:
+          plannedAreaValue === null
+            ? null
+            : convertAreaValue(
+                plannedAreaValue,
+                cropPlanForm.planned_area_unit,
+                "ha",
+              ),
         planting_date: cropPlanForm.planting_date.trim() || null,
         expected_harvest_date:
           cropPlanForm.expected_harvest_date.trim() || null,
@@ -5578,6 +5648,15 @@ export default function FarmOSScreen() {
             setWorkerForm((prev) => ({ ...prev, phone: value }))
           }
         />
+        <NeumorphicInput
+          label="Date of birth"
+          placeholder="YYYY-MM-DD"
+          value={workerForm.date_of_birth}
+          onChangeText={(value) =>
+            setWorkerForm((prev) => ({ ...prev, date_of_birth: value }))
+          }
+          helperText="Required before a worker can be created."
+        />
         <Text style={styles.inputLabel}>Role</Text>
         {renderChips(
           WORKER_ROLES.map((role) => ({ id: role, label: role })),
@@ -5597,7 +5676,10 @@ export default function FarmOSScreen() {
       <FormModal
         visible={cropPlanModalOpen}
         title={editingCropPlanId ? "Edit Crop Plan" : "New Crop Plan"}
-        onClose={() => setCropPlanModalOpen(false)}
+        onClose={() => {
+          setCropPlanAreaUnitPickerOpen(false);
+          setCropPlanModalOpen(false);
+        }}
         footer={
           <NeumorphicButton
             title={editingCropPlanId ? "Update Plan" : "Save Plan"}
@@ -5629,13 +5711,79 @@ export default function FarmOSScreen() {
           }
         />
         <NeumorphicInput
-          label="Planned area (ha)"
+          label="Planned area"
           keyboardType="numeric"
           value={cropPlanForm.planned_area_ha}
           onChangeText={(value) =>
             setCropPlanForm((prev) => ({ ...prev, planned_area_ha: value }))
           }
+          helperText="Saved as hectares. Use a smaller unit for compact plots."
         />
+        <Text style={styles.inputLabel}>Area unit</Text>
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: neumorphicColors.base.input,
+            borderRadius: borderRadius.md,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.md,
+            borderWidth: 1,
+            borderColor: neumorphicColors.base.border,
+            marginBottom: spacing.md,
+          }}
+          onPress={() => setCropPlanAreaUnitPickerOpen((previous) => !previous)}
+        >
+          <Text
+            style={{
+              color: neumorphicColors.text.primary,
+              fontSize: 14,
+              fontWeight: "500",
+            }}
+          >
+            {getAreaUnitLabel(cropPlanForm.planned_area_unit)}
+          </Text>
+          <ChevronDown size={18} color={neumorphicColors.text.secondary} />
+        </TouchableOpacity>
+        {cropPlanAreaUnitPickerOpen && (
+          <NeumorphicCard style={{ marginBottom: spacing.md, padding: 0 }}>
+            <ScrollView style={{ maxHeight: 220 }} nestedScrollEnabled>
+              {AREA_UNIT_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={{
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.md,
+                    borderBottomWidth: 1,
+                    borderBottomColor: neumorphicColors.base.border,
+                  }}
+                  onPress={() => {
+                    setCropPlanForm((previous) => ({
+                      ...previous,
+                      planned_area_ha: convertAreaInput(
+                        previous.planned_area_ha,
+                        previous.planned_area_unit,
+                        option.id,
+                      ),
+                      planned_area_unit: option.id,
+                    }));
+                    setCropPlanAreaUnitPickerOpen(false);
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: neumorphicColors.text.primary,
+                      fontSize: 14,
+                    }}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </NeumorphicCard>
+        )}
         <NeumorphicInput
           label="Planting date"
           placeholder="YYYY-MM-DD"
@@ -6861,6 +7009,37 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  picker: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: neumorphicColors.base.input,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: neumorphicColors.base.border,
+    marginBottom: spacing.md,
+  },
+  pickerText: {
+    color: neumorphicColors.text.primary,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  pickerOptions: {
+    marginBottom: spacing.md,
+    padding: 0,
+  },
+  pickerOption: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: neumorphicColors.base.border,
+  },
+  pickerOptionText: {
+    color: neumorphicColors.text.primary,
+    fontSize: 14,
   },
   inputLabel: {
     fontSize: 13,

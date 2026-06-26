@@ -2,7 +2,7 @@
   "expo": {
     "name": "Agrivus",
     "slug": "agrivus-mobile",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
