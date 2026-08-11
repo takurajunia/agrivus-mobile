@@ -748,6 +748,24 @@ export interface FarmOSCalendarEntry {
   created_at?: string;
 }
 
+export type FarmOSTrackerStatus =
+  | "upcoming"
+  | "harvesting"
+  | "harvested"
+  | "cancelled";
+
+export interface FarmOSTrackerEntry {
+  id: string;
+  crop_category: string;
+  quantity: number | string | null;
+  unit?: string | null;
+  harvest_date: string | null;
+  notes?: string | null;
+  status: FarmOSTrackerStatus | string;
+  created_by_name?: string | null;
+  days_until_harvest: number | null;
+}
+
 export interface FarmOSWeeklyReport {
   farmName: string;
   period: { startDate: string; endDate: string };
@@ -1103,9 +1121,11 @@ export type PaymentMethodType =
   | "ecocash"
   | "onemoney"
   | "telecash"
+  | "innbucks"
+  | "zimswitch"
   | "zipit"
   | "usd_bank"
-  | "card";
+  | "cash";
 
 export type PaymentStatusType =
   | "pending"

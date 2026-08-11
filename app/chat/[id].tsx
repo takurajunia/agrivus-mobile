@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from "react-native";
 import {
@@ -59,6 +60,7 @@ export default function ChatConversationScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [inputText, setInputText] = useState("");
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   // First, try to get or create conversation (in case id is a user ID)
   const initializeConversation = useCallback(async () => {
@@ -131,6 +133,18 @@ export default function ChatConversationScreen() {
     };
     init();
   }, [initializeConversation, fetchMessages]);
+
+  // Keep the latest messages in view as the keyboard rises, like WhatsApp —
+  // otherwise the last message can end up hidden behind the input as the
+  // available space shrinks.
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const subscription = Keyboard.addListener(showEvent, () => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => subscription.remove();
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || !conversationId || sending) return;
@@ -287,50 +301,54 @@ export default function ChatConversationScreen() {
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>
       {/* Header */}
-      <NeumorphicCard style={styles.header} variant="standard" animated={false}>
-        <NeumorphicIconButton
-          icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
-          onPress={() => router.back()}
-          variant="ghost"
-          size="medium"
-        />
-
-        <View style={styles.headerInfo}>
-          <NeumorphicAvatar
-            name={otherUserName}
-            size="small"
-            status={isOnline ? "online" : "offline"}
-            showStatus={isOnline}
+      <View
+        onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+      >
+        <NeumorphicCard style={styles.header} variant="standard" animated={false}>
+          <NeumorphicIconButton
+            icon={<ArrowLeft size={24} color={neumorphicColors.text.primary} />}
+            onPress={() => router.back()}
+            variant="ghost"
+            size="medium"
           />
-          <View style={styles.headerText}>
-            <Text style={styles.headerName}>{otherUserName}</Text>
-            <Text style={styles.headerStatus}>{statusLabel}</Text>
+
+          <View style={styles.headerInfo}>
+            <NeumorphicAvatar
+              name={otherUserName}
+              size="small"
+              status={isOnline ? "online" : "offline"}
+              showStatus={isOnline}
+            />
+            <View style={styles.headerText}>
+              <Text style={styles.headerName}>{otherUserName}</Text>
+              <Text style={styles.headerStatus}>{statusLabel}</Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.headerActions}>
-          <NeumorphicIconButton
-            icon={<Phone size={20} color={neumorphicColors.text.primary} />}
-            onPress={() => {}}
-            variant="ghost"
-            size="small"
-          />
-          <NeumorphicIconButton
-            icon={
-              <MoreVertical size={20} color={neumorphicColors.text.primary} />
-            }
-            onPress={() => {}}
-            variant="ghost"
-            size="small"
-          />
-        </View>
-      </NeumorphicCard>
+          <View style={styles.headerActions}>
+            <NeumorphicIconButton
+              icon={<Phone size={20} color={neumorphicColors.text.primary} />}
+              onPress={() => {}}
+              variant="ghost"
+              size="small"
+            />
+            <NeumorphicIconButton
+              icon={
+                <MoreVertical size={20} color={neumorphicColors.text.primary} />
+              }
+              onPress={() => {}}
+              variant="ghost"
+              size="small"
+            />
+          </View>
+        </NeumorphicCard>
+      </View>
 
       {/* Messages */}
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={100}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 0}
       >
         <ScrollView
           ref={scrollViewRef}

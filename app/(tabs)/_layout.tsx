@@ -29,14 +29,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="farm-os"
-        options={{ title: "Farm OS", href: canAccessFarmOS ? undefined : null }}
-      />
-      <Tabs.Screen
         name="export-gateway"
         options={{ title: "Export", href: canAccessExport ? undefined : null }}
       />
       <Tabs.Screen name="wallet" options={{ title: "Wallet" }} />
+      <Tabs.Screen
+        name="farm-os"
+        options={{ title: "Farm OS", href: canAccessFarmOS ? undefined : null }}
+      />
       <Tabs.Screen name="orders" options={{ title: "Orders" }} />
     </Tabs>
   );

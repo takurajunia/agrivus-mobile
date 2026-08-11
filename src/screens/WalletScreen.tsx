@@ -9,7 +9,6 @@ import {
   RefreshControl,
   Modal,
   Alert,
-  Linking,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
@@ -50,43 +49,40 @@ const PAYMENT_METHODS: Array<{
     id: "ecocash",
     name: "EcoCash",
     icon: Smartphone,
-    description: "📱 You will be redirected to EcoCash to complete payment",
+    description: "📱 Pay with your EcoCash mobile wallet",
   },
   {
-    id: "onemoney",
-    name: "OneMoney",
+    id: "innbucks",
+    name: "InnBucks",
     icon: Smartphone,
-    description: "📱 You will be redirected to OneMoney to complete payment",
+    description: "💳 Pay with InnBucks",
   },
   {
-    id: "telecash",
-    name: "Telecash",
-    icon: Smartphone,
-    description: "📱 You will be redirected to Telecash to complete payment",
-  },
-  {
-    id: "zipit",
-    name: "ZIPIT",
+    id: "zimswitch",
+    name: "ZimSwitch / ZIPIT",
     icon: CreditCard,
-    description: "🏦 You will receive bank transfer instructions",
+    description: "🏦 Pay with any ZimSwitch debit card or ZIPIT",
   },
   {
     id: "usd_bank",
-    name: "USD Bank Transfer",
+    name: "Internet/Mobile Banking",
     icon: CreditCard,
-    description: "🏦 You will receive bank account details for USD transfer",
+    description: "🌐 Transfer from your bank's mobile or internet banking",
   },
   {
-    id: "card",
-    name: "Debit/Credit Card",
-    icon: CreditCard,
-    description: "💳 You will be redirected to secure card payment page",
+    id: "cash",
+    name: "Cash Deposit",
+    icon: DollarSign,
+    description: "💵 Hand cash to an authorized Agrivus representative",
   },
 ];
 
 export default function WalletScreen() {
   const router = useRouter();
-  const searchParams = useLocalSearchParams<{ payment?: string }>();
+  const searchParams = useLocalSearchParams<{
+    payment?: string;
+    action?: string;
+  }>();
 
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -115,7 +111,11 @@ export default function WalletScreen() {
     } else if (paymentStatus === "cancelled") {
       Alert.alert("Cancelled", "⚠️ Payment was cancelled.");
     }
-  }, [searchParams.payment]);
+
+    if (searchParams.action === "deposit") {
+      setShowDepositModal(true);
+    }
+  }, [searchParams.payment, searchParams.action]);
 
   const loadWalletData = async () => {
     try {
@@ -168,31 +168,35 @@ export default function WalletScreen() {
       });
 
       if (response.success) {
-        const { paymentUrl, isMockPayment, paymentId, instructions } =
-          response.data;
+        const {
+          paymentId,
+          reference,
+          amount: confirmedAmount,
+          paymentMethod: confirmedMethod,
+          paymentUrl,
+          instructions,
+          isMockPayment,
+        } = response.data;
 
         // Close modal
         setShowDepositModal(false);
         setDepositAmount("");
 
-        if (isMockPayment && paymentId) {
-          // Navigate to mock payment screen
-          router.push({
-            pathname: "/payment/[paymentId]",
-            params: { paymentId },
-          });
-        } else if (paymentUrl) {
-          // Open external payment gateway (Paynow)
-          const canOpen = await Linking.canOpenURL(paymentUrl);
-          if (canOpen) {
-            await Linking.openURL(paymentUrl);
-          } else {
-            Alert.alert("Error", "Cannot open payment page. Please try again.");
-          }
-        } else if (instructions) {
-          // Manual payment (ZIPIT/Bank Transfer)
-          showManualPaymentInstructions(response.data);
-        }
+        // Every deposit — mock or real, mobile-money instructions, browser
+        // checkout, or cash — is handled by the payment screen so the
+        // status-polling/success/failure flow is consistent for all of them.
+        router.push({
+          pathname: "/payment/[paymentId]",
+          params: {
+            paymentId,
+            reference: reference || "",
+            amount: String(confirmedAmount ?? amount),
+            paymentMethod: confirmedMethod || paymentMethod,
+            paymentUrl: paymentUrl || "",
+            instructions: instructions || "",
+            isMockPayment: String(!!isMockPayment),
+          },
+        });
       }
     } catch (error: any) {
       console.error("Deposit initiation failed:", error);
@@ -203,14 +207,6 @@ export default function WalletScreen() {
     } finally {
       setProcessing(false);
     }
-  };
-
-  const showManualPaymentInstructions = (paymentData: any) => {
-    Alert.alert(
-      "Payment Instructions",
-      `${paymentData.instructions}\n\nReference: ${paymentData.reference}\n\nPlease complete the payment and it will be credited within 24 hours.`,
-      [{ text: "OK" }],
-    );
   };
 
   const handleWithdraw = async () => {
@@ -519,17 +515,6 @@ export default function WalletScreen() {
                 </Text>
               </View>
 
-              {/* Development Mode Warning */}
-              <View style={styles.devWarning}>
-                <Text style={styles.devWarningText}>
-                  ℹ️{" "}
-                  <Text style={styles.devWarningBold}>Development Mode:</Text>{" "}
-                  This is currently using a mock payment gateway. Real payment
-                  processing will be enabled once Paynow integration is
-                  activated.
-                </Text>
-              </View>
-
               <View style={styles.modalButtons}>
                 <NeumorphicButton
                   title="Cancel"
@@ -778,7 +763,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
     padding: spacing.xl,
-    maxHeight: "80%",
+    paddingBottom: 40, // Added clearance for the device safe area
+    maxHeight: "100%",
   },
   modalTitle: {
     ...typography.h4,
@@ -874,22 +860,6 @@ const styles = StyleSheet.create({
   paymentMethodInfoText: {
     ...typography.bodySmall,
     color: neumorphicColors.primary[700],
-  },
-  devWarning: {
-    marginTop: spacing.md,
-    padding: spacing.md,
-    backgroundColor: neumorphicColors.semantic.warning + "15",
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: neumorphicColors.semantic.warning + "30",
-  },
-  devWarningText: {
-    ...typography.caption,
-    color: neumorphicColors.text.secondary,
-  },
-  devWarningBold: {
-    fontWeight: "700",
-    color: neumorphicColors.semantic.warning,
   },
   paymentHistoryContainer: {
     paddingHorizontal: spacing.lg,

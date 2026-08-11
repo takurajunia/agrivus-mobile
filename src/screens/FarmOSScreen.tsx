@@ -15,7 +15,16 @@ import {
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
-import { ChevronDown, ClipboardList, Plus, X } from "lucide-react-native";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ClipboardList,
+  Clock,
+  Plus,
+  Sprout,
+  X,
+} from "lucide-react-native";
 import Svg, {
   Circle,
   G,
@@ -77,10 +86,17 @@ import type {
   FarmOSAnalyticsData,
   FarmOSSeasonalPredictions,
   FarmOSSubscription,
+  FarmOSTrackerEntry,
   FarmOSWeeklyReport,
   FarmOSWorker,
 } from "../types";
 import { neumorphicColors, spacing, borderRadius } from "../theme/neumorphic";
+import {
+  formatHarvestCountdown,
+  formatHarvestDate,
+  getHarvestUrgency,
+  type HarvestUrgency,
+} from "../utils/cropTracker";
 
 type FarmOSWorkerWithDob = FarmOSWorker & {
   date_of_birth?: string | null;
@@ -337,6 +353,28 @@ const CHART_COLORS = {
   expected: "#a7f3d0",
   actual: "#2d6a4f",
   labour: "#8b5cf6",
+};
+
+const TRACKER_STATUS_VARIANT: Record<
+  string,
+  "info" | "warning" | "success" | "neutral"
+> = {
+  upcoming: "info",
+  harvesting: "warning",
+  harvested: "success",
+  cancelled: "neutral",
+};
+
+const TRACKER_URGENCY_COLOR: Record<HarvestUrgency, string> = {
+  overdue: neumorphicColors.semantic.error,
+  dueSoon: neumorphicColors.semantic.warning,
+  onTrack: neumorphicColors.primary[600],
+  harvested: neumorphicColors.text.tertiary,
+};
+
+const TRACKER_URGENCY_CARD_BG: Partial<Record<HarvestUrgency, string>> = {
+  overdue: neumorphicColors.badge.error.bg,
+  dueSoon: neumorphicColors.badge.warning.bg,
 };
 
 const CHART_PALETTE = [
@@ -662,6 +700,15 @@ export default function FarmOSScreen() {
     [],
   );
   const [plantingNow, setPlantingNow] = useState<FarmOSCalendarEntry[]>([]);
+  const [trackerEntries, setTrackerEntries] = useState<FarmOSTrackerEntry[]>(
+    [],
+  );
+  const [trackerUpcoming, setTrackerUpcoming] = useState<FarmOSTrackerEntry[]>(
+    [],
+  );
+  const [trackerOverdue, setTrackerOverdue] = useState<FarmOSTrackerEntry[]>(
+    [],
+  );
   const [weeklyReport, setWeeklyReport] = useState<FarmOSWeeklyReport | null>(
     null,
   );
@@ -936,6 +983,12 @@ export default function FarmOSScreen() {
     if (cache.calendar) {
       setCalendarEntries(cache.calendar.calendar ?? []);
       setPlantingNow(cache.calendar.plantingNow ?? []);
+    }
+
+    if (cache.tracker) {
+      setTrackerEntries(cache.tracker.entries ?? []);
+      setTrackerUpcoming(cache.tracker.upcoming ?? []);
+      setTrackerOverdue(cache.tracker.overdue ?? []);
     }
 
     setIfDefined(cache.weeklyReport, setWeeklyReport);
@@ -1226,6 +1279,24 @@ export default function FarmOSScreen() {
         calendar: {
           calendar: response.data.calendar || [],
           plantingNow: response.data.plantingNow || [],
+        },
+      });
+    }
+  }, [guardOffline]);
+
+  const loadTracker = useCallback(async () => {
+    if (await guardOffline()) return;
+    const response = await farmOSService.getMyTrackerEntries();
+    if (response.success) {
+      setTrackerEntries(response.data.entries || []);
+      setTrackerUpcoming(response.data.upcoming || []);
+      setTrackerOverdue(response.data.overdue || []);
+      await updateFarmOSCache({
+        tracker: {
+          entries: response.data.entries || [],
+          upcoming: response.data.upcoming || [],
+          overdue: response.data.overdue || [],
+          total: response.data.total || 0,
         },
       });
     }
@@ -1585,7 +1656,7 @@ export default function FarmOSScreen() {
         await loadMarket();
       }
       if (activeSection === "calendar") {
-        await loadCalendar();
+        await Promise.all([loadCalendar(), loadTracker()]);
       }
       if (activeSection === "analytics") {
         await loadAnalytics();
@@ -1617,6 +1688,7 @@ export default function FarmOSScreen() {
     canAccess,
     isOnline,
     loadCalendar,
+    loadTracker,
     loadAnalytics,
     loadCropActivities,
     loadCropPlans,
@@ -4580,6 +4652,135 @@ export default function FarmOSScreen() {
             {activeSection === "calendar" && (
               <View style={styles.section}>
                 <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitle}>
+                    Admin-Assigned Crop Schedule
+                  </Text>
+                </View>
+                <Text style={styles.cardMeta}>
+                  {`Crops tracked by Agrivus team · ${trackerEntries.length} ${
+                    trackerEntries.length === 1 ? "entry" : "entries"
+                  }`}
+                </Text>
+
+                {(trackerOverdue.length > 0 || trackerUpcoming.length > 0) && (
+                  <View style={styles.trackerBadgeRow}>
+                    {trackerOverdue.length > 0 && (
+                      <NeumorphicBadge
+                        label={`${trackerOverdue.length} overdue`}
+                        size="small"
+                        variant="error"
+                      />
+                    )}
+                    {trackerUpcoming.length > 0 && (
+                      <NeumorphicBadge
+                        label={`${trackerUpcoming.length} due soon`}
+                        size="small"
+                        variant="warning"
+                      />
+                    )}
+                  </View>
+                )}
+
+                {trackerEntries.length === 0 ? (
+                  <NeumorphicCard style={styles.emptyCard}>
+                    <ClipboardList
+                      size={28}
+                      color={neumorphicColors.text.tertiary}
+                    />
+                    <Text style={styles.emptyText}>
+                      No admin-assigned crops yet.
+                    </Text>
+                  </NeumorphicCard>
+                ) : (
+                  trackerEntries.map((entry) => {
+                    const urgency = getHarvestUrgency(
+                      entry.days_until_harvest,
+                      entry.status,
+                    );
+                    const UrgencyIcon =
+                      urgency === "overdue"
+                        ? AlertTriangle
+                        : urgency === "dueSoon"
+                          ? Clock
+                          : urgency === "harvested"
+                            ? CheckCircle2
+                            : Sprout;
+                    return (
+                      <NeumorphicCard
+                        key={entry.id}
+                        style={[
+                          styles.dataCard,
+                          TRACKER_URGENCY_CARD_BG[urgency]
+                            ? {
+                                backgroundColor:
+                                  TRACKER_URGENCY_CARD_BG[urgency],
+                              }
+                            : undefined,
+                        ]}
+                      >
+                        <View style={styles.cardHeader}>
+                          <View style={styles.trackerTitleRow}>
+                            <View
+                              style={[
+                                styles.trackerIconChip,
+                                {
+                                  backgroundColor:
+                                    TRACKER_URGENCY_COLOR[urgency],
+                                },
+                              ]}
+                            >
+                              <UrgencyIcon
+                                size={14}
+                                color={neumorphicColors.text.inverse}
+                              />
+                            </View>
+                            <Text style={styles.cardTitle}>
+                              {entry.crop_category}
+                            </Text>
+                          </View>
+                          <NeumorphicBadge
+                            label={entry.status}
+                            size="small"
+                            variant={
+                              TRACKER_STATUS_VARIANT[entry.status] ??
+                              "neutral"
+                            }
+                          />
+                        </View>
+                        {(entry.quantity || entry.unit) && (
+                          <Text style={styles.cardMeta}>
+                            {`${entry.quantity ?? ""} ${entry.unit ?? ""}`.trim()}
+                          </Text>
+                        )}
+                        <Text
+                          style={[
+                            styles.cardMeta,
+                            { color: TRACKER_URGENCY_COLOR[urgency] },
+                          ]}
+                        >
+                          {`${formatHarvestDate(entry.harvest_date)} · ${formatHarvestCountdown(
+                            entry.days_until_harvest,
+                            entry.status,
+                          )}`}
+                        </Text>
+                        {!!entry.created_by_name && (
+                          <Text style={styles.cardMeta}>
+                            {`Assigned by ${entry.created_by_name}`}
+                          </Text>
+                        )}
+                        {!!entry.notes && (
+                          <Text style={styles.cardMeta}>{entry.notes}</Text>
+                        )}
+                      </NeumorphicCard>
+                    );
+                  })
+                )}
+              </View>
+            )}
+
+            {activeSection === "calendar" && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>Cropping Calendar</Text>
                   <NeumorphicButton
                     title="Add Entry"
@@ -6797,6 +6998,23 @@ const styles = StyleSheet.create({
   dataCard: {
     marginBottom: spacing.sm,
   },
+  trackerBadgeRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  trackerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    flexShrink: 1,
+  },
+  trackerIconChip: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -6985,6 +7203,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     paddingBottom: spacing.md,
+    maxHeight: "100%",
   },
   modalHeader: {
     flexDirection: "row",

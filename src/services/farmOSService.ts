@@ -29,6 +29,7 @@ import type {
   FarmOSMarketInsights,
   FarmOSAnalyticsData,
   FarmOSSeasonalPredictions,
+  FarmOSTrackerEntry,
 } from "../types";
 
 type SubscriptionResponse = {
@@ -100,6 +101,16 @@ type CalendarResponse = {
     calendar: FarmOSCalendarEntry[];
     plantingNow: FarmOSCalendarEntry[];
     currentMonth: number;
+  };
+};
+
+type TrackerResponse = {
+  success: boolean;
+  data: {
+    entries: FarmOSTrackerEntry[];
+    upcoming: FarmOSTrackerEntry[];
+    overdue: FarmOSTrackerEntry[];
+    total: number;
   };
 };
 
@@ -483,6 +494,11 @@ const farmOSService = {
 
   async createCalendarEntry(payload: CalendarPayload) {
     const response = await api.post("/farm-os/calendar", payload);
+    return response.data;
+  },
+
+  async getMyTrackerEntries(): Promise<TrackerResponse> {
+    const response = await api.get("/farm-os/tracker");
     return response.data;
   },
 

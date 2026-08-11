@@ -26,6 +26,7 @@ import {
 import { auctionsService } from "../services/auctionsService";
 import { listingsService } from "../services/listingsService";
 import type { Listing } from "../types";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 import LoadingSpinner from "../components/LoadingSpinner";
 import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
@@ -188,7 +189,9 @@ export default function CreateAuctionScreen() {
           <NeumorphicCard style={styles.listingCard}>
             <Text style={styles.sectionTitle}>Selected Listing</Text>
             <View style={styles.listingInfo}>
-              <Text style={styles.listingCrop}>{listing.cropType}</Text>
+              <Text style={styles.listingCrop}>
+                {getListingDisplayTitle(listing.cropType, listing.cropName)}
+              </Text>
               <Text style={styles.listingDetails}>
                 {listing.quantity} {listing.unit} • {listing.location}
               </Text>
@@ -304,7 +307,9 @@ export default function CreateAuctionScreen() {
               <Text style={styles.summaryTitle}>Auction Summary</Text>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Item</Text>
-                <Text style={styles.summaryValue}>{listing.cropType}</Text>
+                <Text style={styles.summaryValue}>
+                  {getListingDisplayTitle(listing.cropType, listing.cropName)}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Quantity</Text>

@@ -34,6 +34,7 @@ import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
 import NeumorphicIconButton from "../components/neumorphic/NeumorphicIconButton";
 import NeumorphicBadge from "../components/neumorphic/NeumorphicBadge";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 
 export default function AuctionDetailScreen() {
   const router = useRouter();
@@ -186,13 +187,10 @@ export default function AuctionDetailScreen() {
 
   const { auction, listing, bids } = auctionData;
   const isActive = auction.status === "active" && timeRemaining !== "Ended";
-  const cropType = listing?.cropType?.trim();
-  const cropName = listing?.cropName?.trim();
-  const listingDisplayName = !cropType
-    ? cropName || "Auction"
-    : !cropName || cropType.toLowerCase() === cropName.toLowerCase()
-      ? cropType
-      : `${cropType} (${cropName})`;
+  const listingDisplayName = getListingDisplayTitle(
+    listing?.cropType,
+    listing?.cropName,
+  );
 
   return (
     <NeumorphicScreen variant="detail" showLeaves={false}>

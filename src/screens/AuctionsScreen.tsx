@@ -26,6 +26,7 @@ import {
   NeumorphicButton,
 } from "../components/neumorphic";
 import OptimizedImage from "../components/OptimizedImage";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 
 interface AuctionItem {
   auction: {
@@ -96,20 +97,8 @@ export default function AuctionsScreen() {
     return `${minutes}m left`;
   };
 
-  const getListingDisplayName = (listing: AuctionItem["listing"]) => {
-    const cropType = listing.cropType?.trim();
-    const cropName = listing.cropName?.trim();
-
-    if (!cropType) {
-      return cropName || "Crop";
-    }
-
-    if (!cropName || cropType.toLowerCase() === cropName.toLowerCase()) {
-      return cropType;
-    }
-
-    return `${cropType} (${cropName})`;
-  };
+  const getListingDisplayName = (listing: AuctionItem["listing"]) =>
+    getListingDisplayTitle(listing.cropType, listing.cropName);
 
   const getListingImage = (listing: AuctionItem["listing"]) =>
     listing.images?.find((image) => image.trim().length > 0);

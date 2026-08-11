@@ -33,16 +33,8 @@ const notificationsService = {
     success: boolean;
     data: { unreadCount: number };
   }> {
-    const response = await api.get("/notifications", {
-      params: { unreadOnly: true, limit: 1, offset: 0 },
-    });
-
-    return {
-      success: !!response.data?.success,
-      data: {
-        unreadCount: response.data?.data?.unreadCount || 0,
-      },
-    };
+    const response = await api.get("/notifications/unread-count");
+    return response.data;
   },
 
   // Mark a single notification as read

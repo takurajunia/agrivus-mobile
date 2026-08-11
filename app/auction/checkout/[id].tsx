@@ -40,6 +40,7 @@ import {
 import { auctionsService } from "../../../src/services/auctionsService";
 import api from "../../../src/services/api";
 import { useAuth } from "../../../src/contexts/AuthContext";
+import { getListingDisplayTitle } from "../../../src/utils/listingDisplay";
 
 interface Transporter {
   id: string;
@@ -333,9 +334,12 @@ export default function AuctionCheckoutScreen() {
             <Package size={40} color={neumorphicColors.primary[600]} />
             <View style={styles.productDetails}>
               <Text style={styles.productName}>
-                {listing?.cropType ||
-                  auction?.listing?.cropType ||
-                  "Agricultural Product"}
+                {listing?.cropType || auction?.listing?.cropType
+                  ? getListingDisplayTitle(
+                      listing?.cropType || auction?.listing?.cropType,
+                      listing?.cropName || auction?.listing?.cropName,
+                    )
+                  : "Agricultural Product"}
               </Text>
               <Text style={styles.productQuantity}>
                 {listing?.quantity || auction?.listing?.quantity}{" "}

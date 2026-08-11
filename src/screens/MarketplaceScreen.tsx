@@ -20,6 +20,7 @@ import {
 } from "../theme/neumorphic";
 import { listingsService } from "../services/listingsService";
 import type { ListingWithFarmer, ListingFilters } from "../types";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 import LoadingSpinner from "../components/LoadingSpinner";
 import OptimizedImage from "../components/OptimizedImage";
 import {
@@ -52,6 +53,7 @@ const SORT_OPTIONS = [
 ];
 
 const BOOST_BANNER_HEIGHT = 58;
+const SEARCH_DEBOUNCE_MS = 350;
 
 type MarketplaceScreenMode = "default" | "guest";
 
@@ -180,24 +182,33 @@ export default function MarketplaceScreen({
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
-  const getListingDisplayName = (listing: ListingWithFarmer["listing"]) => {
-    const cropType = listing.cropType?.trim();
-    const cropName = listing.cropName?.trim();
+  // Local buffer for the search box so typing feels instant, while the
+  // actual filter change (and the API request it triggers) is debounced.
+  const [searchInput, setSearchInput] = useState(filters.search || "");
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
-    if (!cropType) {
-      return cropName || "Crop";
-    }
+  useEffect(() => {
+    setSearchInput(filters.search || "");
+  }, [filters.search]);
 
-    if (!cropName) {
-      return cropType;
-    }
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
 
-    if (cropType.toLowerCase() === cropName.toLowerCase()) {
-      return cropType;
-    }
-
-    return `${cropType} (${cropName})`;
+  const handleSearchInputChange = (text: string) => {
+    setSearchInput(text);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      handleFilterChange("search", text);
+    }, SEARCH_DEBOUNCE_MS);
   };
+
+  const getListingDisplayName = (listing: ListingWithFarmer["listing"]) =>
+    getListingDisplayTitle(listing.cropType, listing.cropName);
 
   const renderListingCard = ({ item }: { item: ListingWithFarmer }) => {
     const { listing, farmer } = item;
@@ -296,8 +307,8 @@ export default function MarketplaceScreen({
       <View style={styles.searchContainer}>
         <NeumorphicSearchBar
           placeholder="Search products..."
-          value={filters.search || ""}
-          onChangeText={(text) => handleFilterChange("search", text)}
+          value={searchInput}
+          onChangeText={handleSearchInputChange}
           style={styles.searchBar}
         />
         <NeumorphicIconButton

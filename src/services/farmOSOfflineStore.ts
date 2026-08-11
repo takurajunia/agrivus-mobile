@@ -28,6 +28,7 @@ import type {
   FarmOSRevenueSummary,
   FarmOSSeasonalPredictions,
   FarmOSSubscription,
+  FarmOSTrackerEntry,
   FarmOSWeeklyReport,
   FarmOSWorker,
 } from "../types";
@@ -63,6 +64,12 @@ export type FarmOSCache = {
   calendar?: {
     calendar: FarmOSCalendarEntry[];
     plantingNow: FarmOSCalendarEntry[];
+  };
+  tracker?: {
+    entries: FarmOSTrackerEntry[];
+    upcoming: FarmOSTrackerEntry[];
+    overdue: FarmOSTrackerEntry[];
+    total: number;
   };
   weeklyReport?: FarmOSWeeklyReport | null;
   monthlyReport?: FarmOSMonthlyReport | null;

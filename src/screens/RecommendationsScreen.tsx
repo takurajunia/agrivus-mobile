@@ -75,19 +75,10 @@ export default function RecommendationsScreen() {
   };
 
   const handleGenerateRecommendations = async () => {
-    try {
-      setGenerating(true);
-      await recommendationsService.generateRecommendations();
-      await loadData();
-      Alert.alert("Success", "✅ New recommendations generated!");
-    } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Failed to generate recommendations",
-      );
-    } finally {
-      setGenerating(false);
-    }
+    Alert.alert(
+      "Coming Soon",
+      "⏳ This AI generation feature is currently under development and will be available in a future update.",
+    );
   };
 
   const handleAccept = async (id: string) => {

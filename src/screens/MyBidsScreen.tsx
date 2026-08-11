@@ -28,6 +28,7 @@ import NeumorphicScreen from "../components/neumorphic/NeumorphicScreen";
 import NeumorphicCard from "../components/neumorphic/NeumorphicCard";
 import NeumorphicButton from "../components/neumorphic/NeumorphicButton";
 import NeumorphicBadge from "../components/neumorphic/NeumorphicBadge";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 
 interface BidWithAuction extends Bid {
   auction?: {
@@ -37,6 +38,7 @@ interface BidWithAuction extends Bid {
     currentPrice: string;
     listing?: {
       cropType: string;
+      cropName?: string | null;
       quantity: number;
       unit: string;
     };
@@ -277,7 +279,12 @@ export default function MyBidsScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.auctionInfo}>
                     <Text style={styles.cropType}>
-                      {latestBid.auction?.listing?.cropType || "Auction"}
+                      {latestBid.auction?.listing?.cropType
+                        ? getListingDisplayTitle(
+                            latestBid.auction.listing.cropType,
+                            latestBid.auction.listing.cropName,
+                          )
+                        : "Auction"}
                     </Text>
                     <Text style={styles.quantity}>
                       {latestBid.auction?.listing?.quantity || 0}{" "}

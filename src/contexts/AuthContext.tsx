@@ -21,6 +21,10 @@ import {
   updateProfile as updateProfileRequest,
 } from "../services/authService";
 import { normalizeAuthToken, onAuthExpired } from "../services/api";
+import {
+  setupPushNotifications,
+  teardownPushNotifications,
+} from "../services/pushNotificationsService";
 
 type JwtPayload = {
   exp?: number | string;
@@ -110,6 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             setToken(storedToken);
             setUser(JSON.parse(storedUser));
+            void setupPushNotifications();
           } catch {
             await AsyncStorage.multiRemove(["token", "user"]);
           }
@@ -156,6 +161,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await AsyncStorage.setItem("token", normalizedToken);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
         console.log("Auth data saved to AsyncStorage");
+        void setupPushNotifications();
       } else {
         console.log("Login response success was false");
         throw new Error(response.message || "Login failed");
@@ -185,6 +191,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         await AsyncStorage.setItem("token", normalizedToken);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
+        void setupPushNotifications();
       } else {
         // Handle case where success is false but no exception was thrown
         throw new Error(response.message || "Registration failed");
@@ -199,6 +206,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const handleLogout = async () => {
+    // Unregister the push token while the auth header is still valid.
+    await teardownPushNotifications().catch(() => {});
+
     // Clear local state first to prevent navigation issues
     setUser(null);
     setToken(null);

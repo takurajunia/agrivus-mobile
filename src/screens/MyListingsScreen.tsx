@@ -32,6 +32,7 @@ import {
 } from "../components/neumorphic";
 import { listingsService } from "../services/listingsService";
 import type { Listing } from "../types";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 import LoadingSpinner from "../components/LoadingSpinner";
 import OptimizedImage from "../components/OptimizedImage";
 
@@ -210,7 +211,9 @@ export default function MyListingsScreen() {
 
                 {/* Info */}
                 <View style={styles.infoContainer}>
-                  <Text style={styles.cropType}>{listing.cropType}</Text>
+                  <Text style={styles.cropType}>
+                    {getListingDisplayTitle(listing.cropType, listing.cropName)}
+                  </Text>
                   <Text style={styles.quantity}>
                     {listing.quantity} {listing.unit}
                   </Text>

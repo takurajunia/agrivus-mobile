@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import * as Notifications from "expo-notifications";
 import {
   Stack,
   useRouter,
@@ -12,6 +13,7 @@ import { useFrameworkReady } from "../hooks/useFrameworkReady";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ChatProvider } from "../src/contexts/ChatContext";
 import { NotificationsProvider } from "../src/contexts/NotificationsContext";
+import { getNotificationRoute } from "../src/utils/notificationRouting";
 
 // Separate component to handle auth-based navigation
 function AuthNavigator() {
@@ -111,6 +113,41 @@ function AuthNavigator() {
     lastRedirectRef.current = null;
   }, [isAuthenticated, segments, loading, navigationState?.key]);
 
+  useEffect(() => {
+    const navigateFromNotification = (
+      response: Notifications.NotificationResponse,
+    ) => {
+      const content = response.notification.request.content;
+      if (content.data?.type === "agri_trivia") {
+        // Ambient trivia notifications just open the app as-is —
+        // no deep link to a specific screen.
+        return;
+      }
+      const route = getNotificationRoute(
+        String(content.data?.type ?? ""),
+        content.data,
+        user?.role,
+      );
+      router.push(route);
+    };
+
+    // Handle a tap that launched the app from a killed state.
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        navigateFromNotification(response);
+      }
+    });
+
+    // Handle a tap while the app is running (foreground or background).
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      navigateFromNotification,
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router, user?.role]);
+
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -153,6 +190,7 @@ function AuthNavigator() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="payment-history" options={{ headerShown: false }} />
+        <Stack.Screen name="trivia" options={{ headerShown: false }} />
         <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
         <Stack.Screen name="delete-account" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />

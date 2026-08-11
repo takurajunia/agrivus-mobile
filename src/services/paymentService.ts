@@ -1,14 +1,79 @@
 import api from "./api";
+import type { PaymentMethodType } from "../types";
+
+export interface PaymentMethodInfo {
+  id: PaymentMethodType;
+  label: string;
+  description: string;
+  icon: string; // emoji
+  requiresPhone: boolean;
+  available: boolean; // mirrors what's enabled on the Paynow merchant account
+}
+
+/** All payment methods supported by the platform, kept in sync with the
+ *  backend's PaymentMethod enum and the web app's PAYMENT_METHODS list. */
+export const PAYMENT_METHODS: PaymentMethodInfo[] = [
+  {
+    id: "ecocash",
+    label: "EcoCash",
+    description: "Pay with your EcoCash mobile wallet",
+    icon: "📱",
+    requiresPhone: true,
+    available: true,
+  },
+  {
+    id: "innbucks",
+    label: "InnBucks",
+    description: "Pay with InnBucks",
+    icon: "💳",
+    requiresPhone: true,
+    available: true,
+  },
+  {
+    id: "zimswitch",
+    label: "ZimSwitch / ZIPIT",
+    description: "Pay with any ZimSwitch debit card or ZIPIT",
+    icon: "🏦",
+    requiresPhone: false,
+    available: true,
+  },
+  {
+    id: "usd_bank",
+    label: "Internet/Mobile Banking",
+    description: "Transfer from your bank's mobile or internet banking",
+    icon: "🌐",
+    requiresPhone: false,
+    available: true,
+  },
+  {
+    id: "onemoney",
+    label: "OneMoney",
+    description: "Pay with your OneMoney mobile wallet",
+    icon: "📲",
+    requiresPhone: true,
+    available: false,
+  },
+  {
+    id: "telecash",
+    label: "Telecash",
+    description: "Pay with your Telecash mobile wallet",
+    icon: "📲",
+    requiresPhone: true,
+    available: false,
+  },
+  {
+    id: "cash",
+    label: "Cash Deposit",
+    description: "Hand cash to an authorized Agrivus representative",
+    icon: "💵",
+    requiresPhone: false,
+    available: true,
+  },
+];
 
 export interface PaymentInitiationRequest {
   amount: number;
-  paymentMethod:
-    | "ecocash"
-    | "onemoney"
-    | "telecash"
-    | "zipit"
-    | "usd_bank"
-    | "card";
+  paymentMethod: PaymentMethodType;
 }
 
 export interface PaymentInitiationResponse {
@@ -36,6 +101,8 @@ export interface PaymentStatus {
   paidAmount?: number;
   completedAt?: string;
   paymentMethod?: string;
+  instructions?: string;
+  paymentUrl?: string;
 }
 
 export interface PaymentHistoryItem {
@@ -96,7 +163,7 @@ class PaymentService {
   async pollPaymentStatus(
     paymentId: string,
     onStatusChange?: (status: PaymentStatus) => void,
-    maxAttempts: number = 60, // 60 attempts = 5 minutes with 5-second intervals
+    maxAttempts: number = 72, // 72 attempts = 6 minutes with 5-second intervals
   ): Promise<PaymentStatus> {
     let attempts = 0;
 
@@ -140,28 +207,14 @@ class PaymentService {
 
   // Format payment method for display
   formatPaymentMethod(method: string): string {
-    const methods: Record<string, string> = {
-      ecocash: "EcoCash",
-      onemoney: "OneMoney",
-      telecash: "Telecash",
-      zipit: "ZIPIT",
-      usd_bank: "USD Bank Transfer",
-      card: "Debit/Credit Card",
-    };
-    return methods[method] || method.toUpperCase();
+    const found = PAYMENT_METHODS.find((m) => m.id === method);
+    return found?.label || method.toUpperCase();
   }
 
   // Get payment method icon (emoji)
   getPaymentMethodIcon(method: string): string {
-    const icons: Record<string, string> = {
-      ecocash: "💳",
-      onemoney: "💳",
-      telecash: "💳",
-      zipit: "🏦",
-      usd_bank: "🏦",
-      card: "💳",
-    };
-    return icons[method] || "💰";
+    const found = PAYMENT_METHODS.find((m) => m.id === method);
+    return found?.icon || "💰";
   }
 }
 

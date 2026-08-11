@@ -8,12 +8,12 @@ import {
   Dimensions,
 } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Home, Store, Wallet, Receipt } from "lucide-react-native";
+import { Home, Store, Wallet, Leaf } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
 // Define exactly which routes should be visible
-const VISIBLE_ROUTES = ["index", "marketplace", "wallet", "orders"];
+const VISIBLE_ROUTES = ["index", "marketplace", "wallet", "farm-os"];
 
 export const NeumorphicTabBar = ({
   state,
@@ -56,7 +56,7 @@ export const NeumorphicTabBar = ({
           if (route.name === "index") IconComponent = Home;
           if (route.name === "marketplace") IconComponent = Store;
           if (route.name === "wallet") IconComponent = Wallet;
-          if (route.name === "orders") IconComponent = Receipt;
+          if (route.name === "farm-os") IconComponent = Leaf;
 
           return (
             <TouchableOpacity

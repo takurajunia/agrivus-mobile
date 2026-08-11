@@ -40,6 +40,7 @@ import ordersService from "../../src/services/ordersService";
 import { buildOrderFailureMessage } from "../../src/services/orderErrorMessage";
 import { useAuth } from "../../src/contexts/AuthContext";
 import type { Listing } from "../../src/types";
+import { getListingDisplayTitle } from "../../src/utils/listingDisplay";
 
 interface ListingData {
   listing: Listing;
@@ -284,7 +285,10 @@ export default function CreateOrderScreen() {
           <View style={styles.productInfo}>
             <Package size={40} color={neumorphicColors.primary[600]} />
             <View style={styles.productDetails}>
-              <Text style={styles.productName}>{listing?.cropType}</Text>
+              <Text style={styles.productName}>
+                {listing &&
+                  getListingDisplayTitle(listing.cropType, listing.cropName)}
+              </Text>
               <Text style={styles.productPrice}>
                 {formatCurrency(parseFloat(listing?.pricePerUnit || "0"))} /{" "}
                 {listing?.unit}

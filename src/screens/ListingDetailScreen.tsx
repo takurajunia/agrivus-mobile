@@ -20,6 +20,7 @@ import {
 } from "../theme/neumorphic";
 import { listingsService } from "../services/listingsService";
 import type { ListingWithFarmer } from "../types";
+import { getListingDisplayTitle } from "../utils/listingDisplay";
 import LoadingSpinner from "../components/LoadingSpinner";
 import OptimizedImage from "../components/OptimizedImage";
 import {
@@ -34,7 +35,7 @@ export default function ListingDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [listingData, setListingData] = useState<ListingWithFarmer | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -127,7 +128,7 @@ export default function ListingDetailScreen() {
           onPress={() => router.back()}
           variant="ghost"
         />
-        <Text style={styles.headerTitle}>{listing.cropType}</Text>
+        <Text style={styles.headerTitle}>{getListingDisplayTitle(listing.cropType, listing.cropName)}</Text>
         <View style={{ width: 48 }} />
       </View>
 
@@ -170,10 +171,7 @@ export default function ListingDetailScreen() {
                   shadowLevel={1}
                   animated={false}
                 >
-                  <OptimizedImage
-                    uri={image}
-                    style={styles.thumbnailImage}
-                  />
+                  <OptimizedImage uri={image} style={styles.thumbnailImage} />
                 </NeumorphicCard>
               ))}
             </ScrollView>
@@ -183,7 +181,7 @@ export default function ListingDetailScreen() {
         {/* Listing Info */}
         <View style={styles.infoSection}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{listing.cropType}</Text>
+            <Text style={styles.title}>{getListingDisplayTitle(listing.cropType, listing.cropName)}</Text>
             <NeumorphicBadge
               label={listing.status.toUpperCase()}
               variant="success"
@@ -503,14 +501,16 @@ const styles = StyleSheet.create({
     height: spacing["2xl"],
   },
   bottomActions: {
-    flexDirection: "row",
-    padding: spacing.lg,
+    flexDirection: "column",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: 40, // Added clearance for the device safe area
     backgroundColor: neumorphicColors.base.card,
     borderTopWidth: 1,
     borderTopColor: neumorphicColors.base.shadowDark,
     gap: spacing.md,
   },
   actionButton: {
-    flex: 1,
+    width: "100%",
   },
 });

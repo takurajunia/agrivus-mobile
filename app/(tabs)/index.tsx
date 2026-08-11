@@ -32,6 +32,9 @@ import {
   BarChart3,
   Settings,
   TrendingUp,
+  AlertTriangle,
+  Clock,
+  Lightbulb,
 } from "lucide-react-native";
 
 // Import our textured leaf background
@@ -43,7 +46,16 @@ import { useAuth } from "../../src/contexts/AuthContext";
 import notificationsService from "../../src/services/notificationsService";
 import chatService from "../../src/services/chatService";
 import adminService, { AdminStatistics } from "../../src/services/adminService";
-import type { Notification } from "../../src/types";
+import listingsService from "../../src/services/listingsService";
+import farmOSService from "../../src/services/farmOSService";
+import agriTriviaService from "../../src/services/agriTriviaService";
+import type { TriviaItem } from "../../src/services/agriTriviaService";
+import {
+  formatHarvestCountdown,
+  formatHarvestDate,
+} from "../../src/utils/cropTracker";
+import { getNotificationRoute } from "../../src/utils/notificationRouting";
+import type { FarmOSTrackerEntry, Notification } from "../../src/types";
 
 const { width } = Dimensions.get("window");
 
@@ -150,6 +162,14 @@ export default function HomeScreen() {
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [adminStats, setAdminStats] = useState<AdminStatistics | null>(null);
   const [adminStatsLoading, setAdminStatsLoading] = useState(false);
+  const [myListingsCount, setMyListingsCount] = useState<number | null>(null);
+  const [harvestOverdue, setHarvestOverdue] = useState<FarmOSTrackerEntry[]>(
+    [],
+  );
+  const [harvestUpcoming, setHarvestUpcoming] = useState<FarmOSTrackerEntry[]>(
+    [],
+  );
+  const [latestTrivia, setLatestTrivia] = useState<TriviaItem | null>(null);
 
   const parseNumericValue = (value: number | string | undefined): number => {
     if (typeof value === "number") return Number.isFinite(value) ? value : 0;
@@ -221,10 +241,60 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const fetchMyListingsCount = useCallback(async () => {
+    if (user?.role !== "farmer") return;
+    try {
+      const response = await listingsService.getMyListings();
+      if (response.success && Array.isArray(response.data)) {
+        setMyListingsCount(response.data.length);
+      }
+    } catch (error) {
+      console.error("Error fetching my listings count:", error);
+    }
+  }, [user?.role]);
+
+  const fetchHarvestAlerts = useCallback(async () => {
+    if (user?.role !== "farmer") return;
+    try {
+      const subscription = await farmOSService.getSubscription();
+      const access = subscription?.data?.access;
+      if (access !== "trial" && access !== "active") return;
+      const response = await farmOSService.getMyTrackerEntries();
+      if (response.success) {
+        setHarvestOverdue(response.data.overdue || []);
+        setHarvestUpcoming(response.data.upcoming || []);
+      }
+    } catch (error) {
+      // Farm OS may be unavailable or unsubscribed for this farmer; fail silently.
+      setHarvestOverdue([]);
+      setHarvestUpcoming([]);
+    }
+  }, [user?.role]);
+
+  const fetchLatestTrivia = useCallback(async () => {
+    try {
+      const response = await agriTriviaService.getHistory(1);
+      if (response.success) {
+        setLatestTrivia(response.data.items?.[0] || null);
+      }
+    } catch (error) {
+      setLatestTrivia(null);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRecentNotifications();
     fetchUnreadCounts();
-  }, [fetchRecentNotifications, fetchUnreadCounts]);
+    fetchMyListingsCount();
+    fetchHarvestAlerts();
+    fetchLatestTrivia();
+  }, [
+    fetchRecentNotifications,
+    fetchUnreadCounts,
+    fetchMyListingsCount,
+    fetchHarvestAlerts,
+    fetchLatestTrivia,
+  ]);
 
   useEffect(() => {
     fetchAdminStats();
@@ -251,17 +321,29 @@ export default function HomeScreen() {
     loadProfilePhoto();
   }, [user?.id]);
 
-  const latestFiveNotifications = useMemo(
-    () =>
-      [...recentNotifications]
-        .sort(
-          (first, second) =>
-            new Date(second.createdAt).getTime() -
-            new Date(first.createdAt).getTime(),
-        )
-        .slice(0, 5),
-    [recentNotifications],
-  );
+  type ActivityFeedItem =
+    | { kind: "notification"; notification: Notification; timestamp: number }
+    | { kind: "trivia"; trivia: TriviaItem; timestamp: number };
+
+  const activityFeed = useMemo<ActivityFeedItem[]>(() => {
+    const items: ActivityFeedItem[] = recentNotifications.map(
+      (notification) => ({
+        kind: "notification",
+        notification,
+        timestamp: new Date(notification.createdAt).getTime(),
+      }),
+    );
+
+    if (latestTrivia) {
+      items.push({
+        kind: "trivia",
+        trivia: latestTrivia,
+        timestamp: new Date(latestTrivia.sentAt).getTime(),
+      });
+    }
+
+    return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+  }, [recentNotifications, latestTrivia]);
 
   const getActivityBadgeLabel = (notification: Notification): string => {
     return notification.isRead ? "Read" : "New";
@@ -282,75 +364,12 @@ export default function HomeScreen() {
       }
     }
 
-    const notificationData = notification.data;
-
-    switch (notification.type) {
-      case "transport_offer":
-      case "transport_offer_sent":
-      case "transport_offer_accepted":
-      case "transport_offer_declined":
-      case "transport_offer_countered":
-      case "transport_offer_counter_accepted":
-      case "transport_assigned":
-        if (
-          notification.type === "transport_offer_countered" &&
-          user?.role === "buyer" &&
-          notificationData?.orderId
-        ) {
-          router.push(`/order/${notificationData.orderId}`);
-        } else {
-          router.push("/transport-offers");
-        }
-        break;
-      case "order":
-      case "order_placed":
-      case "order_received":
-      case "order_update":
-      case "order_delivered":
-        if (notificationData?.orderId) {
-          if (user?.role === "transporter" && notificationData?.offerId) {
-            router.push("/transport-offers");
-          } else {
-            router.push(`/order/${notificationData.orderId}`);
-          }
-        } else {
-          router.push("/(tabs)/orders");
-        }
-        break;
-      case "bid":
-      case "auction":
-      case "auction_won":
-      case "auction_outbid":
-        if (notificationData?.auctionId) {
-          router.push(`/auction/${notificationData.auctionId}`);
-        } else {
-          router.push("/(tabs)/auctions");
-        }
-        break;
-      case "message":
-      case "chat":
-        if (notificationData?.conversationId) {
-          router.push(`/chat/${notificationData.conversationId}`);
-        } else {
-          router.push("/(tabs)/chat");
-        }
-        break;
-      case "payment":
-      case "payment_received":
-      case "wallet":
-        router.push("/(tabs)/wallet");
-        break;
-      case "listing":
-        if (notificationData?.listingId) {
-          router.push(`/listing/${notificationData.listingId}`);
-        } else {
-          router.push("/(tabs)/marketplace");
-        }
-        break;
-      default:
-        router.push("/(tabs)/notifications");
-        break;
-    }
+    const route = getNotificationRoute(
+      notification.type,
+      notification.data,
+      user?.role,
+    );
+    router.push(route);
   };
 
   // Helper function to get user initials
@@ -375,6 +394,9 @@ export default function HomeScreen() {
     await Promise.all([
       fetchRecentNotifications(),
       fetchUnreadCounts(),
+      fetchMyListingsCount(),
+      fetchHarvestAlerts(),
+      fetchLatestTrivia(),
       isAdmin ? fetchAdminStats() : Promise.resolve(),
     ]);
     setRefreshing(false);
@@ -495,34 +517,6 @@ export default function HomeScreen() {
             />
           }
         >
-          {/* --- Secondary Nav (Pills) --- */}
-          {!isAdmin && !isModerator && !isAccountsOfficer && (
-            <View style={styles.pillsRow}>
-              {[
-                "Auctions",
-                "AgriMall",
-                ...(canAccessFarmOS ? ["Farm OS"] : []),
-                ...(canAccessFarmLog ? ["Farm Log"] : []),
-                ...(canAccessExport ? ["Export"] : []),
-              ].map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  style={styles.pillButton}
-                  onPress={() => {
-                    if (item === "Auctions") router.push("/(tabs)/auctions");
-                    if (item === "AgriMall") router.push("/(tabs)/agrimall");
-                    if (item === "Farm OS") router.push("/(tabs)/farm-os");
-                    if (item === "Farm Log") router.push("/(tabs)/farm-log");
-                    if (item === "Export")
-                      router.push("/(tabs)/export-gateway");
-                  }}
-                >
-                  <Text style={styles.pillText}>{item}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
           {/* --- CTA Banner --- */}
           {!isAdmin && !isModerator && !isAccountsOfficer && (
             <TouchableOpacity
@@ -706,7 +700,9 @@ export default function HomeScreen() {
                       <InsetDent icon={Package} color="#4CD964" />
                     </View>
                     <Text style={styles.statLabel}>My Listings</Text>
-                    <Text style={styles.statMain}>2</Text>
+                    <Text style={styles.statMain}>
+                      {myListingsCount !== null ? myListingsCount : "..."}
+                    </Text>
                     <Text style={styles.statSub}>– 0%</Text>
                   </TouchableOpacity>
                 )}
@@ -1122,54 +1118,180 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* --- Recent Activity --- */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-            {latestFiveNotifications.length > 0 ? (
-              latestFiveNotifications.map((notification) => (
+          {/* --- Action Items & Alerts (admin-assigned crop harvests) --- */}
+          {(harvestOverdue.length > 0 || harvestUpcoming.length > 0) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Action Items & Alerts</Text>
+              {harvestOverdue.slice(0, 2).map((entry) => (
                 <FloatPillow
-                  key={notification.id}
+                  key={`overdue-${entry.id}`}
                   style={styles.activityCard}
                   borderRadius={24}
-                  onPress={() => handleActivityPress(notification)}
+                  onPress={() => router.push("/(tabs)/farm-os")}
                 >
                   <View style={styles.activityRow}>
                     <View style={styles.activityIconBox}>
-                      <View style={styles.activityGlow} />
-                      <Bell
+                      <View style={[styles.activityGlow, { opacity: 0.15 }]} />
+                      <AlertTriangle
                         size={24}
-                        color={COLORS.greenGradient[1]}
+                        color="#EF4444"
                         strokeWidth={2.5}
                       />
                     </View>
 
                     <View style={styles.activityContent}>
                       <Text style={styles.activityTitle} numberOfLines={1}>
-                        {notification.title}
+                        {`Harvest overdue: ${entry.crop_category}`}
                       </Text>
                       <Text style={styles.activitySub} numberOfLines={2}>
-                        {notification.message}
+                        {`${formatHarvestDate(entry.harvest_date)} · ${formatHarvestCountdown(
+                          entry.days_until_harvest,
+                          entry.status,
+                        )}`}
                       </Text>
                     </View>
 
-                    <View
-                      style={[
-                        styles.pressedBadge,
-                        !notification.isRead && styles.newBadge,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.pressedText,
-                          !notification.isRead && styles.newBadgeText,
-                        ]}
-                      >
-                        {getActivityBadgeLabel(notification)}
+                    <View style={[styles.pressedBadge, styles.newBadge]}>
+                      <Text style={[styles.pressedText, styles.newBadgeText]}>
+                        Overdue
                       </Text>
                     </View>
                   </View>
                 </FloatPillow>
-              ))
+              ))}
+              {harvestUpcoming.slice(0, 2).map((entry) => (
+                <FloatPillow
+                  key={`upcoming-${entry.id}`}
+                  style={styles.activityCard}
+                  borderRadius={24}
+                  onPress={() => router.push("/(tabs)/farm-os")}
+                >
+                  <View style={styles.activityRow}>
+                    <View style={styles.activityIconBox}>
+                      <View style={[styles.activityGlow, { opacity: 0.15 }]} />
+                      <Clock size={24} color="#F59E0B" strokeWidth={2.5} />
+                    </View>
+
+                    <View style={styles.activityContent}>
+                      <Text style={styles.activityTitle} numberOfLines={1}>
+                        {`Harvest due soon: ${entry.crop_category}`}
+                      </Text>
+                      <Text style={styles.activitySub} numberOfLines={2}>
+                        {`${formatHarvestDate(entry.harvest_date)} · ${formatHarvestCountdown(
+                          entry.days_until_harvest,
+                          entry.status,
+                        )}`}
+                      </Text>
+                    </View>
+
+                    <View style={styles.pressedBadge}>
+                      <Text style={styles.pressedText}>Due soon</Text>
+                    </View>
+                  </View>
+                </FloatPillow>
+              ))}
+            </View>
+          )}
+
+          {/* --- Trivia Quick Action --- */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Learn</Text>
+            <View style={styles.quickActionsCard}>
+              <View style={[styles.qaRow, { justifyContent: "flex-start" }]}>
+                <TouchableOpacity
+                  style={styles.qaItem}
+                  onPress={() => router.push("/trivia")}
+                >
+                  <View
+                    style={[styles.qaActiveIcon, { backgroundColor: "#F59E0B" }]}
+                  >
+                    <Lightbulb size={22} color="#FFF" strokeWidth={2.5} />
+                  </View>
+                  <Text style={styles.qaLabel}>Trivia</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* --- Recent Activity --- */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            {activityFeed.length > 0 ? (
+              activityFeed.map((item) =>
+                item.kind === "trivia" ? (
+                  <FloatPillow
+                    key={`trivia-${item.trivia.id}`}
+                    style={styles.activityCard}
+                    borderRadius={24}
+                    onPress={() => router.push("/trivia")}
+                  >
+                    <View style={styles.activityRow}>
+                      <View style={styles.activityIconBox}>
+                        <View
+                          style={[styles.activityGlow, { opacity: 0.15 }]}
+                        />
+                        <Lightbulb size={24} color="#F59E0B" strokeWidth={2.5} />
+                      </View>
+
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle} numberOfLines={1}>
+                          {item.trivia.title}
+                        </Text>
+                        <Text style={styles.activitySub} numberOfLines={2}>
+                          {item.trivia.body}
+                        </Text>
+                      </View>
+
+                      <View style={styles.pressedBadge}>
+                        <Text style={styles.pressedText}>Trivia</Text>
+                      </View>
+                    </View>
+                  </FloatPillow>
+                ) : (
+                  <FloatPillow
+                    key={item.notification.id}
+                    style={styles.activityCard}
+                    borderRadius={24}
+                    onPress={() => handleActivityPress(item.notification)}
+                  >
+                    <View style={styles.activityRow}>
+                      <View style={styles.activityIconBox}>
+                        <View style={styles.activityGlow} />
+                        <Bell
+                          size={24}
+                          color={COLORS.greenGradient[1]}
+                          strokeWidth={2.5}
+                        />
+                      </View>
+
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle} numberOfLines={1}>
+                          {item.notification.title}
+                        </Text>
+                        <Text style={styles.activitySub} numberOfLines={2}>
+                          {item.notification.message}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.pressedBadge,
+                          !item.notification.isRead && styles.newBadge,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.pressedText,
+                            !item.notification.isRead && styles.newBadgeText,
+                          ]}
+                        >
+                          {getActivityBadgeLabel(item.notification)}
+                        </Text>
+                      </View>
+                    </View>
+                  </FloatPillow>
+                ),
+              )
             ) : (
               <FloatPillow style={styles.activityCard} borderRadius={24}>
                 <View style={styles.activityRow}>

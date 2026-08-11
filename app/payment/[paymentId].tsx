@@ -1,3 +1,3 @@
-import MockPaymentScreen from "../../src/screens/MockPaymentScreen";
+import PaymentScreen from "../../src/screens/PaymentScreen";
 
-export default MockPaymentScreen;
+export default PaymentScreen;

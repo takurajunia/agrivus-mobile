@@ -16,6 +16,7 @@ import {
   CreditCard,
   Banknote,
   Smartphone,
+  DollarSign,
   Filter,
 } from "lucide-react-native";
 import {
@@ -126,12 +127,14 @@ export default function PaymentHistoryScreen() {
       case "ecocash":
       case "onemoney":
       case "telecash":
+      case "innbucks":
         return Smartphone;
       case "zipit":
+      case "zimswitch":
       case "usd_bank":
         return Banknote;
-      case "card":
-        return CreditCard;
+      case "cash":
+        return DollarSign;
       default:
         return CreditCard;
     }
