@@ -666,9 +666,25 @@ export default function WalletScreen() {
         transparent
         onRequestClose={() => setShowWithdrawModal(false)}
       >
+        {/*
+          behavior is intentionally undefined on Android. The activity already
+          runs in adjustResize (Expo's default softwareKeyboardLayoutMode), so
+          the window shrinks on its own and this bottom sheet rides up with it
+          — exactly how the Deposit modal above works without any help.
+
+          Adding behavior="height" on top of that made two things resize the
+          same view: KeyboardAvoidingView set an explicit height from a frame
+          it had measured, which fired another layout, which re-evaluated the
+          ScrollView's maxHeight: "90%" against a parent that was still
+          changing. On dismiss the two corrections chased each other and the
+          sheet visibly juddered. With behavior undefined this renders as a
+          plain View on Android and only the OS adjusts.
+
+          iOS has no adjustResize equivalent, so it still needs "padding".
+        */}
         <KeyboardAvoidingView
           style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <ScrollView
             style={styles.modalScrollView}
