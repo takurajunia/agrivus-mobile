@@ -41,6 +41,7 @@ export const getNotificationRoute = (
       return "/(tabs)/auctions";
     case "message":
     case "chat":
+    case "new_message":
       if (data?.conversationId) {
         return `/chat/${data.conversationId}`;
       }

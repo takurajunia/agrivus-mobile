@@ -19,6 +19,7 @@ import {
   Users,
   Shield,
   ChevronRight,
+  Banknote,
 } from "lucide-react-native";
 import {
   NeumorphicScreen,
@@ -554,6 +555,18 @@ export default function AccountsOfficerDashboardScreen() {
                 {summary.pendingCashDeposits} pending
               </Text>
             ) : null}
+          </NeumorphicCard>
+
+          <NeumorphicCard
+            variant="standard"
+            style={styles.actionCard}
+            onPress={() => router.push("/admin/withdrawals")}
+          >
+            <View style={styles.actionIcon}>
+              <Banknote size={20} color={neumorphicColors.semantic.error} />
+            </View>
+            <Text style={styles.actionTitle}>Withdrawals</Text>
+            <Text style={styles.actionSubtitle}>Review pending</Text>
           </NeumorphicCard>
 
           <NeumorphicCard

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "765756831089",
+    "project_id": "agrivusmobileapp",
+    "storage_bucket": "agrivusmobileapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:765756831089:android:ea6f05623a09d049c8f2d0",
+        "android_client_info": {
+          "package_name": "com.agrivus.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGdDkomnKaFvsghawYwbKWBRSaMVi3CRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

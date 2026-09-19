@@ -144,6 +144,38 @@ export interface PendingCashDeposit {
   phone?: string;
 }
 
+// ── Withdrawal Types ────────────────────────────────────────────────────────
+
+export type WithdrawalStatus = "pending" | "processing" | "completed" | "rejected";
+
+export interface AdminWithdrawalRequest {
+  id: string;
+  user_id: string;
+  amount: string;
+  withdrawal_method: string;
+  account_details: string;
+  status: WithdrawalStatus;
+  payment_reference: string | null;
+  rejection_reason: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  processed_at: string | null;
+  user_name: string;
+  user_email: string;
+  user_phone: string | null;
+  user_role: string;
+  processed_by_name: string | null;
+  wallet_balance: string;
+  wallet_escrow: string;
+}
+
+export interface WithdrawalSummary {
+  pending: { count: number; total: number };
+  processing: { count: number; total: number };
+  completed: { count: number; total: number };
+  rejected: { count: number; total: number };
+}
+
 // ── Moderator Types ─────────────────────────────────────────────────────────
 
 export type DisputeOutcome =
@@ -493,6 +525,49 @@ const adminService = {
       `/admin/payments/cash-deposits/${paymentId}/reject`,
       data,
     );
+    return response.data;
+  },
+
+  // ── Withdrawal APIs ─────────────────────────────────────────────────────
+
+  async getWithdrawalQueue(status?: WithdrawalStatus | "all"): Promise<{
+    success: boolean;
+    data: {
+      requests: AdminWithdrawalRequest[];
+      summary: WithdrawalSummary;
+      pagination: { page: number; limit: number };
+    };
+  }> {
+    const response = await api.get("/admin/withdrawals", {
+      params: status && status !== "all" ? { status } : {},
+    });
+    return response.data;
+  },
+
+  async markWithdrawalProcessing(
+    id: string,
+  ): Promise<{ success: boolean; message?: string; data?: any }> {
+    const response = await api.post(`/admin/withdrawals/${id}/processing`, {});
+    return response.data;
+  },
+
+  async completeWithdrawal(
+    id: string,
+    paymentReference: string,
+  ): Promise<{ success: boolean; message?: string; data?: any }> {
+    const response = await api.post(`/admin/withdrawals/${id}/complete`, {
+      paymentReference,
+    });
+    return response.data;
+  },
+
+  async rejectWithdrawal(
+    id: string,
+    rejectionReason: string,
+  ): Promise<{ success: boolean; message?: string; data?: any }> {
+    const response = await api.post(`/admin/withdrawals/${id}/reject`, {
+      rejectionReason,
+    });
     return response.data;
   },
 

@@ -1,6 +1,10 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { AxiosRequestConfig } from "axios";
+import {
+  captureApiFailure,
+  getConnectivitySnapshot,
+} from "./telemetry";
+import type { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 
 type AuthExpiredListener = () => void;
 
@@ -63,6 +67,31 @@ api.interceptors.request.use(
   },
 );
 
+// ── Retry policy ──────────────────────────────────────────────────────────────
+const MAX_GET_RETRIES = 2; // 3 attempts total
+const RETRY_BASE_DELAY_MS = 600;
+const RETRY_JITTER_MS = 250;
+
+type RetriableConfig = InternalAxiosRequestConfig & { __retryCount?: number };
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Retry only requests that are safe to repeat and plausibly transient.
+ *
+ * GET only — replaying a POST could double-submit an order or a bid. A missing
+ * response means the request never landed (dropped connection, timeout), and a
+ * 5xx is often a restart or cold start. Everything else is left alone: 4xx will
+ * fail identically on a retry, and retrying a 429 would only dig the rate limit
+ * deeper.
+ */
+const isRetriableGet = (error: AxiosError): boolean => {
+  if (error.config?.method?.toLowerCase() !== "get") return false;
+  if (!error.response) return true;
+  return error.response.status >= 500;
+};
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
@@ -73,14 +102,41 @@ api.interceptors.response.use(
     );
     return response;
   },
-  async (error) => {
+  async (error: AxiosError) => {
+    // Retry transient read failures before surfacing anything to the caller.
+    // This absorbs the brief connection drops and server restarts that would
+    // otherwise reach the user as a hard error with no recovery path.
+    const retriableConfig = error.config as RetriableConfig | undefined;
+    if (retriableConfig && isRetriableGet(error)) {
+      const attempt = (retriableConfig.__retryCount ?? 0) + 1;
+      if (attempt <= MAX_GET_RETRIES) {
+        retriableConfig.__retryCount = attempt;
+        // Exponential backoff, jittered so that screens failing together do
+        // not resynchronise into a retry burst against a recovering server.
+        const backoffMs =
+          RETRY_BASE_DELAY_MS * 2 ** (attempt - 1) +
+          Math.random() * RETRY_JITTER_MS;
+        if (__DEV__) {
+          console.log(
+            `API Retry ${attempt}/${MAX_GET_RETRIES}: ${error.config?.url}`,
+          );
+        }
+        await sleep(backoffMs);
+        return api(retriableConfig);
+      }
+    }
+
+    const serverMessage = (
+      error.response?.data as { message?: string } | undefined
+    )?.message;
+
     // Log error details for debugging
     if (__DEV__) {
       console.log("API Error:", {
         url: error.config?.url,
         method: error.config?.method,
         status: error.response?.status,
-        message: error.response?.data?.message || error.message,
+        message: serverMessage || error.message,
         data: error.response?.data,
       });
     }
@@ -100,13 +156,34 @@ api.interceptors.response.use(
       }
     }
 
-    // Enhance error with readable message
-    if (error.response?.data?.message) {
-      error.message = error.response.data.message;
-    } else if (error.code === "ECONNABORTED") {
-      error.message = "Request timed out. Please check your connection.";
-    } else if (!error.response) {
-      error.message = "Network error. Please check if the server is running.";
+    // Enhance error with readable message.
+    // When no response arrived we cannot tell from the error alone whether the
+    // device lost its connection or the server is unreachable, so ask NetInfo
+    // rather than blaming the server for what is usually a dropped signal.
+    const status = error.response?.status;
+    const needsDiagnosis = !error.response || (status ?? 0) >= 500;
+
+    if (needsDiagnosis) {
+      // One snapshot serves both purposes: choosing honest wording for the
+      // user, and giving the error report enough context to tell the failure
+      // modes apart later.
+      const snapshot = await getConnectivitySnapshot();
+
+      if (!error.response) {
+        if (snapshot.offline) {
+          error.message = "You're offline. Check your connection and try again.";
+        } else if (error.code === "ECONNABORTED") {
+          error.message = "This is taking longer than usual. Please try again.";
+        } else {
+          error.message = "Couldn't reach Agrivus. Please try again in a moment.";
+        }
+      }
+
+      captureApiFailure(error, snapshot, (retriableConfig?.__retryCount ?? 0) + 1);
+    }
+
+    if (serverMessage) {
+      error.message = serverMessage;
     }
 
     return Promise.reject(error);

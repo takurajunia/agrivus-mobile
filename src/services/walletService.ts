@@ -1,5 +1,10 @@
 import api from "./api";
-import type { WalletBalance, Transaction, TransactionHistory } from "../types";
+import type {
+  WalletBalance,
+  Transaction,
+  TransactionHistory,
+  WithdrawalRequest,
+} from "../types";
 
 export const walletService = {
   // Get wallet balance
@@ -29,6 +34,11 @@ export const walletService = {
       accountDetails,
     });
     return response.data;
+  },
+
+  async getMyWithdrawals(): Promise<WithdrawalRequest[]> {
+    const response = await api.get("/wallet/withdrawals");
+    return response.data.data.requests;
   },
 
   // Get transaction history

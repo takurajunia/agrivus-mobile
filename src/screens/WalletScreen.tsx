@@ -9,7 +9,10 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
   Wallet,
@@ -21,6 +24,10 @@ import {
   CreditCard,
   Smartphone,
   History,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Undo2,
 } from "lucide-react-native";
 import {
   neumorphicColors,
@@ -30,13 +37,19 @@ import {
 } from "../theme/neumorphic";
 import { walletService } from "../services/walletService";
 import { paymentService } from "../services/paymentService";
-import type { WalletBalance, Transaction, PaymentMethodType } from "../types";
+import type {
+  WalletBalance,
+  Transaction,
+  WithdrawalRequest,
+  PaymentMethodType,
+} from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
   NeumorphicScreen,
   NeumorphicCard,
   NeumorphicButton,
   NeumorphicStatCard,
+  NeumorphicBadge,
 } from "../components/neumorphic";
 
 const PAYMENT_METHODS: Array<{
@@ -79,6 +92,7 @@ const PAYMENT_METHODS: Array<{
 
 export default function WalletScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const searchParams = useLocalSearchParams<{
     payment?: string;
     action?: string;
@@ -86,6 +100,9 @@ export default function WalletScreen() {
 
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [withdrawalRequests, setWithdrawalRequests] = useState<
+    WithdrawalRequest[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -120,12 +137,14 @@ export default function WalletScreen() {
   const loadWalletData = async () => {
     try {
       setLoading(true);
-      const [balanceData, transactionsData] = await Promise.all([
+      const [balanceData, transactionsData, withdrawals] = await Promise.all([
         walletService.getBalance(),
         walletService.getTransactions(),
+        walletService.getMyWithdrawals().catch(() => []),
       ]);
       setBalance(balanceData);
       setTransactions(transactionsData.transactions || []);
+      setWithdrawalRequests(withdrawals);
     } catch (error) {
       console.error("Failed to load wallet data:", error);
     } finally {
@@ -231,7 +250,10 @@ export default function WalletScreen() {
       setWithdrawAmount("");
       setAccountDetails("");
       loadWalletData();
-      Alert.alert("Success", "Withdrawal request submitted!");
+      Alert.alert(
+        "Success",
+        "Withdrawal request submitted! The amount is held securely and will be sent to your account — you can track its status below.",
+      );
     } catch (error: any) {
       Alert.alert(
         "Error",
@@ -253,6 +275,10 @@ export default function WalletScreen() {
         return { icon: DollarSign, color: neumorphicColors.semantic.success };
       case "withdrawal":
         return { icon: ArrowUpCircle, color: neumorphicColors.semantic.error };
+      case "withdrawal_hold":
+        return { icon: Clock, color: neumorphicColors.semantic.warning };
+      case "withdrawal_released":
+        return { icon: Undo2, color: neumorphicColors.semantic.info };
       case "escrow_hold":
         return { icon: Lock, color: neumorphicColors.semantic.warning };
       case "escrow_release":
@@ -373,6 +399,89 @@ export default function WalletScreen() {
           </View>
         )}
 
+        {/* Withdrawal Requests */}
+        {withdrawalRequests.length > 0 && (
+          <View style={styles.withdrawalsSection}>
+            <Text style={styles.sectionTitle}>Withdrawal Requests</Text>
+            <Text style={styles.sectionSubtitle}>
+              Track the status of your withdrawals
+            </Text>
+
+            {withdrawalRequests.map((wr, index) => {
+              const statusMeta = {
+                completed: {
+                  icon: CheckCircle2,
+                  color: neumorphicColors.semantic.success,
+                  badge: "success" as const,
+                  label: "Paid",
+                },
+                rejected: {
+                  icon: XCircle,
+                  color: neumorphicColors.semantic.error,
+                  badge: "error" as const,
+                  label: "Rejected",
+                },
+                processing: {
+                  icon: RefreshCw,
+                  color: neumorphicColors.semantic.info,
+                  badge: "info" as const,
+                  label: "Processing",
+                },
+                pending: {
+                  icon: Clock,
+                  color: neumorphicColors.semantic.warning,
+                  badge: "warning" as const,
+                  label: "Pending",
+                },
+              }[wr.status];
+
+              return (
+                <NeumorphicCard
+                  key={wr.id}
+                  style={styles.wrCard}
+                  variant="standard"
+                  animationDelay={index * 50}
+                >
+                  <View style={styles.wrHeader}>
+                    <View style={styles.wrIconAmount}>
+                      <statusMeta.icon size={20} color={statusMeta.color} />
+                      <View style={styles.wrTextGroup}>
+                        <Text style={styles.wrAmount}>
+                          ${parseFloat(wr.amount).toLocaleString()} via{" "}
+                          {wr.withdrawal_method}
+                        </Text>
+                        <Text style={styles.wrMeta}>
+                          Requested{" "}
+                          {new Date(wr.created_at).toLocaleDateString()} ·{" "}
+                          {wr.account_details}
+                        </Text>
+                      </View>
+                    </View>
+                    <NeumorphicBadge
+                      label={statusMeta.label}
+                      variant={statusMeta.badge}
+                      size="small"
+                    />
+                  </View>
+
+                  {wr.status === "completed" && wr.payment_reference && (
+                    <Text style={styles.wrReference}>
+                      Payment reference: {wr.payment_reference}
+                    </Text>
+                  )}
+
+                  {wr.status === "rejected" && wr.rejection_reason && (
+                    <Text style={styles.wrRejection}>
+                      Reason: {wr.rejection_reason} — the funds have been
+                      returned to your wallet.
+                    </Text>
+                  )}
+                </NeumorphicCard>
+              );
+            })}
+          </View>
+        )}
+
         {/* Transaction History */}
         <View style={styles.transactionsSection}>
           <Text style={styles.sectionTitle}>Transaction History</Text>
@@ -439,6 +548,11 @@ export default function WalletScreen() {
             })
           )}
         </View>
+
+        {/* Reserve space so content (and the action buttons above, when
+            content is short) never end up hidden/unclickable under the
+            floating bottom tab bar. */}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Deposit Modal */}
@@ -552,81 +666,103 @@ export default function WalletScreen() {
         transparent
         onRequestClose={() => setShowWithdrawModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Withdraw Funds</Text>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <ScrollView
+            style={styles.modalScrollView}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View
+              style={[
+                styles.modalContent,
+                { paddingBottom: spacing.xl + insets.bottom },
+              ]}
+            >
+              <Text style={styles.modalTitle}>Withdraw Funds</Text>
 
-            <Text style={styles.inputLabel}>Amount</Text>
-            <View style={styles.amountInputContainer}>
-              <Text style={styles.currencyPrefix}>$</Text>
-              <TextInput
-                style={styles.amountInput}
-                placeholder="0.00"
-                placeholderTextColor={neumorphicColors.text.tertiary}
-                keyboardType="decimal-pad"
-                value={withdrawAmount}
-                onChangeText={setWithdrawAmount}
-              />
-            </View>
+              <Text style={styles.inputLabel}>Amount</Text>
+              <View style={styles.amountInputContainer}>
+                <Text style={styles.currencyPrefix}>$</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  placeholder="0.00"
+                  placeholderTextColor={neumorphicColors.text.tertiary}
+                  keyboardType="decimal-pad"
+                  value={withdrawAmount}
+                  onChangeText={setWithdrawAmount}
+                />
+              </View>
 
-            <Text style={styles.inputLabel}>Withdrawal Method</Text>
-            <View style={styles.paymentMethods}>
-              {PAYMENT_METHODS.map((method) => (
-                <TouchableOpacity
-                  key={method.id}
-                  style={[
-                    styles.paymentMethod,
-                    paymentMethod === method.id && styles.paymentMethodActive,
-                  ]}
-                  onPress={() => setPaymentMethod(method.id)}
-                >
-                  <method.icon
-                    size={20}
-                    color={
-                      paymentMethod === method.id
-                        ? neumorphicColors.primary[600]
-                        : neumorphicColors.text.secondary
-                    }
-                  />
-                  <Text
+              <Text style={styles.inputLabel}>Withdrawal Method</Text>
+              <View style={styles.paymentMethods}>
+                {PAYMENT_METHODS.map((method) => (
+                  <TouchableOpacity
+                    key={method.id}
                     style={[
-                      styles.paymentMethodText,
-                      paymentMethod === method.id &&
-                        styles.paymentMethodTextActive,
+                      styles.paymentMethod,
+                      paymentMethod === method.id && styles.paymentMethodActive,
                     ]}
+                    onPress={() => setPaymentMethod(method.id)}
                   >
-                    {method.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <method.icon
+                      size={20}
+                      color={
+                        paymentMethod === method.id
+                          ? neumorphicColors.primary[600]
+                          : neumorphicColors.text.secondary
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.paymentMethodText,
+                        paymentMethod === method.id &&
+                          styles.paymentMethodTextActive,
+                      ]}
+                    >
+                      {method.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-            <Text style={styles.inputLabel}>Account Details</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter phone number or account number"
-              placeholderTextColor={neumorphicColors.text.tertiary}
-              value={accountDetails}
-              onChangeText={setAccountDetails}
-            />
+              <Text style={styles.inputLabel}>Account Details</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter phone number or account number"
+                placeholderTextColor={neumorphicColors.text.tertiary}
+                value={accountDetails}
+                onChangeText={setAccountDetails}
+              />
 
-            <View style={styles.modalButtons}>
-              <NeumorphicButton
-                title="Cancel"
-                variant="tertiary"
-                onPress={() => setShowWithdrawModal(false)}
-                style={styles.modalButton}
-              />
-              <NeumorphicButton
-                title="Withdraw"
-                variant="primary"
-                onPress={handleWithdraw}
-                loading={processing}
-                style={styles.modalButton}
-              />
+              <View style={styles.withdrawInfoBox}>
+                <Text style={styles.withdrawInfoText}>
+                  🔒 The amount is held securely from your available balance while
+                  we process your request. If a request is rejected, the funds
+                  return to your wallet automatically.
+                </Text>
+              </View>
+
+              <View style={styles.modalButtons}>
+                <NeumorphicButton
+                  title="Cancel"
+                  variant="tertiary"
+                  onPress={() => setShowWithdrawModal(false)}
+                  style={styles.modalButton}
+                />
+                <NeumorphicButton
+                  title="Withdraw"
+                  variant="primary"
+                  onPress={handleWithdraw}
+                  loading={processing}
+                  style={styles.modalButton}
+                />
+              </View>
             </View>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </NeumorphicScreen>
   );
@@ -697,6 +833,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.h4,
     color: neumorphicColors.text.primary,
+    marginBottom: spacing.md,
+  },
+  sectionSubtitle: {
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    marginTop: -spacing.sm,
     marginBottom: spacing.md,
   },
   emptyTransactions: {
@@ -892,5 +1034,60 @@ const styles = StyleSheet.create({
   lockedText: {
     ...typography.caption,
     color: neumorphicColors.text.secondary,
+  },
+  withdrawalsSection: {
+    padding: spacing.lg,
+    paddingTop: 0,
+  },
+  wrCard: {
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+  },
+  wrHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  wrIconAmount: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    flex: 1,
+  },
+  wrTextGroup: {
+    flex: 1,
+  },
+  wrAmount: {
+    ...typography.body,
+    fontWeight: "600",
+    color: neumorphicColors.text.primary,
+  },
+  wrMeta: {
+    ...typography.caption,
+    color: neumorphicColors.text.tertiary,
+    marginTop: spacing.xs,
+  },
+  wrReference: {
+    ...typography.caption,
+    color: neumorphicColors.text.secondary,
+    marginTop: spacing.sm,
+  },
+  wrRejection: {
+    ...typography.caption,
+    color: neumorphicColors.semantic.error,
+    marginTop: spacing.sm,
+  },
+  withdrawInfoBox: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: neumorphicColors.badge.info.bg,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: neumorphicColors.semantic.info + "30",
+  },
+  withdrawInfoText: {
+    ...typography.bodySmall,
+    color: neumorphicColors.badge.info.text,
   },
 });

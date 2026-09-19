@@ -2,7 +2,7 @@
   "expo": {
     "name": "Agrivus",
     "slug": "agrivus-mobile",
-    "version": "1.0.4",
+    "version": "1.0.7",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -10,7 +10,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#2E7D32"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agrivus.mobile",
@@ -23,7 +25,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2E7D32"
       },
-      "package": "com.agrivus.mobile"
+      "package": "com.agrivus.mobile",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -47,7 +50,8 @@
           "icon": "./assets/adaptive-icon.png",
           "color": "#2E7D32"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "scheme": "agrivus",
     "extra": {

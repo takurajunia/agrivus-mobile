@@ -28,15 +28,6 @@ const notificationsService = {
     return response.data;
   },
 
-  // Get unread count only
-  async getUnreadCount(): Promise<{
-    success: boolean;
-    data: { unreadCount: number };
-  }> {
-    const response = await api.get("/notifications/unread-count");
-    return response.data;
-  },
-
   // Mark a single notification as read
   async markAsRead(notificationId: string): Promise<{ success: boolean }> {
     const response = await api.patch(`/notifications/${notificationId}/read`);

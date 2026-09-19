@@ -55,6 +55,7 @@ import {
   formatHarvestDate,
 } from "../../src/utils/cropTracker";
 import { getNotificationRoute } from "../../src/utils/notificationRouting";
+import { promptForPushPermissionIfNeeded } from "../../src/services/pushNotificationsService";
 import type { FarmOSTrackerEntry, Notification } from "../../src/types";
 
 const { width } = Dimensions.get("window");
@@ -220,6 +221,12 @@ export default function HomeScreen() {
       if (response.success && response.data?.notifications) {
         setRecentNotifications(response.data.notifications);
       }
+      // GET /notifications already computes the unread count server-side —
+      // reuse it here instead of calling the separate (non-existent)
+      // /notifications/unread-count endpoint.
+      if (response.success && typeof response.data?.unreadCount === "number") {
+        setUnreadNotificationCount(response.data.unreadCount);
+      }
     } catch (error) {
       console.error("Error fetching recent notifications:", error);
     }
@@ -227,16 +234,10 @@ export default function HomeScreen() {
 
   const fetchUnreadCounts = useCallback(async () => {
     try {
-      const [notificationsResponse, chatsResponse] = await Promise.all([
-        notificationsService.getUnreadCount(),
-        chatService.getUnreadCount(),
-      ]);
-
-      setUnreadNotificationCount(notificationsResponse?.data?.unreadCount || 0);
+      const chatsResponse = await chatService.getUnreadCount();
       setUnreadChatCount(chatsResponse?.data?.unreadCount || 0);
     } catch (error) {
-      console.error("Error fetching unread counts:", error);
-      setUnreadNotificationCount(0);
+      console.error("Error fetching unread chat count:", error);
       setUnreadChatCount(0);
     }
   }, []);
@@ -300,6 +301,15 @@ export default function HomeScreen() {
     fetchAdminStats();
   }, [fetchAdminStats]);
 
+  // Ask for notification permission when the app opens — only if it hasn't
+  // already been granted (promptForPushPermissionIfNeeded no-ops silently
+  // in that case).
+  useEffect(() => {
+    if (user?.id) {
+      void promptForPushPermissionIfNeeded();
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     const loadProfilePhoto = async () => {
       if (!user?.id) {
@@ -356,6 +366,7 @@ export default function HomeScreen() {
           item.id === notification.id ? { ...item, isRead: true } : item,
         ),
       );
+      setUnreadNotificationCount((previous) => Math.max(0, previous - 1));
 
       try {
         await notificationsService.markAsRead(notification.id);

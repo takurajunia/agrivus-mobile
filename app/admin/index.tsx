@@ -23,6 +23,7 @@ import {
   Shield,
   BarChart3,
   ArrowLeft,
+  Banknote,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import {
@@ -426,6 +427,16 @@ export default function AdminDashboardScreen() {
           >
             <DollarSign size={20} color={neumorphicColors.primary[600]} />
             <Text style={styles.actionText}>Transactions</Text>
+            <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
+          </NeumorphicCard>
+
+          <NeumorphicCard
+            style={styles.actionButton}
+            onPress={() => router.push("/admin/withdrawals")}
+            variant="standard"
+          >
+            <Banknote size={20} color={neumorphicColors.semantic.error} />
+            <Text style={styles.actionText}>Review Withdrawals</Text>
             <ChevronRight size={16} color={neumorphicColors.text.tertiary} />
           </NeumorphicCard>
 

@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { Platform } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import * as Notifications from "expo-notifications";
 import {
   Stack,
@@ -14,6 +16,11 @@ import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { ChatProvider } from "../src/contexts/ChatContext";
 import { NotificationsProvider } from "../src/contexts/NotificationsContext";
 import { getNotificationRoute } from "../src/utils/notificationRouting";
+import { initTelemetry } from "../src/services/telemetry";
+
+// Initialise as early as possible so failures during startup are still
+// reported. No-ops when no DSN is configured.
+initTelemetry();
 
 // Separate component to handle auth-based navigation
 function AuthNavigator() {
@@ -114,6 +121,11 @@ function AuthNavigator() {
   }, [isAuthenticated, segments, loading, navigationState?.key]);
 
   useEffect(() => {
+    // expo-notifications has no native module on web: the response emitter is
+    // a no-op and getLastNotificationResponseAsync throws UnavailabilityError.
+    // There are no notification taps to route from on web, so skip the wiring.
+    if (Platform.OS === "web") return;
+
     const navigateFromNotification = (
       response: Notifications.NotificationResponse,
     ) => {
@@ -186,6 +198,10 @@ function AuthNavigator() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="admin/withdrawals"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="payment/[paymentId]"
           options={{ headerShown: false }}
         />
@@ -200,7 +216,7 @@ function AuthNavigator() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useFrameworkReady();
 
   return (
@@ -217,3 +233,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap adds the error boundary and touch/navigation breadcrumbs that
+// give a reported error the context of what the user was doing beforehand.
+export default Sentry.wrap(RootLayout);

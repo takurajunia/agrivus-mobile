@@ -1116,6 +1116,18 @@ export interface TransactionHistory {
   };
 }
 
+export interface WithdrawalRequest {
+  id: string;
+  amount: string;
+  withdrawal_method: string;
+  account_details: string;
+  status: "pending" | "processing" | "completed" | "rejected";
+  payment_reference: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  processed_at: string | null;
+}
+
 // Payment Types
 export type PaymentMethodType =
   | "ecocash"
