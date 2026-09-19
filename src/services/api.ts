@@ -52,6 +52,13 @@ export const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   async (config) => {
+    // Stamp when this request first went out, so the retry budget measures the
+    // whole journey. Recording it at failure time would miss the first
+    // attempt's timeout — the very thing the budget exists to bound. Retries
+    // reuse the same config object, so this is set once and preserved.
+    const retriable = config as RetriableConfig;
+    retriable.__firstAttemptAt ??= Date.now();
+
     const rawToken = await AsyncStorage.getItem("token");
     const token = normalizeAuthToken(rawToken);
     if (token) {
@@ -72,7 +79,23 @@ const MAX_GET_RETRIES = 2; // 3 attempts total
 const RETRY_BASE_DELAY_MS = 600;
 const RETRY_JITTER_MS = 250;
 
-type RetriableConfig = InternalAxiosRequestConfig & { __retryCount?: number };
+/**
+ * Hard ceiling on how long a request may keep retrying before the user is told
+ * something went wrong.
+ *
+ * Attempt count alone is not a safe bound: a dropped connection fails in
+ * milliseconds, but a request that connects and then stalls burns the full
+ * 15s timeout each time, so three attempts could leave someone watching a
+ * spinner for the better part of a minute. This budget bounds the slow case
+ * without punishing the fast one — a dead connection still gets all three
+ * attempts inside two seconds, while stalled requests stop after one retry.
+ */
+const MAX_TOTAL_RETRY_MS = 35_000;
+
+type RetriableConfig = InternalAxiosRequestConfig & {
+  __retryCount?: number;
+  __firstAttemptAt?: number;
+};
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -108,14 +131,22 @@ api.interceptors.response.use(
     // otherwise reach the user as a hard error with no recovery path.
     const retriableConfig = error.config as RetriableConfig | undefined;
     if (retriableConfig && isRetriableGet(error)) {
+      const startedAt = retriableConfig.__firstAttemptAt ?? Date.now();
+
       const attempt = (retriableConfig.__retryCount ?? 0) + 1;
-      if (attempt <= MAX_GET_RETRIES) {
+      // Exponential backoff, jittered so that screens failing together do not
+      // resynchronise into a retry burst against a recovering server.
+      const backoffMs =
+        RETRY_BASE_DELAY_MS * 2 ** (attempt - 1) +
+        Math.random() * RETRY_JITTER_MS;
+
+      // Only retry if another full attempt can still finish inside the budget.
+      const timeoutMs = retriableConfig.timeout || 0;
+      const projectedElapsed =
+        Date.now() - startedAt + backoffMs + timeoutMs;
+
+      if (attempt <= MAX_GET_RETRIES && projectedElapsed <= MAX_TOTAL_RETRY_MS) {
         retriableConfig.__retryCount = attempt;
-        // Exponential backoff, jittered so that screens failing together do
-        // not resynchronise into a retry burst against a recovering server.
-        const backoffMs =
-          RETRY_BASE_DELAY_MS * 2 ** (attempt - 1) +
-          Math.random() * RETRY_JITTER_MS;
         if (__DEV__) {
           console.log(
             `API Retry ${attempt}/${MAX_GET_RETRIES}: ${error.config?.url}`,
